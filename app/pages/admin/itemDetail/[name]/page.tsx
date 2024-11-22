@@ -37,6 +37,7 @@ import { Label } from "@/components/ui/label"
 import PaginationComponent from "@/app/components/pagination/pagination";
 import { Button } from "@/components/ui/button";
 import { ResDivision, ResDivisionData } from "@/app/interfaces/division";
+import { ClearItemCache, GetItemWithCache } from "@/lib/servers/getItemWithCache";
 
 const itemsPerPage = 10;
 export default function ItemDetail({ params }: { params: { name: string } }) {
@@ -52,10 +53,27 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
     const [filteredItems, setFilteredItems] = useState<resItemDetialData[]>([]);
     const [statusFilter, setStatusFilter] = useState('');
     const name = decodeURIComponent(params.name)
+    const [newName, setNewName] = useState(name)
     const [position, setPosition] = React.useState('')
     const [division, setDivision] = useState<ResDivisionData[]>([]);
 
     const totalItems = itemsNum.normal + itemsNum.borrowed + itemsNum.damaged + itemsNum.lost;
+
+    const updateAll = async () => {
+        try {
+            const res = await axios.post('/api/items/update', { name: name, newName: newName, division: position, status: itemsNum });
+            if (res.status === 200) {
+                const currentUrl = new URL(window.location.href);
+                currentUrl.pathname = `${currentUrl.pathname.replace(params.name, '')}/${newName}`;
+                window.history.pushState({}, '', currentUrl.toString());
+                ClearItemCache()
+                window.location.reload();
+            };
+            console.log(res);
+        } catch (e) {
+            console.error(e)
+        }
+    }
 
     const handleChange = (field: keyof typeof itemsNum, value: number) => {
         if (value < 0) return;
@@ -95,7 +113,7 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
         setFilteredItems(filtered);
     }, [statusFilter, items]);
     const findItems = async () => {
-        await axios.get<ResItemDetial>(`/api/items/${params.name}`)
+        await axios.get<ResItemDetial>(`/api/items/${name}`)
         try {
             const res = await axios.get<ResItemDetial>(`/api/items/${params.name}`);
             const itemsData = res.data.data;
@@ -186,23 +204,23 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
                                                 className=" text-stone-950 pointer-events-none border-0 bg-transparent w-1/4"
                                             />
                                             <Input
-                                                id="total"
-                                                defaultValue={`ปกติ: ${items.some((v) => v.status == 'ปกติ') ? items.length : '0'}`}
+                                                id="normal"
+                                                defaultValue={`ปกติ: ${items.some((v) => v.status == 'ปกติ') ? items.filter((v) => v.status == 'ปกติ').length : '0'}`}
                                                 className=" text-stone-950 pointer-events-none border-0 bg-transparent w-1/4"
                                             />
                                             <Input
-                                                id="total"
-                                                defaultValue={`ถูกยืม: ${items.some((v) => v.status == 'ถูกยืม') ? items.length : '0'}`}
+                                                id="borrowed"
+                                                defaultValue={`ถูกยืม: ${items.some((v) => v.status == 'ถูกยืม') ? items.filter((v) => v.status == 'ถูกยืม').length : '0'}`}
                                                 className="text-stone-950 pointer-events-none border-0 bg-transparent w-1/4"
                                             />
                                             <Input
-                                                id="total"
-                                                defaultValue={`ชำรุด: ${items.some((v) => v.status == 'ชำรุด') ? items.length : '0'}`}
+                                                id="damaged"
+                                                defaultValue={`ชำรุด: ${items.some((v) => v.status == 'ชำรุด') ? items.filter((v) => v.status == 'ชำรุด').length : '0'}`}
                                                 className="text-stone-950 pointer-events-none border-0 bg-transparent w-1/4"
                                             />
                                             <Input
-                                                id="total"
-                                                defaultValue={`หาย: ${items.some((v) => v.status == 'หาย') ? items.length : '0'}`}
+                                                id="lost"
+                                                defaultValue={`หาย: ${items.some((v) => v.status == 'หาย') ? items.filter((v) => v.status == 'หาย').length : '0'}`}
                                                 className="text-stone-950 pointer-events-none border-0 bg-transparent w-1/4"
                                             />
                                         </div>
@@ -234,7 +252,8 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
                                         </Label>
                                         <Input
                                             id="name"
-                                            defaultValue={itemDetail?.name}
+                                            defaultValue={newName}
+                                            onChange={(e) => setNewName(e.target.value)}
                                             className="text-stone-950 bg-transparent w-full"
                                         />
                                     </div>
@@ -333,7 +352,7 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
                             </div>
                             <DialogFooter>
                                 <DialogClose asChild>
-                                    <Button type="button" className='bg-blue-900'>ยืนยัน</Button>
+                                    <Button type="button" onClick={() => updateAll()} className='bg-blue-900'>ยืนยัน</Button>
                                 </DialogClose>
                             </DialogFooter>
                         </DialogContent>
@@ -413,7 +432,7 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
                                         <TableCell className="border-r border-gray-300 text-center text-center">
                                             {
                                                 item.status == 'ปกติ' ? 'ปกติ'
-                                                    : item.status == 'หาย' ? 'หาบ'
+                                                    : item.status == 'หาย' ? 'หาย'
                                                         : item.status == 'ถูกยืม' ? 'ถูกยืม'
                                                             : item.status == 'ชำรุด' ? 'ชำรุด' : 'อื่นๆ'
                                             }

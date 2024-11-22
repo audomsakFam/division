@@ -42,7 +42,7 @@ const PaginationComponent = ({ currentPage, totalPages, onPageChange }: Paginati
 
     return (
         <Pagination>
-            <PaginationContent className="w-full">
+            <PaginationContent className="w-full flex justify-center ">
                 <PaginationItem className="flex justify-center items-center">
                     <button disabled={currentPage == 1} className={currentPage == 1 ? "pointer-events-none opacity-50" : "hover:border-solid hover:border-2 p-2 rounded-full"} onClick={() => onPageChange(1)}><FaAnglesLeft /></button>
 
