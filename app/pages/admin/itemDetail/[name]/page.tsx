@@ -37,7 +37,7 @@ import { Label } from "@/components/ui/label"
 import PaginationComponent from "@/app/components/pagination/pagination";
 import { Button } from "@/components/ui/button";
 import { ResDivision, ResDivisionData } from "@/app/interfaces/division";
-import { ClearItemCache, GetItemWithCache } from "@/lib/servers/getItemWithCache";
+import { ClearItemCache } from "@/lib/servers/getItemWithCache";
 
 const itemsPerPage = 10;
 export default function ItemDetail({ params }: { params: { name: string } }) {
@@ -233,9 +233,11 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
                 <CardFooter className="flex justify-end">
                     <Dialog>
                         <DialogTrigger asChild>
-                            <Button id="edit" onClick={() => setPosition(itemDetail?.division.name!)} type="button" className="bg-yellow-500 hover:bg-yellow-900">
-                                แก้ไขโดยรวม
-                            </Button>
+                            {itemDetail && itemDetail.division && itemDetail.division.name && (
+                                <Button id="edit" onClick={() => setPosition(itemDetail.division.name)} type="button" className="bg-yellow-500 hover:bg-yellow-900">
+                                    แก้ไขโดยรวม
+                                </Button>
+                            )}
                         </DialogTrigger>
                         <DialogContent className="xl:max-w-2xl">
                             <DialogHeader>
