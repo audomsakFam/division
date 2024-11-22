@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Borrow" ADD COLUMN     "status" INTEGER NOT NULL DEFAULT 0;

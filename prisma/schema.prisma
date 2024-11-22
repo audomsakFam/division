@@ -1,0 +1,134 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int      @id @default(autoincrement())
+  name     String
+  lastname String
+  gender   String
+  tel      String
+  email    String?  @unique
+  username String   @unique
+  password String
+  image    String
+  role     String   @default("admin")
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+}
+
+model Items {
+  id            Int             @id @default(autoincrement())
+  name          String          @db.VarChar(500)
+  img           String?         @db.VarChar(100)
+  status        String          @db.VarChar(20) // ปกติ ชำรุด หาย ถูกยืม 
+  createAt      DateTime        @default(now())
+  updateAt      DateTime        @updatedAt
+  qrId          Int?            @unique
+  qr            Qr?             @relation("ItemQr", fields: [qrId], references: [id])
+  divisionId    Int
+  division      Division        @relation(fields: [divisionId], references: [id])
+  postfixId     Int
+  postfix       Postfix         @relation(fields: [postfixId], references: [id])
+  Item_set      Item_set[]
+  Borrow_detail Borrow_detail[]
+}
+
+model Qr {
+  id        Int         @id @default(autoincrement())
+  code      String      @db.VarChar(500)
+  Items     Items?      @relation("ItemQr")
+  Qr_detail Qr_detail[]
+  createAt  DateTime    @default(now())
+  updateAt  DateTime    @updatedAt
+}
+
+model Qr_detail {
+  id       Int      @id @default(autoincrement())
+  name     String   @db.VarChar(100)
+  detail   String   @db.VarChar(1000)
+  qrId     Int
+  qr       Qr       @relation(fields: [qrId], references: [id])
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+}
+
+model Division {
+  id       Int      @id @default(autoincrement())
+  name     String   @db.VarChar(100)
+  email    String   @db.VarChar(100)
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+  Items    Items[]
+}
+
+model Postfix {
+  id    Int     @id @default(autoincrement())
+  name  String  @db.VarChar(20)
+  Items Items[]
+}
+
+model Borrow {
+  id              Int             @id @default(autoincrement())
+  project         String          @db.VarChar(100)
+  name            String          @db.VarChar(100)
+  lastname        String          @db.VarChar(100)
+  tel             String          @db.VarChar(11)
+  other_tel       String?         @db.VarChar(11)
+  mentor_name     String?         @db.VarChar(100)
+  mentor_last     String?         @db.VarChar(100)
+  img_sign        String?         @db.VarChar(100)
+  status          Int             @default(0) // 0 new, 1 waiting, 2 to serve, 3 to return, 4 returned
+  createAt        DateTime        @default(now())
+  retureAt        DateTime        @default(now())
+  serveAt         DateTime        @default(now())
+  origanizationId Int?
+  origanization   Origanization?   @relation(fields: [origanizationId], references: [id])
+  Borrow_detail   Borrow_detail[]
+}
+
+model Borrow_detail {
+  id       Int    @id @default(autoincrement())
+  setId    Int?
+  set      Set?   @relation(fields: [setId], references: [id])
+  itemId   Int?
+  item     Items? @relation(fields: [itemId], references: [id])
+  borrowId Int
+  borrow   Borrow @relation(fields: [borrowId], references: [id])
+}
+
+model Set {
+  id            Int             @id @default(autoincrement())
+  name          String          @db.VarChar(100)
+  createAt      DateTime        @default(now())
+  updateAt      DateTime        @updatedAt
+  Item_set      Item_set[]
+  Borrow_detail Borrow_detail[]
+}
+
+model Item_set {
+  id     Int   @id @default(autoincrement())
+  setId  Int
+  set    Set   @relation(fields: [setId], references: [id])
+  itemId Int
+  item   Items @relation(fields: [itemId], references: [id])
+}
+
+model Origanization {
+  id       Int      @id @default(autoincrement())
+  name     String   @db.VarChar(100)
+  createAt DateTime @default(now())
+  updateAt DateTime @updatedAt
+  Borrow   Borrow[]
+}

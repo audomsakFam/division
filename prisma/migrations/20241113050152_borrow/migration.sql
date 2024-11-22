@@ -1,0 +1,5 @@
+-- AlterTable
+ALTER TABLE "Borrow" ALTER COLUMN "other_tel" DROP NOT NULL,
+ALTER COLUMN "mentor_name" DROP NOT NULL,
+ALTER COLUMN "mentor_last" DROP NOT NULL,
+ALTER COLUMN "img_sign" DROP NOT NULL;
