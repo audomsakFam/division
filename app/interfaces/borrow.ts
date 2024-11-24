@@ -26,13 +26,13 @@ export interface ResBorrowData {
 
 export interface BorrowDetail {
   id: number
+  item_status: string
   setId: any
   itemId: number
   borrowId: number
   item: Item
   set: any
 }
-
 export interface Item {
   id: number
   name: string
@@ -43,6 +43,22 @@ export interface Item {
   qrId: any
   divisionId: number
   postfixId: number
+  division: Division
+  postfix: Postfix
+  qr: any
+}
+
+export interface Division {
+  id: number
+  name: string
+  email: string
+  createAt: string
+  updateAt: string
+}
+
+export interface Postfix {
+  id: number
+  name: string
 }
 
 

@@ -1,95 +1,3 @@
-// import prisma from "@/lib/db";
-
-// const sendNotification = async (
-//   writer: any,
-//   message: string,
-//   borrowId: number,
-//   status: number
-// ) => {
-// //   const encoder = new TextEncoder();
-//   await writer.write(`data: ${JSON.stringify({ message, borrowId, status })}\n\n`);
-// };
-
-// export async function GET() {
-//     const responseStream = new TransformStream();
-//     const writer = responseStream.writable.getWriter();
-//     const encoder = new TextEncoder();
-//     writer.write(encoder.encode(`Connecting Client....\n\n`));
-
-//     const borrowListener = async () => {
-//       try {
-//         const pendingBorrows = await prisma.borrow.findMany({
-//           where: {
-//             status: 2,
-//           },
-//           orderBy: { createAt: 'desc' },
-//         });
-
-//         if (pendingBorrows.length > 0) {
-//           const updates = pendingBorrows.map(async (borrow) => {
-//             if (borrow.status === 2 && borrow.serveAt && Date.now() >= borrow.serveAt.getTime()) {
-//               await prisma.borrow.update({
-//                 where: { id: borrow.id },
-//                 data: { status: 3 },
-//               });
-//               await sendNotification(
-//                 writer,
-//                 `Borrow Project name ${borrow.project} status updated to "to return"`,
-//                 borrow.id,
-//                 borrow.status
-//               );
-//             }
-//           });
-//           await Promise.all(updates);
-//         }
-
-//         const newBorrow = await prisma.borrow.findFirst({
-//           where: { status: 0 },
-//           orderBy: { createAt: 'desc' },
-//         });
-
-//         if (newBorrow) {
-//           await sendNotification(
-//             writer,
-//             `New borrow created by User ${newBorrow.name}`,
-//             newBorrow.id,
-//             newBorrow.status
-//           );
-//         }
-//       } catch (error) {
-//         console.error('Error in borrowListener:', error);
-//         await sendNotification(writer, 'Error processing borrowListener.', 0, 0);
-//       }
-//     };
-
-//     const intervalId = setInterval(borrowListener, 30000);
-
-//     // เมื่อ client ปิดการเชื่อมต่อ
-//     writer.closed.then(async () => {
-//         // เมื่อ client ปิดการเชื่อมต่อ ให้ลบ intervalId
-//         clearInterval(intervalId);
-//         await prisma.$disconnect();
-//     }).catch((error) => {
-//         // หากเกิดข้อผิดพลาดระหว่างการปิดการเชื่อมต่อ
-//         console.error('Error closing writer:', error);
-//         clearInterval(intervalId);
-//     });
-//     try {
-//         return new Response(responseStream.readable, {
-//             headers: {
-//                 'Content-Type': 'text/event-stream',
-//                 Connection: 'keep-alive',
-//                 'Cache-Control': 'no-cache, no-transform',
-//             },
-//         });
-//     } catch (error) {
-//         console.error('Error handling request:', error);
-//         await writer.write(encoder.encode('data: error occurred\n\n'));
-//         writer.close();
-//         clearInterval(intervalId);
-//         throw error;
-//     }
-// }
 import express from 'express';
 import { PrismaClient } from "@prisma/client";
 import cors from 'cors';
@@ -118,40 +26,26 @@ app.get('/api/noti', async (req, res) => {
 
   // เชื่อมต่อ client
   res.write('Connecting Client....\n\n');
+  console.log('Client Connected');
+
 
   const borrowListener = async () => {
     try {
-      const pendingBorrows = await prisma.borrow.findMany({
-        where: {
-          status: 2,
-        },
-        orderBy: { createAt: 'desc' },
-      });
+      // ตรวจสอบ borrow ใหม่
+      const [newBorrow, pendingBorrows] = await Promise.all([
+        prisma.borrow.findFirst({
+          where: { status: 0 },
+          orderBy: { createAt: 'desc' },
+        }),
+        prisma.borrow.findMany({
+          where: { status: 2 },
+          orderBy: { createAt: 'desc' },
+        }),
+      ]);
 
-      if (pendingBorrows.length > 0) {
-        const updates = pendingBorrows.map(async (borrow) => {
-          if (borrow.status === 2 && borrow.serveAt && Date.now() >= borrow.serveAt.getTime()) {
-            await prisma.borrow.update({
-              where: { id: borrow.id },
-              data: { status: 3 },
-            });
-            await sendNotification(
-              res,
-              `Borrow Project name ${borrow.project} status updated to "to return"`,
-              borrow.id,
-              borrow.status
-            );
-          }
-        });
-        await Promise.all(updates);
-      }
-
-      const newBorrow = await prisma.borrow.findFirst({
-        where: { status: 0 },
-        orderBy: { createAt: 'desc' },
-      });
-
+      // ส่ง Notification สำหรับ borrow ใหม่
       if (newBorrow) {
+        console.log('send New valid borrow');
         await sendNotification(
           res,
           `New borrow created by User ${newBorrow.name}`,
@@ -159,13 +53,37 @@ app.get('/api/noti', async (req, res) => {
           newBorrow.status
         );
       }
+
+      // อัปเดต borrow ที่รอการคืน
+      if (pendingBorrows.length > 0) {
+        const now = Date.now(); // เก็บค่าเวลาปัจจุบัน
+        const updates = pendingBorrows.map((borrow) => {
+          if (borrow.status === 2 && now >= (borrow.serveAt.getTime() + 24 * 60 * 60 * 1000)) {
+            return prisma.borrow.update({
+              where: { id: borrow.id },
+              data: { status: 3 },
+            }).then(() => {
+              console.log('send Update valid borrow');
+              return sendNotification(
+                res,
+                `Borrow Project name ${borrow.project} status updated to "to return"`,
+                borrow.id,
+                3
+              );
+            });
+          } else {
+            return;
+          }
+        });
+        await Promise.all(updates.filter(Boolean)); // กรอง undefined
+      }
     } catch (error) {
       console.error('Error in borrowListener:', error);
       await sendNotification(res, 'Error processing borrowListener.', 0, 0);
     }
   };
 
-  const intervalId = setInterval(borrowListener, 10000);
+  const intervalId = setInterval(borrowListener, 6000);
 
   // เมื่อ client ปิดการเชื่อมต่อ
   req.on('close', async () => {

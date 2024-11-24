@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { useRefresh } from "@/app/context/refreshProvider";
 import { GetBorrowWithCache } from "@/lib/servers/getItemWithCache";
 import PaginationComponent from "@/app/components/pagination/pagination";
+import { useRouter } from "next/navigation";
 
 const itemsPerPage = 10;
 
@@ -24,6 +25,7 @@ export default function BorrowReturn() {
     const [borrow, setBorrow] = useState<ResBorrowData[]>([]);
     const [currentPage, setCurrentPage] = useState(1);
     const { refreshData, setRefreshData } = useRefresh();
+    const router = useRouter();
 
     useEffect(() => {
         if (refreshData) {
@@ -59,16 +61,20 @@ export default function BorrowReturn() {
                                 <TableHead className="text-stone-950 border-r border-gray-300 text-center ">#</TableHead>
                                 <TableHead className="text-stone-950 border-r border-gray-300 text-center">ชื่อโครงการ</TableHead>
                                 <TableHead className="text-stone-950 border-r border-gray-300 text-center">ชื่อผู้ยืม</TableHead>
+                                <TableHead className="text-stone-950 border-r border-gray-300 text-center">วันที่ส่งคำขอ</TableHead>
+                                <TableHead className="text-stone-950 border-r border-gray-300 text-center">วันที่ส่งคืน</TableHead>
                                 <TableHead className="text-stone-950 text-center">ดำเนินการ</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {currentItems.length > 0 ? (
                                 currentItems.map((item, index) => (
-                                    <TableRow key={index} className="cursor-pointer border-b border-gray-300 ">
+                                    <TableRow onClick={() => router.push(`/pages/admin/returnDetail/${item.id}`)}  key={index} className="cursor-pointer border-b border-gray-300 ">
                                         <TableCell className="font-medium border-r border-gray-300 text-center">{index + 1}</TableCell>
                                         <TableCell className="border-r border-gray-300 text-start">{item.project}</TableCell>
                                         <TableCell className="border-r border-gray-300 text-start">{item.name + ' ' + item.lastname}</TableCell>
+                                        <TableCell className="border-r border-gray-300 text-center">{item.createAt.split('T')[0]}</TableCell>
+                                        <TableCell className="border-r border-gray-300 text-center">{item.retureAt.split('T')[0]}</TableCell>
                                         <TableCell className="text-center ">
                                             <Button className="bg-blue-900">test</Button>
                                         </TableCell>

@@ -19,7 +19,7 @@ interface SideProps {
 
 
 export default function Side({ children }: SideProps) {
-    
+
     const { data, status } = useSession();
     const [pageOn, setPageOn] = useState('');
     const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -51,36 +51,43 @@ export default function Side({ children }: SideProps) {
     };
 
 
-    const NotificationListener = useCallback(() => {
-        console.log('listenToSSEUpdates func');
+    const startSSEConnection = useCallback(() => {
+        console.log('Initializing SSE connection...');
         const eventSource = new EventSource('http://localhost:9000/api/noti');
+
         eventSource.onopen = () => {
             console.log('SSE connection opened.');
-            // Save the SSE connection reference in the state
         };
+
         eventSource.onmessage = (event) => {
             const data = JSON.parse(event.data);
             setNotifications(data.message);
             setBorrowId(data.borrowId);
             setBorrowStatus(data.status);
         };
+
         eventSource.onerror = (event) => {
             console.error('SSE Error:', event);
             eventSource.close();
-            // Handle the SSE error here
+            // Attempt to reconnect after a delay
+            setTimeout(() => {
+                console.log('Reconnecting SSE...');
+                startSSEConnection(); // Restart the connection
+            }, 3000); // Reconnect after 3 seconds
         };
+
         setSSEConnection(eventSource);
-        return eventSource;
     }, []);
 
     useEffect(() => {
-        NotificationListener();
+        startSSEConnection();
         return () => {
+            console.log('Cleaning up SSE connection...');
             if (sseConnection) {
                 sseConnection.close();
             }
         };
-    }, [NotificationListener]);
+    }, [startSSEConnection]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {

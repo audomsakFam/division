@@ -1,7 +1,7 @@
 'use client';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { ClearBorrowCache, GetBorrowWithCache } from '@/lib/servers/getItemWithCache';
+import { ClearBorrowCache, ClearItemCache, GetBorrowWithCache, GetItemWithCache } from '@/lib/servers/getItemWithCache';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
 import { FaCircleExclamation } from 'react-icons/fa6';
@@ -11,7 +11,7 @@ const NotificationAlert = ({ borrowId, msg, status, onUpdate }: { borrowId: numb
 
     useEffect(() => {
         ClearBorrowCache();
-
+        ClearItemCache();
         const timer = setTimeout(async () => {
             setMessage(`${msg}`);
             setShowAlert(true);
@@ -28,17 +28,18 @@ const NotificationAlert = ({ borrowId, msg, status, onUpdate }: { borrowId: numb
                     });
             }
             GetBorrowWithCache();
+            GetItemWithCache();
             onUpdate();
         }, 1000); // แสดงการแจ้งเตือนหลังจาก 1 วินาที (สามารถเปลี่ยนเวลาได้)
 
         const clearTimer = setTimeout(() => {
             setShowAlert(false);
-        }, 6000); // ลบการแจ้งเตือนหลังจาก 9 วินาที
+        }, 6000); // ลบการแจ้งเตือนหลังจาก 6 วินาที
         return () => {
             clearTimeout(timer);
             clearTimeout(clearTimer);
         };
-    }, [borrowId, msg]);
+    }, [borrowId, msg, status]);
 
     if (!showAlert) return null;
 
