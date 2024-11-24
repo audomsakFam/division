@@ -6,12 +6,18 @@ export async function POST(req: Request) {
     const url = new URL(req.url);
     try {
         // สร้าง array ของ promises สำหรับการอัปเดต items
-        const itemUpdatePromises = itemUpdates.map((item: { id: number; status: string }) =>
+        const itemUpdatePromises = itemUpdates.map((item: { id: number; status: string }) => [
             prisma.items.update({
                 where: { id: item.id },
                 data: { status: item.status },
-            })
-        );
+            }),
+            prisma.borrow_detail.updateMany({
+                where: { borrowId: id, itemId: item.id },
+                data: { item_status: item.status },
+            }),
+        ]).flat();
+
+
 
         // ใช้ prisma.$transaction สำหรับการอัปเดต borrow และ items
         await prisma.$transaction([
@@ -26,10 +32,10 @@ export async function POST(req: Request) {
         //     JSON.stringify({ success: true, message: "Borrow and items updated successfully" }),
         //     { status: 200 }
         // );
-        return NextResponse.json({ message: "Borrow and items updated successfully" , status: 200});
+        return NextResponse.json({ message: "Borrow and items updated successfully", status: 200 });
     } catch (error) {
         console.error("Error updating borrow and items:", error);
-        return NextResponse.json({ message: "someting went worng at " + url.href, status: 200});
+        return NextResponse.json({ message: "someting went worng at " + url.href, status: 200 });
     }
 }
 

@@ -67,8 +67,16 @@ export async function GET(req: Request) {
                     origanization: true,
                     Borrow_detail: {
                         include: {
-                            item: true,
-                            set: true
+                            item: {include: {division: true, postfix: true, qr: true}},
+                            set: {
+                                include: {
+                                    Item_set: {
+                                        include: {
+                                            item: true
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }

@@ -31,13 +31,14 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 
-import { ClearBorrowCache, GetBorrowWithCache } from '@/lib/servers/getItemWithCache';
+import { ClearBorrowCache, ClearItemCache, GetBorrowWithCache, GetItemWithCache } from '@/lib/servers/getItemWithCache';
 import { ResBorrowData } from '@/app/interfaces/borrow';
 import { FaChartSimple } from 'react-icons/fa6';
 import PaginationComponent from '@/app/components/pagination/pagination';
 import { Button } from '@/components/ui/button';
 import { useRefresh } from '@/app/context/refreshProvider';
 import axios from 'axios';
+import { useRouter } from 'next/navigation';
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
 const itemsPerPage = 10;
@@ -47,6 +48,7 @@ export default function HomePage() {
     const [currentPage, setCurrentPage] = useState(1);
     const { refreshData, setRefreshData } = useRefresh();
     const [statusTosave, setStatusTosave] = useState<{ id: number; status: string, isChecked?: boolean }[]>([]);
+    const router = useRouter();
 
     const handleStatusChange = (id: number, value: string, isChecked: boolean) => {
         setStatusTosave((prevStatusTosave) =>
@@ -59,6 +61,14 @@ export default function HomePage() {
         );
     };
 
+    const deleteBorrow = async (id: number) => {
+        try {
+            await axios.delete(`/api/borrow/${id}`);
+            setRefreshData(true);
+        } catch (err) {
+            console.error(err);
+        }
+    }
 
     const toOpen = async (id: number): Promise<{ id: number }[]> => {
         setStatusTosave((prevStatusTosave) => [...prevStatusTosave, { id, status: 'ปกติ', isChecked: true }]);
@@ -68,7 +78,6 @@ export default function HomePage() {
         await axios.post('/api/borrow/update', { id: borrowId, itemUpdates: items })
             .then((res) => {
                 console.log('test res--->', res)
-                ClearBorrowCache();
                 setRefreshData(true)
             }
             ).catch((err) => console.error(err))
@@ -76,7 +85,10 @@ export default function HomePage() {
 
     useEffect(() => {
         if (refreshData) {
+            ClearBorrowCache();
+            ClearItemCache();
             console.log('working , refreshData ====>>>>', refreshData);
+            GetItemWithCache();
             GetBorrowWithCache().then((res) => setBorrow(
                 res.filter((v) => v.status != 4)
                     .sort((a, b) => new Date(a.createAt).getTime() - new Date(b.createAt).getTime())
@@ -226,10 +238,9 @@ export default function HomePage() {
 
     return (
         <Side>
-            <Tabs defaultValue="home" className="w-full ">
+            <Tabs defaultValue="borrow" className="w-full ">
                 <div className='flex justify-center'>
                     <TabsList className="grid grid-cols-1 w-full h-full md:w-1/2 md:grid-cols-2 bg-blue-950 sm:grid-cols-1 sm:w-full sm:h-full">
-                        <TabsTrigger value="home" className='sm:w-full'>กราฟสรุปผล <FaChartSimple className='ml-2' /></TabsTrigger>
                         <TabsTrigger value="borrow" className='sm:w-full sm:mt-2 md:mt-0'>คำขอการยืม
                             {Array.isArray(borrow) && borrow.filter((v) => v.status == 1 || v.status == 0 || v.status == 2 || v.status == 3).length > 0 ?
                                 <span className='flex'>
@@ -246,6 +257,7 @@ export default function HomePage() {
 
                                 : ''}
                         </TabsTrigger>
+                        <TabsTrigger value="home" className='sm:w-full'>กราฟสรุปผล <FaChartSimple className='ml-2' /></TabsTrigger>
                     </TabsList>
                 </div>
                 <TabsContent value="home">
@@ -281,35 +293,66 @@ export default function HomePage() {
                                         <TableHead className="text-stone-950 border-r border-gray-300 text-center">ชื่อโครงการ</TableHead>
                                         <TableHead className="text-stone-950 border-r border-gray-300 text-center">ชื่อผู้ยืม</TableHead>
                                         <TableHead className="text-stone-950 border-r border-gray-300 text-center">สถานะ</TableHead>
+                                        <TableHead className="text-stone-950 border-r border-gray-300 text-center">วันที่ส่งคำขอ</TableHead>
+                                        <TableHead className="text-stone-950 border-r border-gray-300 text-center">วันที่ส่งมอบ</TableHead>
                                         <TableHead className="text-stone-950 text-center">ดำเนินการ</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {currentItems.length > 0 ? (
                                         currentItems.map((item, index) => (
-                                            <TableRow key={index} className="cursor-pointer border-b border-gray-300 ">
+                                            <TableRow onClick={() => router.push(`/pages/admin/returnDetail/${item.id}`)} key={index} className="cursor-pointer border-b border-gray-300 ">
                                                 <TableCell className="font-medium border-r border-gray-300 text-center">{index + 1}</TableCell>
                                                 <TableCell className="border-r border-gray-300 text-start">{item.project}</TableCell>
                                                 <TableCell className="border-r border-gray-300 text-start">{item.name + ' ' + item.lastname}</TableCell>
                                                 <TableCell className="border-r border-gray-300 text-start">{
-                                                    item.status == 1 ? 'รอการยืนยัน' :
+                                                    item.status == 0 ? 'กำลังประมวลผล' : item.status == 1 ? 'รอการยืนยัน' :
                                                         item.status == 2 ? 'รอส่งมอบ' :
                                                             item.status == 3 ? 'รอส่งคืน' :
                                                                 ''
                                                 }</TableCell>
+                                                <TableCell className="border-r border-gray-300 text-center">{item.createAt.split('T')[0]}</TableCell>
+                                                <TableCell className="border-r border-gray-300 text-center">{item.serveAt.split('T')[0]}</TableCell>
                                                 {
                                                     item.status != 3 ?
                                                         <TableCell className="text-center ">
                                                             <Button className={`${item.status == 1 ? 'bg-red-500' :
                                                                 item.status == 2 ? 'bg-yellow-500' : 'bg-blue-900'
                                                                 }`}
-                                                                onClick={() => updateStatus(item.id)}>
+
+                                                                onClick={(e) => { e.stopPropagation(); updateStatus(item.id); }}>
                                                                 {
                                                                     item.status == 1 ? 'ยืนยัน' :
                                                                         item.status == 2 ? 'ยืนยันการส่งมอบ' :
                                                                             ''
                                                                 }
                                                             </Button>
+
+                                                            <Dialog>
+                                                                <DialogTrigger asChild>
+                                                                    <Button
+                                                                        className="ml-2"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                        }}
+                                                                    >
+                                                                        ยกเลิก
+                                                                    </Button>
+                                                                </DialogTrigger>
+                                                                <DialogContent  onClick={(e) => { e.stopPropagation(); }}  className="sm:max-w-md">
+                                                                    <DialogHeader>
+                                                                        <DialogTitle>ยกเลิกคำขอ</DialogTitle>
+                                                                        <DialogDescription>
+                                                                            การลบข้อมูลนี้ไม่สามารถกู้คืนได้
+                                                                        </DialogDescription>
+                                                                    </DialogHeader>
+                                                                    <DialogFooter>
+                                                                        <DialogClose asChild>
+                                                                            <Button type="button" onClick={(e) => { e.stopPropagation(); deleteBorrow(item.id) }} className='bg-blue-900'>ยืนยัน</Button>
+                                                                        </DialogClose>
+                                                                    </DialogFooter>
+                                                                </DialogContent>
+                                                            </Dialog>
                                                         </TableCell>
                                                         :
                                                         <TableCell className="text-center ">
@@ -317,7 +360,8 @@ export default function HomePage() {
                                                                 <DialogTrigger asChild>
                                                                     <Button
                                                                         className="bg-green-500"
-                                                                        onClick={() => {
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
                                                                             const ids = item.Borrow_detail.map((v) => v.itemId || v.set.id); // ดึง id ทั้งหมดใน Borrow_detail
                                                                             ids.forEach((id) => toOpen(id)); // เรียกใช้ toOpen สำหรับแต่ละ id
                                                                         }}
@@ -325,7 +369,7 @@ export default function HomePage() {
                                                                         ยืนยันการส่งคืน
                                                                     </Button>
                                                                 </DialogTrigger>
-                                                                <DialogContent className="xl:max-w-2xl">
+                                                                <DialogContent  onClick={(e) => { e.stopPropagation(); }}  className="xl:max-w-2xl">
                                                                     <DialogHeader>
                                                                         <DialogTitle>ตรวจสอบอุปกรณ์</DialogTitle>
                                                                         <DialogDescription>
@@ -408,7 +452,7 @@ export default function HomePage() {
                                                                     </div>
                                                                     <DialogFooter>
                                                                         <DialogClose asChild>
-                                                                            <Button type="button" onClick={() => toUpdate(item.id, statusTosave)} className='bg-blue-900'>ยืนยัน</Button>
+                                                                            <Button type="button" onClick={(e) => { e.stopPropagation(); toUpdate(item.id, statusTosave) }} className='bg-blue-900'>ยืนยัน</Button>
                                                                         </DialogClose>
                                                                     </DialogFooter>
                                                                 </DialogContent>
