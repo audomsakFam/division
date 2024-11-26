@@ -39,16 +39,25 @@ import { Button } from '@/components/ui/button';
 import { useRefresh } from '@/app/context/refreshProvider';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import { ResChart } from '@/app/interfaces/chart';
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
 const itemsPerPage = 10;
 export default function HomePage() {
-    const [chartConfigs, setChartConfigs] = useState<any[]>([]);
     const [borrow, setBorrow] = useState<ResBorrowData[]>([]);
+    const [loading, setLoading] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const { refreshData, setRefreshData } = useRefresh();
     const [statusTosave, setStatusTosave] = useState<{ id: number; status: string, isChecked?: boolean }[]>([]);
     const router = useRouter();
+    const [chartData, setChartData] = useState<ResChart>();
+    const [year, setYear] = useState<number>(new Date().getFullYear());
+    const years = Array.from({ length: 100 }, (_, i) => new Date().getFullYear() - i); // infinite scroll
+
+    const fetchData = async (selectedYear: number) => {
+        const res = await axios.get<ResChart>(`/api/chart?year=${selectedYear}`)
+        setChartData(res.data);
+    };
 
     const handleStatusChange = (id: number, value: string, isChecked: boolean) => {
         setStatusTosave((prevStatusTosave) =>
@@ -84,6 +93,16 @@ export default function HomePage() {
     }
 
     useEffect(() => {
+        const fetchDataAsync = async () => {
+            setLoading(true);
+            await fetchData(year);
+            setLoading(false);
+        };
+
+        fetchDataAsync();
+    }, [year]);
+
+    useEffect(() => {
         if (refreshData) {
             ClearBorrowCache();
             ClearItemCache();
@@ -95,125 +114,6 @@ export default function HomePage() {
             ));
             setRefreshData(false);  // รีเซ็ตค่า refreshData
         }
-        const newChartConfigs = [
-            {
-                type: 'area',
-                options: {
-                    chart: {
-                        id: 'area-chart',
-                        // toolbar: {
-                        //     show: false, // ซ่อนปุ่มเครื่องมือ
-                        // },
-                    },
-                    // title: {
-                    //     text: 'Area Chart',
-                    //     align: 'center',
-                    // },
-                    xaxis: {
-                        categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'], // หมวดหมู่ของกราฟ
-                    },
-                    yaxis: {
-                        min: 0, // กำหนดค่าต่ำสุดของแกน Y
-                        max: 100, // กำหนดค่าสูงสุดของแกน Y
-                    },
-                    fill: {
-                        type: 'gradient', // ใช้ gradient เพื่อสร้างพื้นที่ที่มีสี
-                        gradient: {
-                            shade: 'light', // สีของพื้นที่
-                            type: 'horizontal', // ทิศทางของ gradient
-                            shadeIntensity: 0.3,
-                            gradientToColors: ['#F2F4F7'], // สีที่ไปถึงจาก gradient
-                            opacityFrom: 0.7,
-                            opacityTo: 0.3,
-                            stops: [0, 100], // การเปลี่ยนแปลงสีตามที่กำหนด
-                        }
-                    },
-                    stroke: {
-                        curve: 'smooth', // ทำให้เส้นกราฟเรียบ
-                    }
-                },
-                series: [
-                    {
-                        name: 'สาขา1',
-                        data: [10, 20, 30, 40, 50, 60], // ข้อมูลชุดที่ 1
-                    },
-                    {
-                        name: 'สาขา2',
-                        data: [5, 15, 25, 35, 45, 55], // ข้อมูลชุดที่ 2
-                    },
-                    {
-                        name: 'สาขา3',
-                        data: [6, 12, 18, 24, 30, 36], // ข้อมูลชุดที่ 3
-                    },
-                    {
-                        name: 'สาขา4',
-                        data: [7, 14, 21, 28, 35, 42], // ข้อมูลชุดที่ 4
-                    },
-                    {
-                        name: 'สาขา5',
-                        data: [9, 18, 27, 36, 45, 54], // ข้อมูลชุดที่ 5
-                    },
-                ],
-                title: 'ความถี่ของการยืม', // แยก title ออกมา
-            },
-            {
-                type: 'bar',
-                options: {
-                    chart: { id: 'bar' },
-                    xaxis: { categories: ['ส1', 'ส2', 'ส3', 'ส4', 'ส5'] },
-                    plotOptions: {
-                        bar: {
-                            distributed: false
-                        }
-                    },
-                    colors: ['#7febd6', '#69e3cb', '#5ae5c9', '#4ce1c4', '#38debd', '#28dab7', '#0fd9b1'], //'#b2fff0', '#a2f8e7', '#92eedc',
-                },
-                series: [
-                    {
-                        name: 'Data 1',
-                        data: [20, 30, 40, 50, 60],
-                    },
-                    {
-                        name: 'Data 2',
-                        data: [30, 40, 50, 60, 70],
-                    },
-                    {
-                        name: 'Data 3',
-                        data: [15, 25, 35, 45, 55],
-                    },
-                    {
-                        name: 'Data 4',
-                        data: [10, 24, 37, 48, 45],
-                    },
-                    {
-                        name: 'Data 5',
-                        data: [98, 88, 78, 68, 58],
-                    },
-                    {
-                        name: 'Data 6',
-                        data: [76, 66, 56, 46, 36],
-                    },
-                    {
-                        name: 'Data 7',
-                        data: [11, 21, 31, 41, 51],
-                    },
-                    // {
-                    //     name: 'Data 8',
-                    //     data: [52, 42, 32, 22, 12],
-                    // },
-                    // {
-                    //     name: 'Data 9',
-                    //     data: [11, 22, 33, 44, 55],
-                    // },
-                    // {
-                    //     name: 'Data 10',
-                    //     data: [55, 66, 77, 88, 99],
-                    // },
-                ],
-                title: 'ความสัมพันธ์ของการยืม/หน่วยงาน', // แยก title ออกมา
-            },
-        ];
-        setChartConfigs(newChartConfigs);
         GetBorrowWithCache().then((res) => setBorrow(
             res.filter((v) => v.status != 4)
                 .sort((a, b) => new Date(a.createAt).getTime() - new Date(b.createAt).getTime())
@@ -229,6 +129,24 @@ export default function HomePage() {
                 console.error(err);
             })
     }
+
+    if (!chartData) return <p>Loading...</p>;
+
+    const options = {
+        xaxis: {
+            categories: chartData.xaxis || [],
+        },
+        yaxis: {
+            min: 0,
+            max: Math.ceil(
+                Math.max(
+                    ...chartData.series.flatMap((s: { data: number[] }) => s.data)
+                ) + 20
+            ), // คำนวณค่าสูงสุด
+        },
+    };
+
+    const series = chartData?.series || [];
 
     const startIdx = (currentPage - 1) * itemsPerPage;
     const endIdx = startIdx + itemsPerPage;
@@ -262,22 +180,38 @@ export default function HomePage() {
                 </div>
                 <TabsContent value="home">
                     <div className="flex flex-col w-full">
-                        {chartConfigs && chartConfigs.map((config, index) => (
-                            <Card key={index} className="w-full mb-2">
-                                <CardHeader>
-                                    <h3 className="text-xl font-semibold">{config.title}</h3>
-                                </CardHeader>
-                                <CardContent>
-                                    <Chart
-                                        options={config.options}
-                                        series={config.series}
-                                        type={config.type}
-                                        width="100%"
-                                        height="600"
-                                    />
-                                </CardContent>
-                            </Card>
-                        ))}
+                        <Card className="w-full mb-2 ">
+                            <CardHeader>
+                                <h3 className="text-xl font-semibold">ความถี่การยืมของแต่ละแผนก</h3>
+                                <div className='mb-[1rem] flex items-center'>
+                                    <label htmlFor="year" className='mr-2'>เลือกปี: </label>
+                                    <select
+                                        id="year"
+                                        value={year}
+                                        onChange={(e) => setYear(parseInt(e.target.value, 10))}
+                                        className='bg-white
+                                        rounded-md border border-gray-300 text-gray-900 text-sm focus:ring-blue-500 
+                                        focus:border-blue-500 block w-1/8 p-2.5 max-h-[200px] overflow-y-auto'
+                                    >
+                                        {years.map((displayYear) => (
+                                            <option key={displayYear} value={displayYear}>
+                                                {displayYear}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </CardHeader>
+                            <CardContent className='text-center'>
+                                {loading ? (
+                                    <p>กำลังโหลดข้อมูล...</p>
+                                ) : !chartData || (chartData && chartData.series.length === 0) ? (
+                                    <h3>ไม่มีข้อมูล</h3>
+                                ) : (
+                                    <Chart key={year} options={options} series={series} type="area" height={490} />
+                                )}
+                            </CardContent>
+                        </Card>
+
                     </div>
                 </TabsContent>
                 <TabsContent value="borrow">
@@ -313,25 +247,131 @@ export default function HomePage() {
                                                 }</TableCell>
                                                 <TableCell className="border-r border-gray-300 text-center">{item.createAt.split('T')[0]}</TableCell>
                                                 <TableCell className="border-r border-gray-300 text-center">{item.serveAt.split('T')[0]}</TableCell>
-                                                {
-                                                    item.status != 3 ?
-                                                        <TableCell className="text-center ">
-                                                            <Button className={`${item.status == 1 ? 'bg-red-500' :
-                                                                item.status == 2 ? 'bg-yellow-500' : 'bg-blue-900'
-                                                                }`}
+                                                <TableCell className="text-center flex justify-center cursor-not-allowed" onClick={(e) => e.stopPropagation()}>
+                                                    <div className='w-1/2 flex justify-between'>
+                                                        <div className='flex justify-center w-full'>
+                                                            {item.status != 3 ?
+                                                                <Button className={`${item.status == 1 ? 'bg-red-500' :
+                                                                    item.status == 2 ? 'bg-yellow-500' : 'bg-blue-900'
+                                                                    } w-full hover:bg-blue-900`}
 
-                                                                onClick={(e) => { e.stopPropagation(); updateStatus(item.id); }}>
-                                                                {
-                                                                    item.status == 1 ? 'ยืนยัน' :
-                                                                        item.status == 2 ? 'ยืนยันการส่งมอบ' :
-                                                                            ''
-                                                                }
-                                                            </Button>
+                                                                    onClick={(e) => { e.stopPropagation(); updateStatus(item.id); }}>
+                                                                    {
+                                                                        item.status == 1 ? 'ยืนยันคำข้อ' :
+                                                                            item.status == 2 ? 'ยืนยันการส่งมอบ' :
+                                                                                ''
+                                                                    }
+                                                                </Button>
+                                                                :
+                                                                <Dialog>
+                                                                    <DialogTrigger asChild>
+                                                                        <Button
+                                                                            className="bg-green-500 w-full hover:bg-blue-900"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                const ids = item.Borrow_detail.map((v) => v.itemId || v.set.id); // ดึง id ทั้งหมดใน Borrow_detail
+                                                                                ids.forEach((id) => toOpen(id)); // เรียกใช้ toOpen สำหรับแต่ละ id
+                                                                            }}
+                                                                        >
+                                                                            ยืนยันการส่งคืน
+                                                                        </Button>
+                                                                    </DialogTrigger>
+                                                                    <DialogContent onClick={(e) => { e.stopPropagation(); }} className="xl:max-w-2xl">
+                                                                        <DialogHeader>
+                                                                            <DialogTitle>ตรวจสอบอุปกรณ์</DialogTitle>
+                                                                            <DialogDescription>
+                                                                                โปรดตรวจสอบอุปกรณ์ให้ละเอียดก่อนกดยืนยัน
+                                                                            </DialogDescription>
+                                                                        </DialogHeader>
+                                                                        <div className="grid gap-4 py-4 ">
+                                                                            <div className="grid grid-cols-2 items-center gap-2 mb-2">
+                                                                                <Label htmlFor="project" className="text-left font-black">
+                                                                                    ชื่อโครงการ
+                                                                                </Label>
+                                                                                <Input
+                                                                                    id="project"
+                                                                                    readOnly
+                                                                                    defaultValue={item.project}
+                                                                                    className="text-stone-950 col-span-3 pointer-events-none border-0 bg-transparent"
+                                                                                />
+                                                                            </div>
+                                                                            <div className="grid grid-cols-2 items-center gap-2 mb-2">
+                                                                                <Label htmlFor="username" className="text-left font-black">
+                                                                                    ชื่อผู้ยืม
+                                                                                </Label>
+                                                                                <Input
+                                                                                    id="username"
+                                                                                    readOnly
+                                                                                    defaultValue={item.name + ' ' + item.lastname}
+                                                                                    className="text-stone-950 col-span-3 pointer-events-none border-0 bg-transparent"
+                                                                                />
+                                                                            </div>
+                                                                            <div className="flex flex-col mb-2">
+                                                                                <Label htmlFor="items" className="text-left font-black">
+                                                                                    อุปกรณ์ที่ยืม
+                                                                                </Label>
+                                                                                {item.Borrow_detail &&
+                                                                                    item.Borrow_detail.map((v) => (
+                                                                                        <span key={v.item.id} className="flex items-center gap-4">
+                                                                                            <Input
+                                                                                                id="items"
+                                                                                                defaultValue={v.item.name}
+                                                                                                className="text-stone-950 w-1/2 pointer-events-none border-0 bg-transparent"
+                                                                                            />
+                                                                                            <div className="flex items-center gap-2">
+                                                                                                <label className="flex items-center gap-1">
+                                                                                                    <input
+                                                                                                        type="radio"
+                                                                                                        name={`status-${v.item.id}`}
+                                                                                                        value="ปกติ"
+                                                                                                        checked={statusTosave.some((v2) => v2.id === v.item.id && v2.status === "ปกติ")}
+                                                                                                        onChange={(e) => handleStatusChange(v.item.id, "ปกติ", e.target.checked)}
+                                                                                                        className="cursor-pointer"
+                                                                                                    />
+                                                                                                    ปกติ
+                                                                                                </label>
+                                                                                                <label className="flex items-center gap-1">
+                                                                                                    <input
+                                                                                                        type="radio"
+                                                                                                        name={`status-${v.item.id}`}
+                                                                                                        value="ชำรุด"
+                                                                                                        checked={statusTosave.some((v2) => v2.id === v.item.id && v2.status === "ชำรุด")}
+                                                                                                        onChange={(e) => handleStatusChange(v.item.id, "ชำรุด", e.target.checked)}
+                                                                                                        className="cursor-pointer"
+                                                                                                    />
+                                                                                                    ชำรุด
+                                                                                                </label>
+                                                                                                <label className="flex items-center gap-1">
+                                                                                                    <input
+                                                                                                        type="radio"
+                                                                                                        name={`status-${v.item.id}`}
+                                                                                                        value="หาย"
+                                                                                                        checked={statusTosave.some((v2) => v2.id === v.item.id && v2.status === "หาย")}
+                                                                                                        onChange={(e) => handleStatusChange(v.item.id, "หาย", e.target.checked)}
+                                                                                                        className="cursor-pointer"
+                                                                                                    />
+                                                                                                    หาย
+                                                                                                </label>
+                                                                                            </div>
+                                                                                        </span>
+                                                                                    ))}
+                                                                            </div>
+                                                                        </div>
+                                                                        <DialogFooter>
+                                                                            <DialogClose asChild>
+                                                                                <Button type="button" onClick={(e) => { e.stopPropagation(); toUpdate(item.id, statusTosave) }} className='bg-blue-900'>ยืนยัน</Button>
+                                                                            </DialogClose>
+                                                                        </DialogFooter>
+                                                                    </DialogContent>
+                                                                </Dialog>
+                                                            }
 
+                                                        </div>
+                                                        <div>
                                                             <Dialog>
-                                                                <DialogTrigger asChild>
+                                                                <DialogTrigger asChild >
                                                                     <Button
-                                                                        className="ml-2"
+                                                                        className={`ml-2 ${item.status == 3 ? 'pointer-events-none opacity-50 cursor-not-allowed' : ''}`}
                                                                         onClick={(e) => {
                                                                             e.stopPropagation();
                                                                         }}
@@ -339,7 +379,7 @@ export default function HomePage() {
                                                                         ยกเลิก
                                                                     </Button>
                                                                 </DialogTrigger>
-                                                                <DialogContent  onClick={(e) => { e.stopPropagation(); }}  className="sm:max-w-md">
+                                                                <DialogContent onClick={(e) => { e.stopPropagation(); }} className="sm:max-w-md">
                                                                     <DialogHeader>
                                                                         <DialogTitle>ยกเลิกคำขอ</DialogTitle>
                                                                         <DialogDescription>
@@ -353,112 +393,9 @@ export default function HomePage() {
                                                                     </DialogFooter>
                                                                 </DialogContent>
                                                             </Dialog>
-                                                        </TableCell>
-                                                        :
-                                                        <TableCell className="text-center ">
-                                                            <Dialog>
-                                                                <DialogTrigger asChild>
-                                                                    <Button
-                                                                        className="bg-green-500"
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            const ids = item.Borrow_detail.map((v) => v.itemId || v.set.id); // ดึง id ทั้งหมดใน Borrow_detail
-                                                                            ids.forEach((id) => toOpen(id)); // เรียกใช้ toOpen สำหรับแต่ละ id
-                                                                        }}
-                                                                    >
-                                                                        ยืนยันการส่งคืน
-                                                                    </Button>
-                                                                </DialogTrigger>
-                                                                <DialogContent  onClick={(e) => { e.stopPropagation(); }}  className="xl:max-w-2xl">
-                                                                    <DialogHeader>
-                                                                        <DialogTitle>ตรวจสอบอุปกรณ์</DialogTitle>
-                                                                        <DialogDescription>
-                                                                            โปรดตรวจสอบอุปกรณ์ให้ละเอียดก่อนกดยืนยัน
-                                                                        </DialogDescription>
-                                                                    </DialogHeader>
-                                                                    <div className="grid gap-4 py-4 ">
-                                                                        <div className="grid grid-cols-2 items-center gap-2 mb-2">
-                                                                            <Label htmlFor="project" className="text-left font-black">
-                                                                                ชื่อโครงการ
-                                                                            </Label>
-                                                                            <Input
-                                                                                id="project"
-                                                                                readOnly
-                                                                                defaultValue={item.project}
-                                                                                className="text-stone-950 col-span-3 pointer-events-none border-0 bg-transparent"
-                                                                            />
-                                                                        </div>
-                                                                        <div className="grid grid-cols-2 items-center gap-2 mb-2">
-                                                                            <Label htmlFor="username" className="text-left font-black">
-                                                                                ชื่อผู้ยืม
-                                                                            </Label>
-                                                                            <Input
-                                                                                id="username"
-                                                                                readOnly
-                                                                                defaultValue={item.name + ' ' + item.lastname}
-                                                                                className="text-stone-950 col-span-3 pointer-events-none border-0 bg-transparent"
-                                                                            />
-                                                                        </div>
-                                                                        <div className="flex flex-col mb-2">
-                                                                            <Label htmlFor="items" className="text-left font-black">
-                                                                                อุปกรณ์ที่ยืม
-                                                                            </Label>
-                                                                            {item.Borrow_detail &&
-                                                                                item.Borrow_detail.map((v) => (
-                                                                                    <span key={v.item.id} className="flex items-center gap-4">
-                                                                                        <Input
-                                                                                            id="items"
-                                                                                            defaultValue={v.item.name}
-                                                                                            className="text-stone-950 w-1/2 pointer-events-none border-0 bg-transparent"
-                                                                                        />
-                                                                                        <div className="flex items-center gap-2">
-                                                                                            <label className="flex items-center gap-1">
-                                                                                                <input
-                                                                                                    type="radio"
-                                                                                                    name={`status-${v.item.id}`}
-                                                                                                    value="ปกติ"
-                                                                                                    checked={statusTosave.some((v2) => v2.id === v.item.id && v2.status === "ปกติ")}
-                                                                                                    onChange={(e) => handleStatusChange(v.item.id, "ปกติ", e.target.checked)}
-                                                                                                    className="cursor-pointer"
-                                                                                                />
-                                                                                                ปกติ
-                                                                                            </label>
-                                                                                            <label className="flex items-center gap-1">
-                                                                                                <input
-                                                                                                    type="radio"
-                                                                                                    name={`status-${v.item.id}`}
-                                                                                                    value="ชำรุด"
-                                                                                                    checked={statusTosave.some((v2) => v2.id === v.item.id && v2.status === "ชำรุด")}
-                                                                                                    onChange={(e) => handleStatusChange(v.item.id, "ชำรุด", e.target.checked)}
-                                                                                                    className="cursor-pointer"
-                                                                                                />
-                                                                                                ชำรุด
-                                                                                            </label>
-                                                                                            <label className="flex items-center gap-1">
-                                                                                                <input
-                                                                                                    type="radio"
-                                                                                                    name={`status-${v.item.id}`}
-                                                                                                    value="หาย"
-                                                                                                    checked={statusTosave.some((v2) => v2.id === v.item.id && v2.status === "หาย")}
-                                                                                                    onChange={(e) => handleStatusChange(v.item.id, "หาย", e.target.checked)}
-                                                                                                    className="cursor-pointer"
-                                                                                                />
-                                                                                                หาย
-                                                                                            </label>
-                                                                                        </div>
-                                                                                    </span>
-                                                                                ))}
-                                                                        </div>
-                                                                    </div>
-                                                                    <DialogFooter>
-                                                                        <DialogClose asChild>
-                                                                            <Button type="button" onClick={(e) => { e.stopPropagation(); toUpdate(item.id, statusTosave) }} className='bg-blue-900'>ยืนยัน</Button>
-                                                                        </DialogClose>
-                                                                    </DialogFooter>
-                                                                </DialogContent>
-                                                            </Dialog>
-                                                        </TableCell>
-                                                }
+                                                        </div>
+                                                    </div>
+                                                </TableCell>
                                             </TableRow>
                                         ))
                                     ) : (
@@ -484,7 +421,62 @@ export default function HomePage() {
         </Side>
     );
 }
-
+// {
+//     type: 'bar',
+//     options: {
+//         chart: { id: 'bar' },
+//         xaxis: { categories: ['ส1', 'ส2', 'ส3', 'ส4', 'ส5'] },
+//         plotOptions: {
+//             bar: {
+//                 distributed: false
+//             }
+//         },
+//         colors: ['#7febd6', '#69e3cb', '#5ae5c9', '#4ce1c4', '#38debd', '#28dab7', '#0fd9b1'], //'#b2fff0', '#a2f8e7', '#92eedc',
+//     },
+//     series: [
+//         {
+//             name: 'Data 1',
+//             data: [20, 30, 40, 50, 60],
+//         },
+//         {
+//             name: 'Data 2',
+//             data: [30, 40, 50, 60, 70],
+//         },
+//         {
+//             name: 'Data 3',
+//             data: [15, 25, 35, 45, 55],
+//         },
+//         {
+//             name: 'Data 4',
+//             data: [10, 24, 37, 48, 45],
+//         },
+//         {
+//             name: 'Data 5',
+//             data: [98, 88, 78, 68, 58],
+//         },
+//         {
+//             name: 'Data 6',
+//             data: [76, 66, 56, 46, 36],
+//         },
+//         {
+//             name: 'Data 7',
+//             data: [11, 21, 31, 41, 51],
+//         },
+//         {
+//             name: 'Data 8',
+//             data: [52, 42, 32, 22, 12],
+//         },
+//         {
+//             name: 'Data 9',
+//             data: [11, 22, 33, 44, 55],
+//         },
+//         {
+//             name: 'Data 10',
+//             data: [55, 66, 77, 88, 99],
+//         },
+//     ],
+//     title: 'ความสัมพันธ์ของการยืม/หน่วยงาน', // แยก title ออกมา
+// },
 // {
 //     type: 'pie',
 //     options: {

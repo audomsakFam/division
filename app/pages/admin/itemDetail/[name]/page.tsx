@@ -388,7 +388,6 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
                                 <TableHead className="text-center text-stone-950 border-r border-gray-300 text-center">
                                     สถานะ
                                 </TableHead>
-                                <TableHead className="text-stone-950 text-center">ดำเนินการ</TableHead>
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -438,11 +437,6 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
                                                         : item.status == 'ถูกยืม' ? 'ถูกยืม'
                                                             : item.status == 'ชำรุด' ? 'ชำรุด' : 'อื่นๆ'
                                             }
-                                        </TableCell>
-                                        <TableCell className="text-center">
-                                            <Button className="bg-blue-900">
-                                                handle
-                                            </Button>
                                         </TableCell>
                                     </TableRow>
                                 ))

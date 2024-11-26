@@ -10,7 +10,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "node": "node server.mjs",
+    "serve": "node server.mjs",
     "postinstall": "prisma generate"
   },
   "dependencies": {
