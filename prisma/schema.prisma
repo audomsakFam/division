@@ -129,6 +129,7 @@ model Item_set {
 model Origanization {
   id       Int      @id @default(autoincrement())
   name     String   @db.VarChar(100)
+  group    String?
   createAt DateTime @default(now())
   updateAt DateTime @updatedAt
   Borrow   Borrow[]

@@ -57,3 +57,62 @@ export async function GET(req: Request) {
     }
 }
 
+export async function POST(req: Request) {
+    const url = new URL(req.url);
+    try {
+        const { itemId, cloneCount } = await req.json();
+
+        const originalItem = await prisma.items.findUnique({
+            where: { id: itemId },
+        });
+
+        if (!originalItem) {
+            return NextResponse.json({ error: 'Item not found', status: 404 });
+        }
+
+        const itemsToClone = Array.from({ length: cloneCount }, () => ({
+            name: originalItem.name,
+            img: originalItem.img,
+            status: originalItem.status,
+            divisionId: originalItem.divisionId,
+            postfixId: originalItem.postfixId,
+        }));
+
+        const result = await prisma.items.createMany({
+            data: itemsToClone,
+        });
+
+        return NextResponse.json({ msg: 'Items cloned successfully', data: result, status: 200 });
+    } catch (err) {
+        return NextResponse.json({ error: 'someting went worng at ' + url.href + err, status: 500 });
+    }
+}
+
+export async function DELETE(req: Request) {
+    const url = new URL(req.url);
+    try {
+        const { searchParams } = url;
+        const name = searchParams.get('name') || '';
+        const deleteCount = parseInt(searchParams.get('count') || '0', 10);
+
+        // ค้นหา Items ที่ต้องการลบ
+        const itemsToDelete = await prisma.items.findMany({
+            where: { name: name },
+            take: deleteCount,
+        });
+        if (!itemsToDelete || itemsToDelete.length === 0) {
+            return NextResponse.json({ error: 'No items found to delete at' + url.href, status: 404 });
+        }
+
+        // ลบ Items
+        const result = await prisma.items.deleteMany({
+            where: {
+                id: { in: itemsToDelete.map((item) => item.id) },
+            },
+        });
+        return NextResponse.json({ msg: 'Items deleted successfully', data: result, status: 200 });
+
+    } catch (err) {
+        return NextResponse.json({ error: 'someting went worng at ' + url.href + err, status: 500 });
+    }
+}

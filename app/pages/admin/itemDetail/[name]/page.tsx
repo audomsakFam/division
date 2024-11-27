@@ -38,6 +38,7 @@ import PaginationComponent from "@/app/components/pagination/pagination";
 import { Button } from "@/components/ui/button";
 import { ResDivision, ResDivisionData } from "@/app/interfaces/division";
 import { ClearItemCache } from "@/lib/servers/getItemWithCache";
+import { FaCircleMinus, FaCirclePlus, FaPen } from "react-icons/fa6";
 
 const itemsPerPage = 10;
 export default function ItemDetail({ params }: { params: { name: string } }) {
@@ -54,10 +55,33 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
     const [statusFilter, setStatusFilter] = useState('');
     const name = decodeURIComponent(params.name)
     const [newName, setNewName] = useState(name)
+    const [clone, setClone] = useState(0)
     const [position, setPosition] = React.useState('')
     const [division, setDivision] = useState<ResDivisionData[]>([]);
 
     const totalItems = itemsNum.normal + itemsNum.borrowed + itemsNum.damaged + itemsNum.lost;
+
+    const cloneItem = async (itemId: number, cloneCount: number) => {
+        try {
+            const res = await axios.post('/api/items', { itemId, cloneCount });
+            console.log(res);
+            ClearItemCache()
+            window.location.reload();
+        } catch (err) {
+            console.error(err)
+        }
+    }
+
+    const deleteItem = async (name: string, deleteCount: number) => {
+        try {
+            const res = await axios.delete(`/api/items?name=${name}&count=${deleteCount}`);
+            console.log(res);
+            ClearItemCache()
+            window.location.reload();
+        } catch (err) {
+            console.error(err)
+        }
+    }
 
     const updateAll = async () => {
         try {
@@ -234,8 +258,8 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
                     <Dialog>
                         <DialogTrigger asChild>
                             {itemDetail && itemDetail.division && itemDetail.division.name && (
-                                <Button id="edit" onClick={() => setPosition(itemDetail.division.name)} type="button" className="bg-yellow-500 hover:bg-yellow-900">
-                                    แก้ไขโดยรวม
+                                <Button id="edit" onClick={() => setPosition(itemDetail.division.name)} type="button" className="bg-yellow-500 hover:bg-yellow-900 mr-2">
+                                    <FaPen className="mr-2" />  แก้ไขโดยรวม
                                 </Button>
                             )}
                         </DialogTrigger>
@@ -356,6 +380,119 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
                                 <DialogClose asChild>
                                     <Button type="button" onClick={() => updateAll()} className='bg-blue-900'>ยืนยัน</Button>
                                 </DialogClose>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button id="add" type="button" className="bg-green-500 hover:bg-green-900 mr-2">
+                                <FaCirclePlus className='mr-2' onClick={() => setClone(0)} /> เพิ่มอุปกรณ์นี้
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-md">
+                            <DialogHeader>
+                                <DialogTitle>เพิ่มอุปกรณ์นี้</DialogTitle>
+                                <DialogDescription>
+                                    โปรดระบุจำนวนอุปกรณ์ที่ต้องการเพิ่ม
+                                </DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4 ">
+                                <div className="flex justify-start items-start flex-grow h-full flex-col">
+                                    <div className=" items-center gap-2 mb-2 w-full">
+                                        <Label htmlFor="name" className="text-left font-black">
+                                            จำนวนที่ต้องการเพิ่ม
+                                        </Label>
+                                        <Input
+                                            id="items"
+                                            type="number"
+                                            min="1"
+                                            required
+                                            onChange={(e) => setClone(Number(e.target.value))}
+                                            className="text-stone-950 bg-transparent w-1/4"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                <DialogClose asChild>
+                                    {itemDetail && (
+                                        <Button type="button" onClick={() => cloneItem(itemDetail.id, clone)}
+                                            className={`bg-blue-900 ${clone <= 0 ? 'pointer-events-none opacity-50 cursor-not-allowed' : ''}`}>ยืนยัน</Button>
+                                    )}
+                                </DialogClose>
+                            </DialogFooter>
+                        </DialogContent>
+                    </Dialog>
+
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button id="del" type="button" className={`bg-red-500 hover:bg-red-900 ${totalItems == 1 ? 'pointer-events-none opacity-50 cursor-not-allowed' : ''}`}>
+                                <FaCircleMinus className="mr-2" onClick={() => setClone(0)} /> ลบอุปกรณ์นี้ตามจำนวน
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-md">
+                            <DialogHeader>
+                                <DialogTitle>ลบอุปกรณ์นี้ตามจำนวน</DialogTitle>
+                                <DialogDescription>โปรดระบุจำนวนอุปกรณ์ที่ต้องการลบ</DialogDescription>
+                            </DialogHeader>
+                            <div className="grid gap-4 py-4 ">
+                                <div className="flex justify-start items-start flex-grow h-full flex-col">
+                                    <div className="items-center gap-2 mb-2 w-full">
+                                        <Label htmlFor="name" className="text-left font-black">
+                                            จำนวนที่ต้องการลบ
+                                        </Label>
+                                        <Input
+                                            id="items"
+                                            type="number"
+                                            min="1"
+                                            required
+                                            onChange={(e) => setClone(Number(e.target.value))}
+                                            className="text-stone-950 bg-transparent w-1/4"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <DialogFooter>
+                                {itemDetail && (
+                                    <Dialog>
+                                        <DialogTrigger asChild>
+                                            {clone > (totalItems - 1) ?
+                                                <p className="text-red-500">จำนวนที่ต้องการลบต้องน้อยกว่าจำนวนทั้งหมดที่มี 1 {itemDetail.postfix.name}</p>
+                                                :
+                                                <Button id="confirm-del" type="button" className={`bg-red-500 hover:bg-red-900 ${clone > (totalItems - 1) ? 'pointer-events-none opacity-50 cursor-not-allowed' : ''}`}>
+                                                    ยืนยัน
+                                                </Button>
+                                            }
+
+                                        </DialogTrigger>
+                                        <DialogContent className="sm:max-w-md">
+                                            <DialogHeader>
+                                                <DialogTitle>ต้องการลบอุปกรณ์นี้จำนวน {clone} {' ' + itemDetail.postfix.name} จริงหรือไม่</DialogTitle>
+                                                <DialogDescription>
+                                                    ข้อมูลที่ถูกลบจะไม่สามารถกู้คืนได้
+                                                </DialogDescription>
+                                            </DialogHeader>
+                                            <DialogFooter>
+                                                {itemDetail && (
+                                                    <DialogClose asChild>
+                                                        <Button
+                                                            type="button"
+                                                            onClick={() => deleteItem(itemDetail.name, clone)}
+                                                            className={`bg-red-500 mr-2 hover:bg-red-900 ${clone <= 0 ? 'pointer-events-none opacity-50 cursor-not-allowed' : ''
+                                                                }`}
+                                                        >
+                                                            ยืนยัน
+                                                        </Button>
+                                                    </DialogClose>
+                                                )}
+                                                <DialogClose asChild>
+                                                    <Button type="button">ยกเลิก</Button>
+                                                </DialogClose>
+                                            </DialogFooter>
+                                        </DialogContent>
+                                    </Dialog>
+                                )}
                             </DialogFooter>
                         </DialogContent>
                     </Dialog>
