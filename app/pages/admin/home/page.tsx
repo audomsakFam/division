@@ -257,7 +257,7 @@ export default function HomePage() {
 
                                                                     onClick={(e) => { e.stopPropagation(); updateStatus(item.id); }}>
                                                                     {
-                                                                        item.status == 1 ? 'ยืนยันคำข้อ' :
+                                                                        item.status == 1 ? 'ยืนยันคำขอ' :
                                                                             item.status == 2 ? 'ยืนยันการส่งมอบ' :
                                                                                 ''
                                                                     }
