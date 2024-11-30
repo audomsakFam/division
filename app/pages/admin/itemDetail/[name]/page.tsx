@@ -3,14 +3,14 @@
 import Side from "@/app/components/side/side";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow,
-} from "@/components/ui/table"
+// import {
+//     Table,
+//     TableBody,
+//     TableCell,
+//     TableHead,
+//     TableHeader,
+//     TableRow,
+// } from "@/components/ui/table"
 import {
     Dialog,
     DialogClose,
@@ -34,13 +34,13 @@ import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
 import { ResItemDetial, resItemDetialData } from "@/app/interfaces/item";
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import PaginationComponent from "@/app/components/pagination/pagination";
+// import PaginationComponent from "@/app/components/pagination/pagination";
 import { Button } from "@/components/ui/button";
 import { ResDivision, ResDivisionData } from "@/app/interfaces/division";
 import { ClearItemCache } from "@/lib/servers/getItemWithCache";
 import { FaCircleMinus, FaCirclePlus, FaPen } from "react-icons/fa6";
 
-const itemsPerPage = 10;
+// const itemsPerPage = 10;
 export default function ItemDetail({ params }: { params: { name: string } }) {
     const [items, setItems] = useState<resItemDetialData[]>([]);
     const [itemsNum, setItemsNum] = useState<Record<'normal' | 'borrowed' | 'damaged' | 'lost', number>>({
@@ -50,9 +50,9 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
         lost: 0, // "หาย"
     });
     const [itemDetail, setItemDetail] = useState<resItemDetialData>();
-    const [currentPage, setCurrentPage] = useState(1);
-    const [filteredItems, setFilteredItems] = useState<resItemDetialData[]>([]);
-    const [statusFilter, setStatusFilter] = useState('');
+    // const [currentPage, setCurrentPage] = useState(1);
+    // const [filteredItems, setFilteredItems] = useState<resItemDetialData[]>([]);
+    // const [statusFilter, setStatusFilter] = useState('');
     const name = decodeURIComponent(params.name)
     const [newName, setNewName] = useState(name)
     const [clone, setClone] = useState(0)
@@ -125,17 +125,17 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
         }
     };
 
-    useEffect(() => {
-        // Filter items based on the selected filters
-        let filtered = items;
+    // useEffect(() => {
+    //     // Filter items based on the selected filters
+    //     let filtered = items;
 
-        if (statusFilter) {
-            filtered = filtered.filter(item =>
-                item.status === statusFilter
-            );
-        }
-        setFilteredItems(filtered);
-    }, [statusFilter, items]);
+    //     if (statusFilter) {
+    //         filtered = filtered.filter(item =>
+    //             item.status === statusFilter
+    //         );
+    //     }
+    //     setFilteredItems(filtered);
+    // }, [statusFilter, items]);
     const findItems = async () => {
         await axios.get<ResItemDetial>(`/api/items/${name}`)
         try {
@@ -175,11 +175,11 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
         getDivision();
     }, [])
 
-    const startIdx = (currentPage - 1) * itemsPerPage;
-    const endIdx = startIdx + itemsPerPage;
-    const currentItems = filteredItems.slice(startIdx, endIdx);
+    // const startIdx = (currentPage - 1) * itemsPerPage;
+    // const endIdx = startIdx + itemsPerPage;
+    // const currentItems = filteredItems.slice(startIdx, endIdx);
 
-    const totalPages = Math.ceil(filteredItems!.length / itemsPerPage);
+    // const totalPages = Math.ceil(filteredItems!.length / itemsPerPage);
 
     return (
         <Side>
@@ -460,7 +460,7 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
                                             {clone > (totalItems - 1) ?
                                                 <p className="text-red-500">จำนวนที่ต้องการลบต้องน้อยกว่าจำนวนทั้งหมดที่มี 1 {itemDetail.postfix.name}</p>
                                                 :
-                                                <Button id="confirm-del" type="button" className={`bg-red-500 hover:bg-red-900 ${clone > (totalItems - 1) ? 'pointer-events-none opacity-50 cursor-not-allowed' : ''}`}>
+                                                <Button id="confirm-del" type="button" className={`bg-red-500 hover:bg-red-900 ${clone <= 0 ? 'pointer-events-none opacity-50 cursor-not-allowed' : ''} ${clone > (totalItems - 1) ? 'pointer-events-none opacity-50 cursor-not-allowed' : ''}`}>
                                                     ยืนยัน
                                                 </Button>
                                             }
@@ -498,7 +498,14 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
                     </Dialog>
                 </CardFooter>
             </Card>
-            <Card className="w-full p-2">
+            
+
+        </Side>
+    );
+}
+
+
+/* <Card className="w-full p-2">
                 <CardHeader>
                     <div className="mb-4 flex gap-4 flex-wrap">
                         <h3 className="text-xl font-semibold">{name}</h3>
@@ -534,7 +541,7 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
                                         <TableCell className="font-medium border-r border-gray-300 text-center">{index + 1 + startIdx}</TableCell>
                                         <TableCell className="border-r border-gray-300 text-center">
                                             <div className="group group-hover:relative overflow-hidden">
-                                                {/* กล่องแสดงภาพหลัก */}
+                                              
                                                 <div className="flex  justify-center items-center overflow-hidden">
                                                     <img
                                                         src={item.img!}
@@ -545,7 +552,7 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
                                                     />
                                                 </div>
 
-                                                {/* กล่องสำหรับแสดงภาพซูม */}
+                                               
                                                 <div className={`absolute w-1/5 hidden group-hover:flex justify-center items-center
                                                      right-1/2 transform z-100 
                                                     `}
@@ -557,16 +564,9 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
                                                     />
                                                 </div>
                                             </div>
-                                            {/* <QRCodeSVG
-                                                        value={'https://www.google.co.th/?hl=th'}       // ข้อความหรือ URL ที่ต้องการสร้าง QR Code
-                                                        size={120}            // ขนาดของ QR Code
-                                                        bgColor="#ffffff"     // สีพื้นหลังของ QR Code
-                                                        fgColor="#000000"     // สีของ QR Code
-                                                        level="H"             // ระดับความหนาแน่นของ QR Code
-                                                        includeMargin={true}  // เพิ่ม margin รอบ QR Code
-                                                    /> */}
+                                          
                                         </TableCell>
-                                        <TableCell className="border-r border-gray-300 text-start">{item.name}</TableCell>
+                                        <TableCell className="border-r border-gray-300 text-center">{item.name}</TableCell>
                                         <TableCell className="border-r border-gray-300 text-center text-center">
                                             {
                                                 item.status == 'ปกติ' ? 'ปกติ'
@@ -594,8 +594,4 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
                         <PaginationComponent currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
                     )}
                 </CardFooter>
-            </Card>
-
-        </Side>
-    );
-}
+            </Card> */
