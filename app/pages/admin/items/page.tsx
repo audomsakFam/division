@@ -82,7 +82,7 @@ export default function Items() {
                 item.statusCounts.some(status => status.status === statusFilter)
             );
         }
-
+        setCurrentPage(1);
         setFilteredItems(filtered);
     }, [nameFilter, statusFilter, divisionFilter, items]);
 

@@ -9,7 +9,7 @@ export async function GET(req: Request) {
     try {
         const { searchParams } = url;
         const year = parseInt(searchParams.get('year') || `${new Date().getFullYear()}`, 10);
-
+        const divisions = await prisma.division.findMany();
         const data = await prisma.borrow_detail.findMany({
             include: {
                 borrow: true,
@@ -25,23 +25,37 @@ export async function GET(req: Request) {
                         gte: new Date(year, 0, 1), // 1 มกราคมของปีที่ระบุ
                         lt: new Date(year + 1, 0, 1), // 1 มกราคมของปีถัดไป
                     },
+                    status: 4
                 },
             },
         })
 
-        const groupData = data.reduce((acc: Record<string, number[]>, curr) => {
-            const divisionName = curr.item?.division.name
-            const mountIndex = new Date(curr.borrow.createAt).getMonth()
-            if(!divisionName){
-                return acc
-            }
-            if (!acc[divisionName]) {
-                acc[divisionName] = Array(12).fill(0)
-            }
-            acc[divisionName][mountIndex] += 1 // key, value
-
+        const groupData = divisions.reduce((acc: Record<string, number[]>, division) => {
+            acc[division.name] = Array(12).fill(0); // เริ่มต้นข้อมูลเดือนมกราคมถึงธันวาคมเป็น 0
             return acc;
-        }, {})
+        }, {});
+
+        data.forEach((curr) => {
+            const divisionName = curr.item?.division?.name;
+            const monthIndex = new Date(curr.borrow.createAt).getMonth();
+            if (divisionName) {
+                groupData[divisionName][monthIndex] += 1; // เพิ่มจำนวนในเดือนที่ตรงกัน
+            }
+        });
+
+        // const groupData = data.reduce((acc: Record<string, number[]>, curr) => {
+        //     const divisionName = curr.item?.division.name
+        //     const mountIndex = new Date(curr.borrow.createAt).getMonth()
+        //     if(!divisionName){
+        //         return acc
+        //     }
+        //     if (!acc[divisionName]) {
+        //         acc[divisionName] = Array(12).fill(0)
+        //     }
+        //     acc[divisionName][mountIndex] += 1 // key, value
+
+        //     return acc;
+        // }, {})
 
         const series = Object.keys(groupData).map((divisionName) => ({
             name: divisionName,

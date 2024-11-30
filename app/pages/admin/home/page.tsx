@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import dynamic from 'next/dynamic';
 import Side from "@/app/components/side/side";
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
@@ -52,11 +52,38 @@ export default function HomePage() {
     const router = useRouter();
     const [chartData, setChartData] = useState<ResChart>();
     const [year, setYear] = useState<number>(new Date().getFullYear());
-    const years = Array.from({ length: 100 }, (_, i) => new Date().getFullYear() - i); // infinite scroll
+    const [displayYears, setDisplayYears] = useState<number[]>([]);
+    const [visibleCount, setVisibleCount] = useState(50); // จำนวนปีที่แสดงตอนเริ่มต้น
+    const [isOpen, setIsOpen] = useState(false); // สถานะเปิด/ปิด dropdown
+    const dropdownRef = useRef<HTMLDivElement | null>(null); // อ้างอิง dropdown
 
-    const fetchData = async (selectedYear: number) => {
-        const res = await axios.get<ResChart>(`/api/chart?year=${selectedYear}`)
-        setChartData(res.data);
+    useLayoutEffect(() => {
+        // โหลดปีตามค่า visibleCount
+        const allYears = Array.from({ length: visibleCount }, (_, i) => new Date().getFullYear() - i);
+        setDisplayYears(allYears);
+    }, [visibleCount]);
+
+    useEffect(() => {
+        if (isOpen && year !== null) {
+            // หา index ของปีที่ถูกเลือก
+            const currentIndex = displayYears.findIndex((y) => y === year);
+            if (currentIndex !== -1 && dropdownRef.current) {
+                // คำนวณตำแหน่ง scrollTop
+                const itemHeight = 35; // สมมติว่าแต่ละ item สูง 40px (ปรับตามความเหมาะสม)
+                dropdownRef.current.scrollTop = currentIndex * itemHeight;
+            }
+        }
+    }, [isOpen, year]);
+
+    const handleScroll = (event: any) => {
+        // console.log('User scrolled:', event.target.scrollTop);
+        const { scrollTop, scrollHeight, clientHeight } = event.target;
+        const scrollRatio = scrollTop / (scrollHeight - clientHeight);
+
+        if (scrollRatio >= 0.9) {
+            // console.log('=======>>', scrollRatio, 'scroll =======>', scrollHeight);
+            setVisibleCount((prev) => Math.min(prev + 10)); // เพิ่มปีอีก 10 ปี
+        }
     };
 
     const handleStatusChange = (id: number, value: string, isChecked: boolean) => {
@@ -91,15 +118,17 @@ export default function HomePage() {
             }
             ).catch((err) => console.error(err))
     }
+    const fetchData = async (selectedYear: number) => {
+        const res = await axios.get<ResChart>(`/api/chart?year=${selectedYear}`)
+        setLoading(true);
+        setChartData(res.data);
+        setTimeout(() => {
+            setLoading(false);
+        }, 500);
+    };
 
     useEffect(() => {
-        const fetchDataAsync = async () => {
-            setLoading(true);
-            await fetchData(year);
-            setLoading(false);
-        };
-
-        fetchDataAsync();
+        fetchData(year);
     }, [year]);
 
     useEffect(() => {
@@ -112,6 +141,7 @@ export default function HomePage() {
                 res.filter((v) => v.status != 4)
                     .sort((a, b) => new Date(a.createAt).getTime() - new Date(b.createAt).getTime())
             ));
+            fetchData(year);
             setRefreshData(false);  // รีเซ็ตค่า refreshData
         }
         GetBorrowWithCache().then((res) => setBorrow(
@@ -130,7 +160,7 @@ export default function HomePage() {
             })
     }
 
-    if (!chartData) return <p>Loading...</p>;
+    if (!chartData) return <Side><p>Loading...</p></Side>;
 
     const options = {
         xaxis: {
@@ -143,6 +173,11 @@ export default function HomePage() {
                     ...chartData.series.flatMap((s: { data: number[] }) => s.data)
                 ) + 20
             ), // คำนวณค่าสูงสุด
+            labels: {
+                formatter: function (value: number) {
+                    return `${Math.round(value)} ครั้ง`; // เพิ่มหน่วย "ครั้ง" ที่ท้ายค่า Y
+                },
+            }
         },
     };
 
@@ -185,20 +220,37 @@ export default function HomePage() {
                                 <h3 className="text-xl font-semibold">ความถี่การยืมของแต่ละแผนก</h3>
                                 <div className='mb-[1rem] flex items-center'>
                                     <label htmlFor="year" className='mr-2'>เลือกปี: </label>
-                                    <select
-                                        id="year"
-                                        value={year}
-                                        onChange={(e) => setYear(parseInt(e.target.value, 10))}
-                                        className='bg-white
-                                        rounded-md border border-gray-300 text-gray-900 text-sm focus:ring-blue-500 
-                                        focus:border-blue-500 block w-1/8 p-2.5 max-h-[200px] overflow-y-auto'
-                                    >
-                                        {years.map((displayYear) => (
-                                            <option key={displayYear} value={displayYear}>
-                                                {displayYear}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    <div className='relative w-1/6 text-center'>
+                                        <div
+                                            id="selected-year"
+                                            className='bg-white rounded-md border border-gray-300 text-gray-900 text-sm p-2.5 cursor-pointer'
+                                            onClick={() => setIsOpen(!isOpen)}
+                                        >
+                                            {year || "เลือกปี"} {/* แสดงปีที่เลือกหรือข้อความเริ่มต้น */}
+                                        </div>
+                                        {isOpen && (
+                                            <div
+                                                id="year"
+                                                onScroll={handleScroll}
+                                                ref={dropdownRef}
+                                                className='absolute bg-white rounded-md border border-gray-300 text-gray-900 text-sm max-h-[200px] 
+                                                 overflow-y-auto mt-2 z-10 w-full shadow-lg'
+                                            >
+                                                {displayYears.map((displayYear) => (
+                                                    <div
+                                                        key={displayYear}
+                                                        className={`px-4 py-2 hover:bg-blue-500 hover:text-white cursor-pointer ${year === displayYear ? 'bg-blue-500 text-white' : ''}`}
+                                                        onClick={() => {
+                                                            setYear(displayYear);
+                                                            setIsOpen(false); // ปิด dropdown หลังเลือกปี
+                                                        }}
+                                                    >
+                                                        {displayYear}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </CardHeader>
                             <CardContent className='text-center'>
@@ -420,6 +472,19 @@ export default function HomePage() {
 
         </Side>
     );
+    // const handleScroll = (event: any) => {
+    //     console.log('User scrolled:', event.target.scrollTop);
+    // };
+
+    // return (
+    //     <div onScroll={handleScroll} style={{ overflowY: 'scroll', height: '200px' }}>
+    //         {Array.from({ length: 100 }).map((_, index) => (
+    //             <div key={index}>
+    //                 <p>Item {index + 1}</p>
+    //             </div>
+    //         ))}
+    //     </div>
+    // );
 }
 // {
 //     type: 'bar',
