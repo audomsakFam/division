@@ -1,21 +1,18 @@
 'use client'
 import { ResItemsGroup } from "@/app/interfaces/item";
-import { Button } from "@/components/ui/button";
+// import { Button } from "@/components/ui/button";
 import { GetItemWithCache } from "@/lib/servers/getItemWithCache";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
     Card,
     CardContent,
-    CardDescription,
-    CardFooter,
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
 import {
     Table,
     TableBody,
-    TableCaption,
     TableCell,
     TableFooter,
     TableHead,
@@ -24,7 +21,7 @@ import {
 } from "@/components/ui/table"
 
 export default function HomePage() {
-    const router = useRouter();
+    // const router = useRouter();
     const [items, setItems] = useState<ResItemsGroup[]>([]);
 
     useEffect(() => {
