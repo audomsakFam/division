@@ -11,6 +11,8 @@ export async function GET(req: Request) {
             _count: {
                 status: true, // นับจำนวนของแต่ละสถานะ
             },
+            orderBy: {
+                name: 'asc',}
         })
 
         const divisions = await prisma.division.findMany(); // ดึงข้อมูล division ทั้งหมด
