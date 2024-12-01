@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 export async function POST(req: Request) {
     const url = new URL(req.url);
     try {
-        const { name, lastname, tel, project, borrowDetails } = await req.json();
+        const { name, lastname, tel, project, borrowDetails, retureAt, serveAt } = await req.json();
         console.log('Received Data: ', { name, lastname, tel, project, borrowDetails });
 
         // ตรวจสอบว่ามี borrowDetails หรือไม่
@@ -21,6 +21,8 @@ export async function POST(req: Request) {
                 lastname,
                 tel,
                 project,
+                retureAt,
+                serveAt,
                 Borrow_detail: {
                     create: borrowDetails.map((detail: { setId?: number; itemId?: number }) => ({
                         setId: detail.setId,
