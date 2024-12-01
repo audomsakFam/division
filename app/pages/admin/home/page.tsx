@@ -40,6 +40,7 @@ import { useRefresh } from '@/app/context/refreshProvider';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { ResChart } from '@/app/interfaces/chart';
+import CalendarCom from '@/app/components/calendar/calendar';
 const Chart = dynamic(() => import('react-apexcharts'), { ssr: false });
 
 const itemsPerPage = 10;
@@ -210,10 +211,13 @@ export default function HomePage() {
 
                                 : ''}
                         </TabsTrigger>
-                        <TabsTrigger value="home" className='sm:w-full'>กราฟสรุปผล <FaChartSimple className='ml-2' /></TabsTrigger>
+                        <TabsTrigger value="home" className='sm:w-full'>สรุปผล <FaChartSimple className='ml-2' /></TabsTrigger>
                     </TabsList>
                 </div>
                 <TabsContent value="home">
+                    <div className='flex justify-center mb-4 w-full'>
+                        <CalendarCom />
+                    </div>
                     <div className="flex flex-col w-full">
                         <Card className="w-full mb-2 ">
                             <CardHeader>
