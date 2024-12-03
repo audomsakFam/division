@@ -1,6 +1,16 @@
 'use client';
 import Side from "@/app/components/side/side";
 import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
+import {
     Table,
     TableBody,
     TableCell,
@@ -9,13 +19,14 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-
+import { FaCircleMinus, FaCirclePlus } from "react-icons/fa6";
 import { useEffect, useState } from "react";
 import { ResItemsGroup } from "@/app/interfaces/item";
 import PaginationComponent from "@/app/components/pagination/pagination";
 import { GetItemWithCache } from "@/lib/servers/getItemWithCache";
 // import { QRCodeSVG } from 'qrcode.react';
 import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 const itemsPerPage = 20;
 export default function Items() {
@@ -98,7 +109,7 @@ export default function Items() {
                 <Card className="w-full p-2">
                     <CardHeader>
                         <h3 className="text-xl font-semibold">อุปกรณ์</h3>
-                        <div className="mb-4 flex gap-4 flex-wrap">
+                        <div className="mb-4 flex gap-4 flex-wrap items-center">
                             <input
                                 type="text"
                                 placeholder="ค้นหาชื่ออุปกรณ์"
@@ -134,6 +145,9 @@ export default function Items() {
                                 <option value="ฝ่ายบริหารงานทั่วไป">ฝ่ายบริหารงานทั่วไป</option>
                                 <option value="ฝ่ายแนะแนวการศึกษาอาชีพและศิษย์เก่า">ฝ่ายแนะแนวการศึกษาอาชีพและศิษย์เก่า</option>
                             </select>
+                            <Button className="bg-green-600 hover:bg-green-900">
+                                <FaCirclePlus className="mr-2" /> เพิ่มอุปกรณ์ใหม่
+                            </Button>
                         </div>
                     </CardHeader>
                     <CardContent>
@@ -160,7 +174,8 @@ export default function Items() {
                                         </div>
                                     </TableHead>
                                     <TableHead className="text-stone-950 border-r border-gray-300 text-center">หน่วย</TableHead>
-                                    <TableHead className="text-stone-950 text-center">ฝ่ายที่รับผิดชอบ</TableHead>
+                                    <TableHead className="text-stone-950 border-r border-gray-300 text-center">ฝ่ายที่รับผิดชอบ</TableHead>
+                                    <TableHead className="text-stone-950 text-center">ดำเนินการ</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -222,7 +237,34 @@ export default function Items() {
                                                 </div>
                                             </TableCell>
                                             <TableCell className="border-r border-gray-300 text-center">{item.postfixName}</TableCell>
-                                            <TableCell className="text-start">{item.divisionName}</TableCell>
+                                            <TableCell className="border-r border-gray-300 text-center">{item.divisionName}</TableCell>
+                                            <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
+                                                <Dialog>
+                                                    <DialogTrigger asChild>
+                                                        <Button variant={'destructive'}>
+                                                            <FaCircleMinus className="mr-2" /> ลบอุปกรณ์
+                                                        </Button>
+                                                    </DialogTrigger>
+                                                    <DialogContent className="sm:max-w-md" onClick={(e) => e.stopPropagation()}>
+                                                        <DialogHeader>
+                                                            <DialogTitle>ต้องการลบอุปกรณ์นี้จริงหรือไม่</DialogTitle>
+                                                            <DialogDescription>
+                                                                ข้อมูลที่ถูกลบจะไม่สามารถกู้คืนได้
+                                                            </DialogDescription>
+                                                        </DialogHeader>
+                                                        <DialogFooter>
+                                                            <div>
+                                                                <DialogClose asChild>
+                                                                    <Button type="submit" className="bg-red-600 hover:bg-red-900 mr-2" onClick={(e) => e.stopPropagation()}>ยืนยัน</Button>
+                                                                </DialogClose>
+                                                                <DialogClose asChild>
+                                                                    <Button type="button" onClick={(e) => e.stopPropagation()}>ยกเลิก</Button>
+                                                                </DialogClose>
+                                                            </div>
+                                                        </DialogFooter>
+                                                    </DialogContent>
+                                                </Dialog>
+                                            </TableCell>
                                         </TableRow>
                                     ))
                                 ) : (

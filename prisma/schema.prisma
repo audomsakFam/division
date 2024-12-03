@@ -32,7 +32,7 @@ model Items {
   id            Int             @id @default(autoincrement())
   name          String          @db.VarChar(500)
   img           String?         @db.VarChar(100)
-  status        String          @db.VarChar(20) // ปกติ ชำรุด หาย ถูกยืม 
+  status        String?         @default("ปกติ") @db.VarChar(20) // ปกติ ชำรุด หาย ถูกยืม 
   createAt      DateTime        @default(now())
   updateAt      DateTime        @updatedAt
   qrId          Int?            @unique
