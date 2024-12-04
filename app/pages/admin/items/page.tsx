@@ -122,9 +122,9 @@ export default function Items() {
         }
     }
 
-    const deleteItem = async (name: string) => {
+    const deleteItem = async (name: string, imgName: string) => {
         try {
-            const res = await axios.delete(`/api/items/deleteMany?name=${name}`);
+            const res = await axios.delete(`/api/items/deleteMany?name=${name}&imgName=${imgName}`);
             console.log(res);
             ClearItemCache();
             GetItemWithCache().then((res) => {
@@ -471,7 +471,7 @@ export default function Items() {
                                                         <DialogFooter>
                                                             <div>
                                                                 <DialogClose asChild>
-                                                                    <Button type="submit" className="bg-red-600 hover:bg-red-900 mr-2" onClick={(e) => { deleteItem(item.name); e.stopPropagation() }}>ยืนยัน</Button>
+                                                                    <Button type="submit" className="bg-red-600 hover:bg-red-900 mr-2" onClick={(e) => { deleteItem(item.name,item.img); e.stopPropagation() }}>ยืนยัน</Button>
                                                                 </DialogClose>
                                                                 <DialogClose asChild>
                                                                     <Button type="button" onClick={(e) => e.stopPropagation()}>ยกเลิก</Button>
