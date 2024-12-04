@@ -74,7 +74,7 @@ export async function POST(req: Request) {
         const transaction = updatedItems.map((item) =>
             prisma.items.update({
                 where: { id: item.id },
-                data: { status: item.status.toString(), name: newName, divisionId: divisionId?.id },
+                data: { status: item.status?.toString(), name: newName, divisionId: divisionId?.id },
             })
         );
 
