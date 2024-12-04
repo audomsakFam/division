@@ -10,6 +10,8 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
     Table,
     TableBody,
@@ -18,15 +20,27 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuLabel,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { FaCircleMinus, FaCirclePlus } from "react-icons/fa6";
 import { useEffect, useState } from "react";
 import { ResItemsGroup } from "@/app/interfaces/item";
 import PaginationComponent from "@/app/components/pagination/pagination";
-import { GetItemWithCache } from "@/lib/servers/getItemWithCache";
+import { ClearItemCache, GetItemWithCache } from "@/lib/servers/getItemWithCache";
 // import { QRCodeSVG } from 'qrcode.react';
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { ResDivision, ResDivisionData } from "@/app/interfaces/division";
+import axios from "axios";
+import { PostfixData, ResPostfix } from "@/app/interfaces/postfix";
 
 const itemsPerPage = 20;
 export default function Items() {
@@ -38,13 +52,97 @@ export default function Items() {
     const [statusFilter, setStatusFilter] = useState('');
     const [statusOptions, setStatusOptions] = useState<{ status: string, count: number }[]>([]);
     const router = useRouter();
+    const [newName, setNewName] = useState('')
+    const [clone, setClone] = useState(1)
+    const [position, setPosition] = useState('เลือกฝ่าย')
+    const [division, setDivision] = useState<ResDivisionData[]>([]);
+    const [isOpen, setIsOpen] = useState(false);
+    const [postfixSelect, setPostfixSelect] = useState('เลือกหน่วย')
+    const [postfix, setPostfix] = useState<PostfixData[]>([]);
+    const [image, setImage] = useState<File | null>(null);
+    const [preview, setPreview] = useState<string | null>(null);
 
+    const resetForm = () => {
+        setPreview(null);
+        setNewName("");
+        setClone(1);
+        setPosition("เลือกฝ่าย");
+        setPostfixSelect("เลือกหน่วย");
+    };
+
+    const getDivision = async () => {
+        await axios.get<ResDivision>('/api/division')
+            .then((res) => {
+                setDivision(res.data.data);
+            }).catch((err) => console.error(err))
+    }
+
+    const getPostfix = async () => {
+        await axios.get<ResPostfix>('/api/postfix')
+            .then((res) => {
+                setPostfix(res.data.data);
+            }).catch((err) => console.error(err))
+    }
+
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        const previewUrl = URL.createObjectURL(file);
+        setImage(file);
+        setPreview(previewUrl); // สร้าง URL สำหรับแสดงตัวอย่างรูปภาพ
+    };
+
+    const createitems = async () => {
+        try {
+            if (!image) {
+                alert("Please select an image.");
+                return;
+            }
+
+            const fData = new FormData();
+            fData.append("image", image);
+            fData.append("name", newName);
+            fData.append("division", position);
+            fData.append("postfix", postfixSelect);
+            fData.append("count", clone.toString());
+
+            const res = await axios.post('/api/items/newItem', fData, {
+                headers: {
+                    "Content-Type": "multipart/form-data",
+                },
+            });
+            console.log(res);
+            ClearItemCache();
+            GetItemWithCache().then((res) => {
+                setItems(res);
+                setFilteredItems(res);  // Set the filtered items to the full list initially
+            });
+        } catch (err) {
+            console.error(err)
+        }
+    }
+
+    const deleteItem = async (name: string) => {
+        try {
+            const res = await axios.delete(`/api/items/deleteMany?name=${name}`);
+            console.log(res);
+            ClearItemCache();
+            GetItemWithCache().then((res) => {
+                setItems(res);
+                setFilteredItems(res);  // Set the filtered items to the full list initially
+            });
+        } catch (err) {
+            console.error(err)
+        }
+    }
 
     useEffect(() => {
         GetItemWithCache().then((res) => {
             setItems(res);
             setFilteredItems(res);  // Set the filtered items to the full list initially
         });
+        getDivision();
+        getPostfix();
     }, [])
 
     useEffect(() => {
@@ -145,9 +243,127 @@ export default function Items() {
                                 <option value="ฝ่ายบริหารงานทั่วไป">ฝ่ายบริหารงานทั่วไป</option>
                                 <option value="ฝ่ายแนะแนวการศึกษาอาชีพและศิษย์เก่า">ฝ่ายแนะแนวการศึกษาอาชีพและศิษย์เก่า</option>
                             </select>
-                            <Button className="bg-green-600 hover:bg-green-900">
-                                <FaCirclePlus className="mr-2" /> เพิ่มอุปกรณ์ใหม่
-                            </Button>
+
+                            <Dialog open={isOpen} onOpenChange={(open) => {
+                                setIsOpen(open);
+                                if (!open) resetForm(); // เคลียร์ข้อมูลเมื่อ dialog ถูกปิด
+                            }}>
+                                <DialogTrigger asChild>
+                                    <Button className="bg-green-600 hover:bg-green-900">
+                                        <FaCirclePlus className="mr-2" /> เพิ่มอุปกรณ์ใหม่
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent className="xl:max-w-2xl">
+                                    <DialogHeader>
+                                        <DialogTitle>ตรวจสอบอุปกรณ์</DialogTitle>
+                                        <DialogDescription>
+                                            โปรดตรวจสอบให้ละเอียดก่อนกดยืนยัน
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="grid gap-4 py-4 ">
+                                        <div className="flex justify-start items-start flex-grow h-full flex-col">
+                                            <div>
+                                                <Label htmlFor="image">เลือกรูปภาพ:</Label>
+                                                <Input
+                                                    className="cursor-pointer"
+                                                    type="file"
+                                                    id="image"
+                                                    name="image"
+                                                    onChange={handleFileChange}
+                                                    accept="image/*"
+                                                    required
+                                                />
+                                            </div>
+                                            {preview && (
+                                                <div style={{ margin: "10px 0" }}>
+                                                    <p>Preview:</p>
+                                                    <img
+                                                        src={preview}
+                                                        alt="Preview"
+                                                        style={{ width: "200px", height: "auto", border: "1px solid #ddd" }}
+                                                    />
+                                                </div>
+                                            )}
+                                            <div className=" items-center gap-2 mb-2 w-full">
+                                                <Label htmlFor="name" className="text-left font-black">
+                                                    ชื่ออุปกรณ์
+                                                </Label>
+                                                <Input
+                                                    id="name"
+                                                    type="text"
+                                                    onChange={(e) => setNewName(e.target.value)}
+                                                    className="text-stone-950 bg-transparent w-full"
+                                                />
+                                            </div>
+                                            <div className="items-start justify-start flex flex-col gap-2 mb-2 w-full">
+                                                <Label htmlFor="division" className="text-left font-black">
+                                                    ฝ่ายที่รับผิดชอบ
+                                                </Label>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="outline">{position}</Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent className="w-56">
+                                                        <DropdownMenuLabel>ฝ่ายทั้งหมด</DropdownMenuLabel>
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuRadioGroup value={position} onValueChange={setPosition}>
+                                                            {
+                                                                division.map((v, i) => (
+                                                                    <DropdownMenuRadioItem key={i} value={v.name}>{v.name}</DropdownMenuRadioItem>
+                                                                ))
+                                                            }
+                                                        </DropdownMenuRadioGroup>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
+                                            <div className="items-center gap-2 mb-2 w-full">
+                                                <div className="flex justify-start items-center gap-2">
+                                                    <div className=" items-center gap-2 mb-2 w-full">
+                                                        <Label htmlFor="name" className="text-left font-black">
+                                                            จำนวนที่ต้องการเพิ่ม
+                                                        </Label>
+                                                        <Input
+                                                            id="items"
+                                                            type="number"
+                                                            min="1"
+                                                            required
+                                                            defaultValue={clone}
+                                                            onChange={(e) => setClone(Number(e.target.value))}
+                                                            className="text-stone-950 bg-transparent w-1/4"
+                                                        />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="items-start justify-start flex flex-col gap-2 mb-2 w-full">
+                                                <Label htmlFor="division" className="text-left font-black">
+                                                    เลือกหน่วย
+                                                </Label>
+                                                <DropdownMenu>
+                                                    <DropdownMenuTrigger asChild>
+                                                        <Button variant="outline">{postfixSelect}</Button>
+                                                    </DropdownMenuTrigger>
+                                                    <DropdownMenuContent className="w-56 h-96 overflow-y-scroll">
+                                                        <DropdownMenuLabel>หน่วย</DropdownMenuLabel>
+                                                        <DropdownMenuSeparator />
+                                                        <DropdownMenuRadioGroup value={postfixSelect} onValueChange={setPostfixSelect}>
+                                                            {
+                                                                postfix.map((v, i) => (
+                                                                    <DropdownMenuRadioItem key={i} value={v.name}>{v.name}</DropdownMenuRadioItem>
+                                                                ))
+                                                            }
+                                                        </DropdownMenuRadioGroup>
+                                                    </DropdownMenuContent>
+                                                </DropdownMenu>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <DialogFooter>
+                                        <DialogClose asChild>
+                                            <Button type="button" onClick={(e) => { createitems(); e.stopPropagation() }} className='bg-blue-900'>ยืนยัน</Button>
+                                        </DialogClose>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
                         </div>
                     </CardHeader>
                     <CardContent>
@@ -247,7 +463,7 @@ export default function Items() {
                                                     </DialogTrigger>
                                                     <DialogContent className="sm:max-w-md" onClick={(e) => e.stopPropagation()}>
                                                         <DialogHeader>
-                                                            <DialogTitle>ต้องการลบอุปกรณ์นี้จริงหรือไม่</DialogTitle>
+                                                            <DialogTitle>{`${item.name} `} ต้องการลบอุปกรณ์นี้จริงหรือไม่</DialogTitle>
                                                             <DialogDescription>
                                                                 ข้อมูลที่ถูกลบจะไม่สามารถกู้คืนได้
                                                             </DialogDescription>
@@ -255,7 +471,7 @@ export default function Items() {
                                                         <DialogFooter>
                                                             <div>
                                                                 <DialogClose asChild>
-                                                                    <Button type="submit" className="bg-red-600 hover:bg-red-900 mr-2" onClick={(e) => e.stopPropagation()}>ยืนยัน</Button>
+                                                                    <Button type="submit" className="bg-red-600 hover:bg-red-900 mr-2" onClick={(e) => { deleteItem(item.name); e.stopPropagation() }}>ยืนยัน</Button>
                                                                 </DialogClose>
                                                                 <DialogClose asChild>
                                                                     <Button type="button" onClick={(e) => e.stopPropagation()}>ยกเลิก</Button>

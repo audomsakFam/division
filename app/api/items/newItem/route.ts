@@ -33,21 +33,30 @@ export async function POST(req: Request) {
 
         // อ่านข้อมูล JSON สำหรับการสร้าง items
         const name = fData.get("name");
-        const divisionId = fData.get("divisionId");
-        const postfixId = fData.get("postfixId");
+        const division = fData.get("division");
+        const postfix = fData.get("postfix");
+        const count = fData.get("count");
 
-        if (!name || !divisionId || !postfixId) {
+        if (!name || !division || !postfix || !count) {
             return NextResponse.json({ error: "Missing required fields", status: 400 });
         }
 
+        const divisionId = await prisma.division.findFirst({ where: { name: division.toString() } })
+        const postfixId = await prisma.postfix.findFirst({ where: { name: postfix.toString() } })
+
+        console.log('d--->>>', divisionId)
+        console.log('p--->>>', postfixId)
+
+        const itemsToClone = Array.from({ length: Number(count) }, () => ({
+            name: String(name),
+            img: filePath,
+            divisionId: Number(divisionId?.id),
+            postfixId: Number(postfixId?.id),
+        }));
         // สร้าง items พร้อมกับเส้นทางรูปภาพ
-        const newItem = await prisma.items.create({
-            data: {
-                name: String(name),
-                divisionId: Number(divisionId),
-                postfixId: Number(postfixId),
-                img: filePath, // ใช้ path ที่เก็บไว้
-            },
+        console.log('data--->>>', itemsToClone);
+        const newItem = await prisma.items.createMany({
+            data: itemsToClone
         });
 
         return NextResponse.json({ msg: "Item successfully created", item: newItem, status: 201 });
