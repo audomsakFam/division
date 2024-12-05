@@ -13,7 +13,11 @@ module.exports = {
   deploy: {
     production: {
       user: "your-ssh-user",        // ใช้เมื่อทำการ deploy ไปยังเครื่องอื่นผ่าน SSH
+<<<<<<< HEAD
       host: "203.158.120.66",   // ระบุที่อยู่ IP หรือ domain ของเซิร์ฟเวอร์
+=======
+      host: "your-remote-server",   // ระบุที่อยู่ IP หรือ domain ของเซิร์ฟเวอร์
+>>>>>>> 342607841105a89b80ebb3a4f6871c8f724d9ec8
       ref: "origin/main",         // ใช้ branch ที่ต้องการ deploy
       repo: "https://github.com/your84120/division.git",  // URL ของ Git repository
       path: "C:/path/to/your/deployment/folder", // ตำแหน่งที่คุณต้องการ deploy

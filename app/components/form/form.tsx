@@ -45,19 +45,19 @@ export const Form = () => {
                     required
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
-                    id="username"
+                    id="Username"
                     type="text"
                     autoComplete="off" 
                 />
             </div>
             <div className="grid w-full items-center gap-1.5">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="Password">Password</Label>
                 <Input
                     className="w-full"
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    id="password"
+                    id="Password"
                     type="password"
                 />
             </div>

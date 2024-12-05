@@ -172,8 +172,8 @@ export default function HomePage() {
             max: Math.ceil(
                 Math.max(
                     ...chartData.series.flatMap((s: { data: number[] }) => s.data)
-                ) + 20
-            ), // คำนวณค่าสูงสุด
+                ) + 10
+            ), 
             labels: {
                 formatter: function (value: number) {
                     return `${Math.round(value)} ครั้ง`; // เพิ่มหน่วย "ครั้ง" ที่ท้ายค่า Y
