@@ -79,13 +79,30 @@ export default function CalendarCom() {
                         const eventDetail = eventDates.borrowed
                             .filter((event) => {
                                 const eventEndDate = new Date(event.end);
-                                eventEndDate.setDate(eventEndDate.getDate() + 1);
+                                eventEndDate.setDate(eventEndDate.getDate() + 1); // เพิ่ม 1 วันเพื่อรวมวันที่สุดท้าย
 
                                 return newDate >= event.start && newDate <= eventEndDate;
                             })
                             .map((event) => {
                                 const index = eventDates.borrowed.indexOf(event);
-                                return eventDates.eventDetail[index];
+                                const baseDetail = eventDates.eventDetail[index]; // ข้อความเดิม
+
+                                // ปรับ newDate และ event.end ให้เป็นเวลา 00:00:00 ก่อนเปรียบเทียบ
+                                const normalizeDate = (date: Date) => {
+                                    const normalized = new Date(date);
+                                    normalized.setHours(0, 0, 0, 0); // รีเซ็ตเวลาเป็น 00:00:00
+                                    return normalized;
+                                };
+                                const normalizedEndDate = new Date(event.end);
+                                normalizedEndDate.setDate(normalizedEndDate.getDate() + 1);
+                                const isEndDate = normalizeDate(newDate).getTime() === normalizeDate(normalizedEndDate).getTime(); // เปรียบเทียบวันที่หลัง normalize
+                                console.log("date event------->", normalizeDate(normalizedEndDate).toDateString());
+                                console.log("date event new------->", normalizeDate(newDate).toDateString());
+                                console.log("date event isEndDate------->", isEndDate);
+
+                                const additionalDetail = isEndDate ? "คืน" : "ยืม"; // ถ้าตรงเพิ่ม "คืน" ถ้าไม่ตรงเพิ่ม "ยืม"
+
+                                return `${baseDetail} (${additionalDetail})`; // เพิ่มข้อความต่อท้าย
                             });
 
                         const detailToShow = eventDetail.length > 0 ? eventDetail.join('\n') : "ไม่มีข้อมูลกิจกรรม";

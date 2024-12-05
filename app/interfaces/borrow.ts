@@ -25,6 +25,7 @@ export interface ResBorrowData {
 }
 
 export interface BorrowDetail {
+  quantity: number
   id: number
   item_status: string
   setId: any
