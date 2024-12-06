@@ -108,7 +108,7 @@ export default function CalendarCom() {
                         const detailToShow = eventDetail.length > 0 ? eventDetail.join('\n') : "ไม่มีข้อมูลกิจกรรม";
                         return (
                             <div className={`w-full h-full border-y flex items-center justify-center cursor-pointer whitespace-per-line`} title={detailToShow}>
-                                <div className={`${dayClasses} w-full h-1/4 flex items-center justify-center `}>
+                                <div className={`${dayClasses} w-full h-1/4 flex items-center justify-center border-r border-gray-500`}>
                                     {date.getDate()}
                                 </div>
                             </div>
