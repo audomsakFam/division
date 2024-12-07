@@ -63,7 +63,7 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
 
     const cloneItem = async (itemId: number, cloneCount: number) => {
         try {
-            const res = await axios.post('/api/items', { itemId, cloneCount });
+            const res = await axios.post(process.env.NEXT_PUBLIC_BASE_PATH+'/api/items', { itemId, cloneCount });
             console.log(res);
             ClearItemCache()
             window.location.reload();
@@ -74,7 +74,7 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
 
     const deleteItem = async (name: string, deleteCount: number) => {
         try {
-            const res = await axios.delete(`/api/items?name=${name}&count=${deleteCount}`);
+            const res = await axios.delete(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/items?name=${name}&count=${deleteCount}`);
             console.log(res);
             ClearItemCache()
             window.location.reload();
@@ -85,7 +85,7 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
 
     const updateAll = async () => {
         try {
-            const res = await axios.post('/api/items/update', { name: name, newName: newName, division: position, status: itemsNum });
+            const res = await axios.post(process.env.NEXT_PUBLIC_BASE_PATH+'/api/items/update', { name: name, newName: newName, division: position, status: itemsNum });
             if (res.status === 200) {
                 const currentUrl = new URL(window.location.href);
                 currentUrl.pathname = `${currentUrl.pathname.replace(params.name, '')}/${newName}`;
@@ -137,9 +137,9 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
     //     setFilteredItems(filtered);
     // }, [statusFilter, items]);
     const findItems = async () => {
-        await axios.get<ResItemDetial>(`/api/items/${name}`)
+        await axios.get<ResItemDetial>(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/items/${name}`)
         try {
-            const res = await axios.get<ResItemDetial>(`/api/items/${params.name}`);
+            const res = await axios.get<ResItemDetial>(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/items/${params.name}`);
             const itemsData = res.data.data;
 
             setItems(itemsData); // ตั้งค่า items ทั้งหมด
@@ -164,7 +164,7 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
     }
 
     const getDivision = async () => {
-        await axios.get<ResDivision>('/api/division')
+        await axios.get<ResDivision>(process.env.NEXT_PUBLIC_BASE_PATH+'/api/division')
             .then((res) => {
                 setDivision(res.data.data);
             }).catch((err) => console.error(err))

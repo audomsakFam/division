@@ -32,7 +32,7 @@ export default async function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <SessionProvider session={session}>
+        <SessionProvider session={session} basePath={`${process.env.NEXT_PUBLIC_BASE_PATH}/api/auth`}>
           <RefreshProvider>
             {children}
           </RefreshProvider>

@@ -132,10 +132,12 @@ export default function HomePage() {
                                                 <TableCell colSpan={7} className="text-stone-950 text-left font-bold">{divisionName}</TableCell>
                                             </TableRow>
                                             {items.map((item, index) => (
+                                                
                                                 <TableRow key={index}>
+                                                    {/* {console.log(`${process.env.NEXT_PUBLIC_BASE_PATH}/${item.img}`)} */}
                                                     <TableCell className="text-stone-950 border-r border-gray-400 text-left">{item.name}</TableCell>
                                                     <TableCell className="text-stone-950 border-r border-gray-400 text-center">
-                                                        <img src={item.img} alt={item.name} className="h-12 w-12 object-cover" />
+                                                        <img src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/banner.jpg`} alt={item.name} className="h-12 w-12 object-cover" />
                                                     </TableCell>
                                                     <TableCell className="text-stone-950 mb-2 border-r border-gray-400">
                                                         <div className="flex justify-around">
