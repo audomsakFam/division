@@ -25,8 +25,11 @@ export default function HomePage() {
     const [items, setItems] = useState<ResItemsGroup[]>([]);
 
     useEffect(() => {
-        GetItemWithCache().then((res) => setItems(res));
+        console.log("test")
+        GetItemWithCache().then((res) => {setItems(res); console.log("hello123")});
+    
     }, [])
+    
     return (
         <div  className="h-screen overflow-auto"> 
             <Card className="w-full m-2">
