@@ -71,14 +71,14 @@ export default function Items() {
     };
 
     const getDivision = async () => {
-        await axios.get<ResDivision>('/api/division')
+        await axios.get<ResDivision>(process.env.NEXT_PUBLIC_BASE_PATH+'/api/division')
             .then((res) => {
                 setDivision(res.data.data);
             }).catch((err) => console.error(err))
     }
 
     const getPostfix = async () => {
-        await axios.get<ResPostfix>('/api/postfix')
+        await axios.get<ResPostfix>(process.env.NEXT_PUBLIC_BASE_PATH+'/api/postfix')
             .then((res) => {
                 setPostfix(res.data.data);
             }).catch((err) => console.error(err))
@@ -106,7 +106,7 @@ export default function Items() {
             fData.append("postfix", postfixSelect);
             fData.append("count", clone.toString());
 
-            const res = await axios.post('/api/items/newItem', fData, {
+            const res = await axios.post(process.env.NEXT_PUBLIC_BASE_PATH+'/api/items/newItem', fData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 },
@@ -124,7 +124,7 @@ export default function Items() {
 
     const deleteItem = async (name: string, imgName: string) => {
         try {
-            const res = await axios.delete(`/api/items/deleteMany?name=${name}&imgName=${imgName}`);
+            const res = await axios.delete(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/items/deleteMany?name=${name}&imgName=${imgName}`);
             console.log(res);
             ClearItemCache();
             GetItemWithCache().then((res) => {
