@@ -26,6 +26,7 @@ export default function HomePage() {
     const [selectedDivision, setSelectedDivision] = useState("ทั้งหมด");
 
     useEffect(() => {
+<<<<<<< HEAD
         GetItemWithCache().then((res) => { setItems(res); setLoading(false) });
     }, [])
     if (loading) return <div>Loading...</div>
@@ -33,6 +34,45 @@ export default function HomePage() {
     const filteredItems = items.filter(item =>
         item.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
         (selectedDivision === "ทั้งหมด" || item.divisionName === selectedDivision)
+=======
+        console.log("test")
+        GetItemWithCache().then((res) => {setItems(res); console.log("hello123")});
+    
+    }, [])
+    
+    return (
+        <div  className="h-screen overflow-auto"> 
+            <Card className="w-full m-2">
+                <CardHeader>
+                    <CardTitle>Create project</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <Table className="overflow-hidden">
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead className="w-[100px]">name</TableHead>
+                                <TableHead>img</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {items.map((v,i) => (
+                                <TableRow key={i}>
+                                    <TableCell className="font-medium">{v.name}</TableCell>
+                                    <TableCell>
+                                        {
+                                            v.img ? <img src={v.img} alt="img" className="w-[100px]"/> : 'no img'
+                                        }
+                                    </TableCell>
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                        <TableFooter>
+                        </TableFooter>
+                    </Table>
+                </CardContent>
+            </Card>
+        </div>
+>>>>>>> famDev
     );
 
     const groupedByDivision = filteredItems.reduce((acc, item) => {

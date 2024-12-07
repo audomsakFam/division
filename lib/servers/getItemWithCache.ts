@@ -13,6 +13,7 @@ export const GetItemWithCache = async (): Promise<ResItemsGroup[]> => {
 
     console.log('Fetching new items data');
     try {
+        console.log("hello")
         const response = await axios.get<ResItemsGroup[]>('/api/items');
         const fetchItems = response.data;
 
