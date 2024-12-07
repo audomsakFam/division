@@ -28,7 +28,7 @@ export async function POST(req: Request) {
         const arrayBuffer = await fileUpload.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
         const fileName = fileUpload.name;
-        const filePath = `../../../../images/items/${fileName}`; // เส้นทางสำหรับเก็บไฟล์
+        const filePath = `images/items/${fileName}`; // เส้นทางสำหรับเก็บไฟล์
         await writeImageToPublic(fileName, buffer);
 
         // อ่านข้อมูล JSON สำหรับการสร้าง items

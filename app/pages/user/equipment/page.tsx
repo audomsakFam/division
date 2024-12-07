@@ -147,7 +147,7 @@ export default function Equipment() {
                                                     <TableCell className="pt-0 pb-0 pl-0 pr-0 text-stone-950 border-r border-gray-400 text-center">
                                                         <div className="relative group flex justify-center items-center">
                                                             <img
-                                                                src={item.img}
+                                                                src={process.env.NEXT_PUBLIC_BASE_PATH + '/' + item.img}
                                                                 alt={item.name}
                                                                 className="h-12 w-[auto] object-cover transition-transform duration-300 ease-in-out sm:group-hover:scale-[7] group-hover:scale-[3] group-hover:z-50 group-hover:absolute group-hover:top-1/2 group-hover:left-1/2 group-hover:transform group-hover:-translate-x-1/2 group-hover:-translate-y-1/2"
                                                             />

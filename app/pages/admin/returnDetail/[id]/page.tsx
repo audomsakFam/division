@@ -136,7 +136,7 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
                                                         {/* กล่องแสดงภาพหลัก */}
                                                         <div className="flex  justify-center items-center overflow-hidden">
                                                             <img
-                                                                src={item.item.img!}
+                                                                src={process.env.NEXT_PUBLIC_BASE_PATH + '/' + item.item.img!}
                                                                 width={90}
                                                                 height={90}
                                                                 alt="item image"
@@ -150,7 +150,7 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
                                                     `}
                                                         >
                                                             <img
-                                                                src={item.item.img!}
+                                                                src={process.env.NEXT_PUBLIC_BASE_PATH + '/' + item.item.img!}
                                                                 alt="Zoomed image"
                                                                 className="transform w-full absolute"
                                                             />

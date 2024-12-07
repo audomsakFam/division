@@ -9,7 +9,7 @@ export async function POST(req: Request) {
         if (!name || !lastname || !username || !password || !gender || !tel) {
             return NextResponse.json({ error: 'Missing required fields', status: 400 });
         }
-        const image = gender == 'ชาย' ? '../../../../../images/male.png' : '../../../../../images/female.png'
+        const image = gender == 'ชาย' ? 'images/male.png' : 'images/female.png'
         const hashedPassword = await bcrypt.hash(password, 9);
         const user = await prisma.user.create({
             data: {
