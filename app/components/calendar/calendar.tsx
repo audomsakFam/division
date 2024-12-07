@@ -48,7 +48,7 @@ export default function CalendarCom() {
         }
         if (isBorrowed) return "bg-red-500 text-white"; // วันที่ยืม
         if (isReturned) return "bg-yellow-500 text-black"; // วันที่คืน
-        if (isToday) return "bg-blue-900 text-white"; // วันที่คืน
+        if (isToday) return "bg-blue-300 text-black"; // วันที่คืน
         return "bg-white text-black"; // วันอื่นๆ
     };
 
@@ -59,9 +59,9 @@ export default function CalendarCom() {
     }
 
     return (
-        <div className="w-full bg-white h-[650px] mb-4 rounded-md border shadow" >
+        <div className="w-full bg-white h-[auto] mb-4 rounded-md border shadow p-0">
             <Calendar
-                className="h-[94%] w-full flex "
+                className="h-[auto] w-full flex "
                 classNames={{
                     months:
                         "flex w-full flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0 flex-1",
@@ -107,8 +107,8 @@ export default function CalendarCom() {
 
                         const detailToShow = eventDetail.length > 0 ? eventDetail.join('\n') : "ไม่มีข้อมูลกิจกรรม";
                         return (
-                            <div className={`w-full h-full border-y flex items-center justify-center cursor-pointer whitespace-per-line`} title={detailToShow}>
-                                <div className={`${dayClasses} w-full h-1/4 flex items-center justify-center border-r border-gray-500`}>
+                            <div className={`w-full h-full border-y flex items-center justify-center cursor-pointer whitespace-per-line p-0`} title={detailToShow}>
+                                <div className={`${dayClasses} w-full h-[30px] sm:h-[100px] flex items-center justify-center border-r border-gray-500`}>
                                     {date.getDate()}
                                 </div>
                             </div>
@@ -123,12 +123,25 @@ export default function CalendarCom() {
                 defaultMonth={fieldValue?.from}
                 locale={th}
             />
-            <div className="flex gap-2 ml-4 mt-2">
-                <p className="flex items-center"><div className="bg-blue-900 rounded-full w-4 h-4 mr-2"></div> วันนี้</p>
-                <p className="flex items-center"><div className="bg-red-500 rounded-full w-4 h-4 mr-2"></div> วันที่ยืม</p>
-                <p className="flex items-center"><div className="bg-yellow-500 rounded-full w-4 h-4 mr-2"></div> วันที่คืน</p>
-                <p className="flex items-center"><div className="bg-gradient-to-r from-red-500 via-blue-900 to-yellow-500 rounded-full w-4 h-4 mr-2"></div> วันนี้และมีหลายเหตุการณ์</p>
+            <div className="flex flex-col gap-2 ml-12 mt-2 mb-2">
+                <p className="flex items-center">
+                    <div className="bg-blue-300 rounded-full w-4 h-4 mr-2"></div>
+                    วันนี้
+                </p>
+                <p className="flex items-center">
+                    <div className="bg-red-500 rounded-full w-4 h-4 mr-2"></div>
+                    วันที่ยืม
+                </p>
+                <p className="flex items-center">
+                    <div className="bg-yellow-500 rounded-full w-4 h-4 mr-2"></div>
+                    วันที่คืน
+                </p>
+                <p className="flex items-center">
+                    <div className="bg-gradient-to-r from-red-500 via-blue-900 to-yellow-500 rounded-full w-4 h-4 mr-2"></div>
+                    วันนี้และมีหลายเหตุการณ์
+                </p>
             </div>
+
         </div>
     );
 }
