@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 
 
 export async function GET(req: Request) {
+    //return NextResponse.json({msg: "hello"})
     const url = new URL(req.url);
     try {
         const data = await prisma.items.groupBy({
