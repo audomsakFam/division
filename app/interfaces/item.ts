@@ -1,16 +1,21 @@
 /* eslint-disable*/
 
 export interface ResItemsGroup {
-    name: string
-    statusCounts: StatusCount[]
-    divisionName: string
-    postfixName: string
-    img: any
+  name: string
+  statusCounts: StatusCount[]
+  divisionName: string
+  postfixName: string
+  img: string
+  itemSets: ItemSet[]
 }
 
 export interface StatusCount {
-    status: string
-    count: number
+  status: string
+  count: number
+}
+
+export interface ItemSet {
+  setName: string
 }
 
 export interface ResItemDetial {

@@ -13,20 +13,25 @@ export async function GET(req: Request) {
                 status: true, // นับจำนวนของแต่ละสถานะ
             },
             orderBy: {
-                name: 'asc',}
+                name: 'asc',
+            }
         })
 
         const divisions = await prisma.division.findMany(); // ดึงข้อมูล division ทั้งหมด
         const postfixes = await prisma.postfix.findMany(); // ดึงข้อมูล postfix ทั้งหมด
-        // const qrs = await prisma.qr.findMany(); // ดึงข้อมูล qr ทั้งหมด
-        // สร้าง finalResult โดยใช้ข้อมูลที่ได้จาก groupBy, division, และ postfix
+        const itemSets = await prisma.item_set.findMany({
+            include: {
+                item: true,
+                set: true
+            }
+        })
+
         const finalResult = data.reduce<Items[]>((acc, item) => {
             // หาค่าที่สัมพันธ์กับ divisionId
             const division = divisions.find(div => div.id === item.divisionId);
 
             // หาค่าที่สัมพันธ์กับ postfixId
             const postfix = postfixes.find(pf => pf.id === item.postfixId);
-
 
             // ค้นหากลุ่มที่มี name ซ้ำกัน
             let existingGroup = acc.find(group => group.name === item.name) as any;
@@ -38,8 +43,8 @@ export async function GET(req: Request) {
                     statusCounts: [],
                     divisionName: division ? division.name : null,
                     postfixName: postfix ? postfix.name : null,
-                    img: item.img
-                    // createAt: item.createAt,
+                    img: item.img,
+                    itemSets: [], // เพิ่มฟิลด์ itemSets
                 };
                 acc.push(existingGroup as never);
             }
@@ -50,8 +55,24 @@ export async function GET(req: Request) {
                 count: item._count.status,
             });
 
+            // เพิ่มข้อมูล Item_set ที่สัมพันธ์กับ item
+            const relatedItemSets = itemSets
+                .filter(is => is.item.name === item.name)
+                .map(is => ({
+                    setName: is.set.name, // เก็บชื่อของ set
+                }));
+
+            existingGroup.itemSets = [
+                ...existingGroup.itemSets,
+                ...relatedItemSets,
+            ].filter(
+                (value, index, self) =>
+                    self.findIndex(v => v.setName === value.setName) === index
+            );
+
             return acc;
         }, []);
+
         return NextResponse.json(finalResult, {
             status: 200
         })
@@ -59,6 +80,11 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: 'someting went worng at ' + url.href + err, status: 500 });
     }
 }
+
+
+
+
+
 
 export async function POST(req: Request) {
     const url = new URL(req.url);

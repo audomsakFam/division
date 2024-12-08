@@ -41,6 +41,8 @@ import { Button } from "@/components/ui/button";
 import { ResDivision, ResDivisionData } from "@/app/interfaces/division";
 import axios from "axios";
 import { PostfixData, ResPostfix } from "@/app/interfaces/postfix";
+import { Set } from "@prisma/client";
+import DialogSetComponent from "@/app/components/dialogSet/dialog";
 
 const itemsPerPage = 20;
 export default function Items() {
@@ -48,6 +50,7 @@ export default function Items() {
     const [currentPage, setCurrentPage] = useState<number>(1);
     const [filteredItems, setFilteredItems] = useState<ResItemsGroup[]>([]);
     const [nameFilter, setNameFilter] = useState('');
+    const [setFilter, setSetFilter] = useState('');
     const [divisionFilter, setDivisionFilter] = useState('');
     const [statusFilter, setStatusFilter] = useState('');
     const [statusOptions, setStatusOptions] = useState<{ status: string, count: number }[]>([]);
@@ -56,11 +59,14 @@ export default function Items() {
     const [clone, setClone] = useState(1)
     const [position, setPosition] = useState('เลือกฝ่าย')
     const [division, setDivision] = useState<ResDivisionData[]>([]);
-    const [isOpen, setIsOpen] = useState(false);
+    const [isOpenAddNew, setIsOpenAddNew] = useState(false);
+    const [isOpenAddSet, setIsOpenAddSet] = useState(false);
     const [postfixSelect, setPostfixSelect] = useState('เลือกหน่วย')
+    const [setSelect, setSetSelect] = useState('เลือกชุด')
     const [postfix, setPostfix] = useState<PostfixData[]>([]);
     const [image, setImage] = useState<File | null>(null);
     const [preview, setPreview] = useState<string | null>(null);
+    const [set, setSet] = useState<Set[]>([]);
 
     const resetForm = () => {
         setPreview(null);
@@ -68,17 +74,31 @@ export default function Items() {
         setClone(1);
         setPosition("เลือกฝ่าย");
         setPostfixSelect("เลือกหน่วย");
+        setSetSelect("เลือกชุด");
     };
 
+    const getSet = async () => {
+        try {
+            const data = await axios.get(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/set`);
+            if (data.status === 200) {
+                setSet(data.data.data);
+            } else {
+                throw new Error(data.data.message)
+            }
+        } catch (err) {
+            console.log(err)
+        }
+    }
+
     const getDivision = async () => {
-        await axios.get<ResDivision>(process.env.NEXT_PUBLIC_BASE_PATH+'/api/division')
+        await axios.get<ResDivision>(process.env.NEXT_PUBLIC_BASE_PATH + '/api/division')
             .then((res) => {
                 setDivision(res.data.data);
             }).catch((err) => console.error(err))
     }
 
     const getPostfix = async () => {
-        await axios.get<ResPostfix>(process.env.NEXT_PUBLIC_BASE_PATH+'/api/postfix')
+        await axios.get<ResPostfix>(process.env.NEXT_PUBLIC_BASE_PATH + '/api/postfix')
             .then((res) => {
                 setPostfix(res.data.data);
             }).catch((err) => console.error(err))
@@ -106,7 +126,7 @@ export default function Items() {
             fData.append("postfix", postfixSelect);
             fData.append("count", clone.toString());
 
-            const res = await axios.post(process.env.NEXT_PUBLIC_BASE_PATH+'/api/items/newItem', fData, {
+            const res = await axios.post(process.env.NEXT_PUBLIC_BASE_PATH + '/api/items/newItem', fData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 },
@@ -142,6 +162,7 @@ export default function Items() {
             setFilteredItems(res);  // Set the filtered items to the full list initially
         });
         getDivision();
+        getSet();
         getPostfix();
     }, [])
 
@@ -173,6 +194,12 @@ export default function Items() {
         // Filter items based on the selected filters
         let filtered = items;
 
+        if (setFilter) {
+            filtered = filtered.filter(item =>
+                item.itemSets.some(set => set.setName === setFilter.toLowerCase())
+            );
+        }
+
         if (nameFilter) {
             filtered = filtered.filter(item =>
                 item.name.toLowerCase().includes(nameFilter.toLowerCase())
@@ -193,7 +220,7 @@ export default function Items() {
         }
         setCurrentPage(1);
         setFilteredItems(filtered);
-    }, [nameFilter, statusFilter, divisionFilter, items]);
+    }, [nameFilter, statusFilter, divisionFilter, items, setFilter]);
 
     const startIdx = (currentPage - 1) * itemsPerPage;
     const endIdx = startIdx + itemsPerPage;
@@ -207,166 +234,215 @@ export default function Items() {
                 <Card className="w-full p-2">
                     <CardHeader>
                         <h3 className="text-xl font-semibold">อุปกรณ์</h3>
-                        <div className="mb-4 flex gap-4 flex-wrap items-center">
-                            <input
-                                type="text"
-                                placeholder="ค้นหาชื่ออุปกรณ์"
-                                value={nameFilter}
-                                onChange={(e) => setNameFilter(e.target.value)}
-                                className="px-4 py-2 border rounded"
-                            />
-                            <select
-                                value={statusFilter}
-                                onChange={(e) => setStatusFilter(e.target.value)}
-                                className="px-4 py-2 border rounded"
-                            >
-                                <option value="">สถานะ (แสดงเฉพาะสถานะที่มีข้อมูล)</option>
-                                {
-                                    statusOptions.map((statusObj, index) => (
-                                        <option key={index} value={statusObj.status}>
-                                            {statusObj.status}
-                                            {/* ({statusObj.count}) */}
-                                        </option>
-                                    ))
-                                }
-                            </select>
+                        <div className="mb-4 flex gap-4 flex-wrap flex-col">
+                            <div className="flex gap-4 flex-wrap items-center ">
+                                <input
+                                    type="text"
+                                    placeholder="ค้นหาชื่ออุปกรณ์"
+                                    value={nameFilter}
+                                    onChange={(e) => setNameFilter(e.target.value)}
+                                    className="px-4 py-2 border rounded"
+                                />
+                                <select
+                                    value={statusFilter}
+                                    onChange={(e) => setStatusFilter(e.target.value)}
+                                    className="px-4 py-2 border rounded"
+                                >
+                                    <option value="">สถานะ (แสดงเฉพาะสถานะที่มีข้อมูล)</option>
+                                    {
+                                        statusOptions.map((statusObj, index) => (
+                                            <option key={index} value={statusObj.status}>
+                                                {statusObj.status}
+                                                {/* ({statusObj.count}) */}
+                                            </option>
+                                        ))
+                                    }
+                                </select>
 
-                            <select
-                                value={divisionFilter}
-                                onChange={(e) => setDivisionFilter(e.target.value)}
-                                className="px-4 py-2 border rounded"
-                            >
-                                <option value="">แผนก</option>
-                                <option value="ฝ่ายพัฒนาศักยภาพนักศึกษา">ฝ่ายพัฒนาศักยภาพนักศึกษา</option>
-                                <option value="ฝ่ายทำนุบำรุงศิลปวัฒนธรรม">ฝ่ายทำนุบำรุงศิลปวัฒนธรรม</option>
-                                <option value="ฝ่ายสุขภาพและอนามัย">ฝ่ายสุขภาพและอนามัย</option>
-                                <option value="ฝ่ายบริหารงานทั่วไป">ฝ่ายบริหารงานทั่วไป</option>
-                                <option value="ฝ่ายแนะแนวการศึกษาอาชีพและศิษย์เก่า">ฝ่ายแนะแนวการศึกษาอาชีพและศิษย์เก่า</option>
-                            </select>
+                                <select
+                                    value={divisionFilter}
+                                    onChange={(e) => setDivisionFilter(e.target.value)}
+                                    className="px-4 py-2 border rounded"
+                                >
+                                    <option value="">แผนก</option>
+                                    <option value="ฝ่ายพัฒนาศักยภาพนักศึกษา">ฝ่ายพัฒนาศักยภาพนักศึกษา</option>
+                                    <option value="ฝ่ายทำนุบำรุงศิลปวัฒนธรรม">ฝ่ายทำนุบำรุงศิลปวัฒนธรรม</option>
+                                    <option value="ฝ่ายสุขภาพและอนามัย">ฝ่ายสุขภาพและอนามัย</option>
+                                    <option value="ฝ่ายบริหารงานทั่วไป">ฝ่ายบริหารงานทั่วไป</option>
+                                    <option value="ฝ่ายแนะแนวการศึกษาอาชีพและศิษย์เก่า">ฝ่ายแนะแนวการศึกษาอาชีพและศิษย์เก่า</option>
+                                </select>
 
-                            <Dialog open={isOpen} onOpenChange={(open) => {
-                                setIsOpen(open);
-                                if (!open) resetForm(); // เคลียร์ข้อมูลเมื่อ dialog ถูกปิด
-                            }}>
-                                <DialogTrigger asChild>
-                                    <Button className="bg-green-600 hover:bg-green-900">
-                                        <FaCirclePlus className="mr-2" /> เพิ่มอุปกรณ์ใหม่
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent className="xl:max-w-2xl">
-                                    <DialogHeader>
-                                        <DialogTitle>ตรวจสอบอุปกรณ์</DialogTitle>
-                                        <DialogDescription>
-                                            โปรดตรวจสอบให้ละเอียดก่อนกดยืนยัน
-                                        </DialogDescription>
-                                    </DialogHeader>
-                                    <div className="grid gap-4 py-4 ">
-                                        <div className="flex justify-start items-start flex-grow h-full flex-col">
-                                            <div>
-                                                <Label htmlFor="image">เลือกรูปภาพ:</Label>
-                                                <Input
-                                                    className="cursor-pointer"
-                                                    type="file"
-                                                    id="image"
-                                                    name="image"
-                                                    onChange={handleFileChange}
-                                                    accept="image/*"
-                                                    required
-                                                />
-                                            </div>
-                                            {preview && (
-                                                <div style={{ margin: "10px 0" }}>
-                                                    <p>Preview:</p>
-                                                    <img
-                                                        src={preview}
-                                                        alt="Preview"
-                                                        style={{ width: "200px", height: "auto", border: "1px solid #ddd" }}
+                                <select
+                                    value={setFilter}
+                                    onChange={(e) => setSetFilter(e.target.value)}
+                                    className="px-4 py-2 border rounded"
+                                >
+                                    <option value="">ชุดอุปกรณ์</option>
+                                    {
+                                        set.map((set, index) => (
+                                            <option key={index} value={set.name}>{set.name}</option>
+                                        ))
+                                    }
+                                </select>
+                            </div>
+                            <div className="flex gap-4 flex-wrap items-center ">
+                                <Dialog open={isOpenAddNew} onOpenChange={(open) => {
+                                    setIsOpenAddNew(open);
+                                    if (!open) resetForm(); // เคลียร์ข้อมูลเมื่อ dialog ถูกปิด
+                                }}>
+                                    <DialogTrigger asChild>
+                                        <Button className="bg-green-600 hover:bg-green-900">
+                                            <FaCirclePlus className="mr-2" /> เพิ่มอุปกรณ์ใหม่
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="xl:max-w-2xl">
+                                        <DialogHeader>
+                                            <DialogTitle>ตรวจสอบอุปกรณ์</DialogTitle>
+                                            <DialogDescription>
+                                                โปรดตรวจสอบให้ละเอียดก่อนกดยืนยัน
+                                            </DialogDescription>
+                                        </DialogHeader>
+                                        <div className="grid gap-4 py-4 ">
+                                            <div className="flex justify-start items-start flex-grow h-full flex-col">
+                                                <div>
+                                                    <Label htmlFor="image">เลือกรูปภาพ:</Label>
+                                                    <Input
+                                                        className="cursor-pointer"
+                                                        type="file"
+                                                        id="image"
+                                                        name="image"
+                                                        onChange={handleFileChange}
+                                                        accept="image/*"
+                                                        required
                                                     />
                                                 </div>
-                                            )}
-                                            <div className=" items-center gap-2 mb-2 w-full">
-                                                <Label htmlFor="name" className="text-left font-black">
-                                                    ชื่ออุปกรณ์
-                                                </Label>
-                                                <Input
-                                                    id="name"
-                                                    type="text"
-                                                    onChange={(e) => setNewName(e.target.value)}
-                                                    className="text-stone-950 bg-transparent w-full"
-                                                />
-                                            </div>
-                                            <div className="items-start justify-start flex flex-col gap-2 mb-2 w-full">
-                                                <Label htmlFor="division" className="text-left font-black">
-                                                    ฝ่ายที่รับผิดชอบ
-                                                </Label>
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="outline">{position}</Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent className="w-56">
-                                                        <DropdownMenuLabel>ฝ่ายทั้งหมด</DropdownMenuLabel>
-                                                        <DropdownMenuSeparator />
-                                                        <DropdownMenuRadioGroup value={position} onValueChange={setPosition}>
-                                                            {
-                                                                division.map((v, i) => (
-                                                                    <DropdownMenuRadioItem key={i} value={v.name}>{v.name}</DropdownMenuRadioItem>
-                                                                ))
-                                                            }
-                                                        </DropdownMenuRadioGroup>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </div>
-                                            <div className="items-center gap-2 mb-2 w-full">
-                                                <div className="flex justify-start items-center gap-2">
-                                                    <div className=" items-center gap-2 mb-2 w-full">
-                                                        <Label htmlFor="name" className="text-left font-black">
-                                                            จำนวนที่ต้องการเพิ่ม
-                                                        </Label>
-                                                        <Input
-                                                            id="items"
-                                                            type="number"
-                                                            min="1"
-                                                            required
-                                                            defaultValue={clone}
-                                                            onChange={(e) => setClone(Number(e.target.value))}
-                                                            className="text-stone-950 bg-transparent w-1/4"
+                                                {preview && (
+                                                    <div style={{ margin: "10px 0" }}>
+                                                        <p>Preview:</p>
+                                                        <img
+                                                            src={preview}
+                                                            alt="Preview"
+                                                            style={{ width: "200px", height: "auto", border: "1px solid #ddd" }}
                                                         />
                                                     </div>
+                                                )}
+                                                <div className=" items-center gap-2 mb-2 w-full">
+                                                    <Label htmlFor="name" className="text-left font-black">
+                                                        ชื่ออุปกรณ์
+                                                    </Label>
+                                                    <Input
+                                                        required
+                                                        id="name"
+                                                        type="text"
+                                                        onChange={(e) => setNewName(e.target.value)}
+                                                        className="text-stone-950 bg-transparent w-full"
+                                                    />
+                                                </div>
+                                                <div className="items-start justify-start flex flex-col gap-2 mb-2 w-full">
+                                                    <Label htmlFor="division" className="text-left font-black">
+                                                        ฝ่ายที่รับผิดชอบ
+                                                    </Label>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="outline">{position}</Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent className="w-56">
+                                                            <DropdownMenuLabel>ฝ่ายทั้งหมด</DropdownMenuLabel>
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuRadioGroup value={position} onValueChange={setPosition}>
+                                                                {
+                                                                    division.map((v, i) => (
+                                                                        <DropdownMenuRadioItem key={i} value={v.name}>{v.name}</DropdownMenuRadioItem>
+                                                                    ))
+                                                                }
+                                                            </DropdownMenuRadioGroup>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
+                                                <div className="items-center gap-2 mb-2 w-full">
+                                                    <div className="flex justify-start items-center gap-2">
+                                                        <div className=" items-center gap-2 mb-2 w-full">
+                                                            <Label htmlFor="name" className="text-left font-black">
+                                                                จำนวนที่ต้องการเพิ่ม
+                                                            </Label>
+                                                            <Input
+                                                                id="items"
+                                                                type="number"
+                                                                min="1"
+                                                                required
+                                                                defaultValue={clone}
+                                                                onChange={(e) => setClone(Number(e.target.value))}
+                                                                className="text-stone-950 bg-transparent w-1/4"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="items-start justify-start flex flex-col gap-2 mb-2 w-full">
+                                                    <Label htmlFor="division" className="text-left font-black">
+                                                        เลือกหน่วย
+                                                    </Label>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="outline">{postfixSelect}</Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent className="w-56 h-96 overflow-y-scroll">
+                                                            <DropdownMenuLabel>หน่วย</DropdownMenuLabel>
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuRadioGroup value={postfixSelect} onValueChange={setPostfixSelect}>
+                                                                {
+                                                                    postfix.map((v, i) => (
+                                                                        <DropdownMenuRadioItem key={i} value={v.name}>{v.name}</DropdownMenuRadioItem>
+                                                                    ))
+                                                                }
+                                                            </DropdownMenuRadioGroup>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                </div>
+                                                <div className="items-start justify-start flex flex-col gap-2 mb-2 w-full">
+                                                    <Label htmlFor="division" className="text-left font-black">
+                                                        เลือกชุดอุปกรณ์ หรือ ปล่อยว่างหากไม่อยู่ในชุดอุปกรณ์ใดๆ
+                                                    </Label>
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="outline">{setSelect}</Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent className="w-56 h-96 overflow-y-scroll">
+                                                            <DropdownMenuLabel>หน่วย</DropdownMenuLabel>
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuRadioGroup value={setSelect} onValueChange={setSetSelect}>
+                                                                <DropdownMenuRadioItem value={""}>ไม่อยู่ในชุด</DropdownMenuRadioItem>
+                                                                {
+                                                                    set.map((v, i) => (
+                                                                        <DropdownMenuRadioItem key={i} value={v.name}>{v.name}</DropdownMenuRadioItem>
+                                                                    ))
+                                                                }
+                                                            </DropdownMenuRadioGroup>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
                                                 </div>
                                             </div>
-                                            <div className="items-start justify-start flex flex-col gap-2 mb-2 w-full">
-                                                <Label htmlFor="division" className="text-left font-black">
-                                                    เลือกหน่วย
-                                                </Label>
-                                                <DropdownMenu>
-                                                    <DropdownMenuTrigger asChild>
-                                                        <Button variant="outline">{postfixSelect}</Button>
-                                                    </DropdownMenuTrigger>
-                                                    <DropdownMenuContent className="w-56 h-96 overflow-y-scroll">
-                                                        <DropdownMenuLabel>หน่วย</DropdownMenuLabel>
-                                                        <DropdownMenuSeparator />
-                                                        <DropdownMenuRadioGroup value={postfixSelect} onValueChange={setPostfixSelect}>
-                                                            {
-                                                                postfix.map((v, i) => (
-                                                                    <DropdownMenuRadioItem key={i} value={v.name}>{v.name}</DropdownMenuRadioItem>
-                                                                ))
-                                                            }
-                                                        </DropdownMenuRadioGroup>
-                                                    </DropdownMenuContent>
-                                                </DropdownMenu>
-                                            </div>
                                         </div>
-                                    </div>
-                                    <DialogFooter>
-                                        <DialogClose asChild>
-                                            <Button type="button" onClick={(e) => { createitems(); e.stopPropagation() }} className='bg-blue-900'>ยืนยัน</Button>
-                                        </DialogClose>
-                                    </DialogFooter>
-                                </DialogContent>
-                            </Dialog>
+                                        <DialogFooter>
+                                            <DialogClose asChild>
+                                                <Button type="button" onClick={(e) => { createitems(); e.stopPropagation() }} className='bg-blue-900'>ยืนยัน</Button>
+                                            </DialogClose>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
+
+                                <DialogSetComponent
+                                    isOpen={isOpenAddSet}
+                                    setIsOpen={setIsOpenAddSet}
+                                    resetForm={resetForm}
+                                    set={set}
+                                    setSelect={setSelect}
+                                    setSetSelect={setSetSelect}
+                                    items={items}
+                                />
+                            </div>
                         </div>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="h-[640px] overflow-y-scroll">
                         <Table>
                             <TableHeader>
                                 <TableRow className="border-b border-gray-800 ">
@@ -471,7 +547,7 @@ export default function Items() {
                                                         <DialogFooter>
                                                             <div>
                                                                 <DialogClose asChild>
-                                                                    <Button type="submit" className="bg-red-600 hover:bg-red-900 mr-2" onClick={(e) => { deleteItem(item.name,item.img); e.stopPropagation() }}>ยืนยัน</Button>
+                                                                    <Button type="submit" className="bg-red-600 hover:bg-red-900 mr-2" onClick={(e) => { deleteItem(item.name, item.img); e.stopPropagation() }}>ยืนยัน</Button>
                                                                 </DialogClose>
                                                                 <DialogClose asChild>
                                                                     <Button type="button" onClick={(e) => e.stopPropagation()}>ยกเลิก</Button>
