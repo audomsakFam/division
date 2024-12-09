@@ -1,5 +1,5 @@
 import prisma from "@/lib/db";
-import { Borrow_detail } from "@prisma/client";
+import { Borrow_detail, Items } from "@prisma/client";
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
@@ -14,41 +14,91 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'No borrow details provided' }, { status: 400 });
         }
 
-        // สร้าง Borrow พร้อมกับ Borrow_detail
-        const result = await prisma.borrow.create({
-            data: {
-                name,
-                lastname,
-                tel,
-                project,
-                retureAt,
-                serveAt,
-                origanizationId,
-                Borrow_detail: {
-                    create: borrowDetails.map((detail: { setId?: number; itemId?: number }) => ({
-                        setId: detail.setId,
-                        itemId: detail.itemId,
-                    })),
+        const result = await prisma.$transaction(async (tx) => {
+            // 1. สร้าง Borrow
+            const createdBorrow = await tx.borrow.create({
+                data: {
+                    name,
+                    lastname,
+                    tel,
+                    project,
+                    serveAt: new Date(serveAt),
+                    retureAt: new Date(retureAt),
+                    origanizationId,
                 },
-            },
-            include: {
-                Borrow_detail: {
+                include: {
+                    origanization: true
+                }
+            });
+
+            // 2. สร้าง Borrow_detail
+            for (const detail of borrowDetails) {
+                // ดึงรายการ `itemId` จาก `Item_set` ใน detail.set
+                const itemIds = detail.set?.Item_set?.map((v: any) => v.itemId) || [];
+
+                // สร้าง Borrow_detail สำหรับแต่ละรายการใน borrowDetails
+                const data = await tx.borrow_detail.create({
+                    data: {
+                        borrowId: createdBorrow.id,
+                        itemId: detail.itemId,
+                        setId: detail.setId,
+                    },
                     include: {
-                        item: true,
                         set: {
                             include: {
                                 Item_set: {
-                                    include: {
-                                        item: true
-                                    }
-                                }
-                            }
-                        }
+                                    where: {
+                                        itemId: { in: itemIds }, // ใช้ `in` แทน `flatMap`
+                                        setId: detail.setId,
+                                    },
+                                    include: { item: true },
+                                },
+                            },
+                        },
                     },
+                });
+
+                console.log('data======>', data.set?.Item_set)
+            }
+
+
+            const borrowWithDetails = await tx.borrow.findUnique({
+                where: { id: createdBorrow.id },
+                include: {
+                    Borrow_detail: {
+                        include: {
+                            item: true,
+                            set: {
+                                include: {
+                                    Item_set: {
+                                        include: {
+                                            item: true, // ดึงข้อมูล item ที่สัมพันธ์กับ Item_set
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    origanization: true,
                 },
-                origanization: true
-            },
+            });
+            
+            // กรองข้อมูล `Item_set` หลังจากดึงข้อมูล
+            borrowWithDetails?.Borrow_detail.forEach(detail => {
+                if (detail.set && detail.set.Item_set) {
+                    detail.set.Item_set = detail.set.Item_set.filter(itemSet =>
+                        borrowDetails.some(
+                            (d: any) =>
+                                d.setId === detail.setId &&
+                                d.set?.Item_set?.some((item: any) => item.itemId === itemSet.itemId)
+                        )
+                    );
+                }
+            });
+
+            return borrowWithDetails; // คืนค่าข้อมูล Borrow ที่สร้างขึ้น
         });
+
 
         if (result) {
             // console.log("Borrow created successfully:", result);
@@ -63,16 +113,42 @@ export async function POST(req: Request) {
             // รอให้การอัปเดต status ของ items เสร็จ
             await Promise.all(itemUpdates);
 
-            const groupedItems = result.Borrow_detail.reduce((acc: Record<string, number>, detail) => {
-                const itemName = detail?.item?.name || 'Unknown'; // กำหนดชื่ออุปกรณ์หรือค่าเริ่มต้น
-                acc[itemName] = (acc[itemName] || 0) + 1; // เพิ่มจำนวนของอุปกรณ์
+            const groupedItems = result.Borrow_detail.reduce((acc: Record<string, any>, detail) => {
+                const itemName = detail?.item?.name || 'Unknown'; // ชื่ออุปกรณ์หรือค่าเริ่มต้น
+                const itemSetName = detail?.set?.name || 'Unknown';
+                const itemSetDetails = detail?.set?.Item_set || []; // ดึงรายการ Item_set
+
+                // เพิ่มรายการอุปกรณ์
+                acc[itemName] = (acc[itemName] || 0) + 1;
+
+                // เพิ่มรายการ Set และรายละเอียดใน Set
+                if (itemSetName !== 'Unknown') {
+                    acc[itemSetName] = acc[itemSetName] || {};
+                    itemSetDetails.forEach((itemSetDetail: { itemId: number; item?: Items; }) => {
+                        const itemInSetName = itemSetDetail.item?.name || `Item ${itemSetDetail.itemId}`;
+                        acc[itemSetName][itemInSetName] = (acc[itemSetName][itemInSetName] || 0) + 1;
+                    });
+                }
                 return acc;
             }, {});
-            
+
+            // console.log("Item in Set Name:", groupedItems);
+
+            // แปลงเป็นข้อความสำหรับส่งออกรายการ
             const itemSummary = Object.entries(groupedItems)
-                .map(([name, count]) => `${name} ${count} ชิ้น`) // สร้างข้อความสำหรับแต่ละอุปกรณ์
-                .join(',\n\t\t\t'); // แปลงเป็นข้อความรวม
-            
+                .map(([name, details]) => {
+                    if (typeof details === 'number') {
+                        // อุปกรณ์เดี่ยว
+                        return `${name} จำนวน ${details} ชิ้น`;
+                    } else {
+                        // อุปกรณ์ใน Set
+                        const setDetails = Object.entries(details)
+                            .map(([subName, count]) => `  - ${subName}: ${count} ชิ้น`) // ใช้ Bullet point และระยะห่าง
+                            .join('\n');
+                        return `${name}:\n${setDetails}`; // เพิ่ม ':' หลังชื่อ Set
+                    }
+                })
+                .join('\n\n');
 
             const user = await prisma.user.findUnique({
                 where: { email: process.env.SMTP_USER },
@@ -101,12 +177,8 @@ export async function POST(req: Request) {
                 to: 'fam841209@gmail.com', // Receiver email
                 cc: ["famqqblood@gmail.com"],
                 subject: `แจ้งการยืมอุปกรณ์ ${result.project}`,
-                text: `
-                โครงการ: ${result.project}
-                ชื่อ: ${result.name + ' ' + result.lastname}
-                เบอร์โทร: ${result.tel}
-                จากหน่วยงาน: ${result.origanization?.name}
-                อุปกณณ์:\n\t\t\t${itemSummary}
+                text: `โครงการ: ${result.project}\nชื่อ: ${result.name + ' ' + result.lastname}\nเบอร์โทร: ${result.tel}\nจากหน่วยงาน: ${result.origanization?.name}
+                \n\t\t\tอุปกรณ์\n\n${itemSummary}
                 `,
             });
 
