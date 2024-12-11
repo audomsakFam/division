@@ -19,20 +19,28 @@ export interface ResBorrowData {
   createAt: string
   retureAt: string
   serveAt: string
-  origanizationId: any
-  origanization: any
+  origanizationId: number
+  origanization: Origanization
   Borrow_detail: BorrowDetail[]
+}
+
+export interface Origanization {
+  id: number
+  name: string
+  group: any
+  createAt: string
+  updateAt: string
 }
 
 export interface BorrowDetail {
   quantity: number
   id: number
   item_status: string
-  setId: any
+  setId: number
   itemId: number
   borrowId: number
   item: Item
-  set: any
+  set: Set
 }
 export interface Item {
   id: number
@@ -62,5 +70,31 @@ export interface Postfix {
   name: string
 }
 
+export interface Set {
+  id: number
+  name: string
+  createAt: string
+  updateAt: string
+  Item_set: ItemSet[]
+}
+
+export interface ItemSet {
+  id: number
+  setId: number
+  itemId: number
+  item: ItemInSet
+}
+
+export interface ItemInSet {
+  id: number
+  name: string
+  img?: string
+  status: string
+  createAt: string
+  updateAt: string
+  qrId: any
+  divisionId: number
+  postfixId: number
+}
 
 /* eslint-disable*/
