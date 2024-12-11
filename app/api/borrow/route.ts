@@ -67,12 +67,20 @@ export async function POST(req: Request) {
                 include: {
                     Borrow_detail: {
                         include: {
-                            item: true,
+                            item: {
+                                include: {
+                                    division: true,
+                                }
+                            },
                             set: {
                                 include: {
                                     Item_set: {
                                         include: {
-                                            item: true, // ดึงข้อมูล item ที่สัมพันธ์กับ Item_set
+                                            item: {
+                                                include: {
+                                                    division: true,
+                                                }
+                                            }, 
                                         },
                                     },
                                 },
@@ -82,7 +90,7 @@ export async function POST(req: Request) {
                     origanization: true,
                 },
             });
-            
+
             // กรองข้อมูล `Item_set` หลังจากดึงข้อมูล
             borrowWithDetails?.Borrow_detail.forEach(detail => {
                 if (detail.set && detail.set.Item_set) {
@@ -117,38 +125,51 @@ export async function POST(req: Request) {
                 const itemName = detail?.item?.name || 'Unknown'; // ชื่ออุปกรณ์หรือค่าเริ่มต้น
                 const itemSetName = detail?.set?.name || 'Unknown';
                 const itemSetDetails = detail?.set?.Item_set || []; // ดึงรายการ Item_set
-
-                // เพิ่มรายการอุปกรณ์
-                acc[itemName] = (acc[itemName] || 0) + 1;
-
+                const divisionName = detail?.item?.division?.name || 'Unknown Division';
+            
+                // เพิ่ม Division
+                if (!acc[divisionName]) {
+                    acc[divisionName] = { items: {}, sets: {} };
+                }
+            
+                // เพิ่มรายการอุปกรณ์เดี่ยวใน Division
+                acc[divisionName].items[itemName] = (acc[divisionName].items[itemName] || 0) + 1;
+            
                 // เพิ่มรายการ Set และรายละเอียดใน Set
                 if (itemSetName !== 'Unknown') {
-                    acc[itemSetName] = acc[itemSetName] || {};
+                    const set = acc[divisionName].sets[itemSetName] || {};
                     itemSetDetails.forEach((itemSetDetail: { itemId: number; item?: Items; }) => {
                         const itemInSetName = itemSetDetail.item?.name || `Item ${itemSetDetail.itemId}`;
-                        acc[itemSetName][itemInSetName] = (acc[itemSetName][itemInSetName] || 0) + 1;
+                        set[itemInSetName] = (set[itemInSetName] || 0) + 1;
                     });
+                    acc[divisionName].sets[itemSetName] = set;
                 }
+            
                 return acc;
             }, {});
-
-            // console.log("Item in Set Name:", groupedItems);
-
+            
             // แปลงเป็นข้อความสำหรับส่งออกรายการ
             const itemSummary = Object.entries(groupedItems)
-                .map(([name, details]) => {
-                    if (typeof details === 'number') {
-                        // อุปกรณ์เดี่ยว
-                        return `${name} จำนวน ${details} ชิ้น`;
-                    } else {
-                        // อุปกรณ์ใน Set
-                        const setDetails = Object.entries(details)
-                            .map(([subName, count]) => `  - ${subName}: ${count} ชิ้น`) // ใช้ Bullet point และระยะห่าง
-                            .join('\n');
-                        return `${name}:\n${setDetails}`; // เพิ่ม ':' หลังชื่อ Set
-                    }
+                .map(([divisionName, { items, sets }]) => {
+                    // รายการอุปกรณ์เดี่ยว
+                    const itemDetails = Object.entries(items)
+                        .map(([itemName, count]) => `  - ${itemName}: ${count} ชิ้น`)
+                        .join('\n');
+            
+                    // รายการ Set
+                    const setDetails = Object.entries(sets)
+                        .map(([setName, setItems]) => {
+                            const setItemDetails = Object.entries(setItems as Record<string, number>)
+                                .map(([itemName, count]) => `   - ${itemName}: ${count} ชิ้น`)
+                                .join('\n');
+                            return `${setName}:\n${setItemDetails}`;
+                        })
+                        .join('\n\n');
+            
+                    return `${divisionName}:\n${itemDetails}\n\n${setDetails}`;
                 })
                 .join('\n\n');
+            
 
             const user = await prisma.user.findUnique({
                 where: { email: process.env.SMTP_USER },
