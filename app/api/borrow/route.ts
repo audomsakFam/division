@@ -1,5 +1,6 @@
 import prisma from "@/lib/db";
 import { Borrow_detail, Items } from "@prisma/client";
+import { tr } from "date-fns/locale";
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
@@ -33,9 +34,6 @@ export async function POST(req: Request) {
 
             // 2. สร้าง Borrow_detail
             for (const detail of borrowDetails) {
-                // ดึงรายการ `itemId` จาก `Item_set` ใน detail.set
-                const itemIds = detail.set?.Item_set?.map((v: any) => v.itemId) || [];
-
                 // เพิ่ม Borrow_detail สำหรับ `itemId` เดี่ยว
                 if (detail.itemId) {
                     await tx.borrow_detail.create({
@@ -47,13 +45,17 @@ export async function POST(req: Request) {
                 }
 
                 // เพิ่ม Borrow_detail สำหรับ `setId` และรายการ `Item_set`
-                if (detail.setId) {
-                    await tx.borrow_detail.create({
-                        data: {
-                            borrowId: createdBorrow.id,
-                            setId: detail.setId,
-                        },
-                    });
+                if (detail.setId && detail.set?.Item_set) {
+                    for (const itemSet of detail.set.Item_set) {
+                        const data = await tx.borrow_detail.create({
+                            data: {
+                                borrowId: createdBorrow.id,
+                                setId: detail.setId,
+                                itemId: itemSet.itemId, // เพิ่ม itemId จาก Item_set
+                            },
+                        });
+                        console.log('data createset in tx=====>', data)
+                    }
                 }
             }
 
@@ -65,24 +67,11 @@ export async function POST(req: Request) {
                     Borrow_detail: {
                         include: {
                             item: { include: { division: true } },
-                            set: { include: { Item_set: { include: { item: { include: { division: true } } } } } },
+                            set: true,
                         },
                     },
                     origanization: true,
                 },
-            });
-
-            // กรองข้อมูล `Item_set` เพื่อจับคู่กับ JSON body
-            borrowWithDetails?.Borrow_detail.forEach((detail) => {
-                if (detail.set && detail.set.Item_set) {
-                    detail.set.Item_set = detail.set.Item_set.filter((itemSet) =>
-                        borrowDetails.some(
-                            (d: any) =>
-                                d.setId === detail.setId &&
-                                d.set?.Item_set?.some((item: any) => item.itemId === itemSet.itemId)
-                        )
-                    );
-                }
             });
 
             return borrowWithDetails;
@@ -109,11 +98,10 @@ export async function POST(req: Request) {
             }
 
             const groupedItems = result.Borrow_detail.reduce((acc: Record<string, any>, detail) => {
-                const itemName = detail?.item?.name || 'Unknown'; // ชื่ออุปกรณ์หรือค่าเริ่มต้น
+                const itemName = detail?.item?.name && detail?.setId == null ? detail?.item?.name : 'Unknown'; // ชื่ออุปกรณ์หรือค่าเริ่มต้น
                 const itemSetName = detail?.set?.name || 'Unknown';
-                const itemSetDetails = detail?.set?.Item_set || []; // ดึงรายการ Item_set
-                const divisionName = detail?.item?.division?.name || 
-                [...new Set(detail?.set?.Item_set?.map(itemSet => itemSet?.item?.division?.name))].join(', ') || 'Unknown division';
+                const divisionName = detail?.item?.division?.name || 'Unknown division';
+
                 // เพิ่ม Division
                 if (!acc[divisionName]) {
                     acc[divisionName] = { items: {}, sets: {} };
@@ -127,11 +115,30 @@ export async function POST(req: Request) {
                 // เพิ่มรายการ Set และรายละเอียดใน Set
                 if (itemSetName !== 'Unknown') {
                     const set = acc[divisionName].sets[itemSetName] || {};
-                    itemSetDetails.forEach((itemSetDetail: { itemId: number; item?: Items; }) => {
+                    // สร้างรายการ itemSetDetails จาก Borrow_detail ของ set นี้
+                    const itemSetDetails = result.Borrow_detail
+                        .filter((borrow) => borrow.setId === detail.setId)
+                        .map((borrow) => ({
+                            itemId: borrow.itemId,
+                            item: borrow.item,
+                        }));
+
+                    const setMap = new Map<string, number>();
+
+                    itemSetDetails.forEach((itemSetDetail) => {
                         const itemInSetName = itemSetDetail.item?.name || `Item ${itemSetDetail.itemId}`;
-                        set[itemInSetName] = (set[itemInSetName] || 0) + 1;
+                        setMap.set(itemInSetName, (setMap.get(itemInSetName) || 0) + 1);
                     });
-                    acc[divisionName].sets[itemSetName] = set;
+
+                    acc[divisionName].sets[itemSetName] = Object.fromEntries(setMap);
+
+                    itemSetDetails.forEach((itemSetDetail) => {
+                        const itemInSetName = itemSetDetail.item?.name || `Item ${itemSetDetail.itemId}`;
+                        if (!set[itemInSetName]) {
+                            set[itemInSetName] = 0; // กำหนดค่าเริ่มต้นเฉพาะเมื่อยังไม่มี
+                        }
+                        set[itemInSetName] += 1;
+                    });
                 }
 
                 return acc;

@@ -15,7 +15,7 @@ import {
 import PaginationComponent from "@/app/components/pagination/pagination";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
-import * as XLSX from "xlsx";
+// import * as XLSX from "xlsx";
 
 const itemsPerPage = 20;
 export default function ReturnDetail({ params }: { params: { id: string } }) {
@@ -28,23 +28,23 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
         GetBorrowWithCache().then((res) => setBorrow(res.find((v) => v.id == id)!));
     }, [id])
 
-    const exportToExcel = (data: BorrowDetail[]) => {
-        const worksheetData = data?.map((item) => {
-            return {
-                "ชื่ออุปกรณ์ / ชุดอุปกรณ์": item.item.name,
-                "จำนวน": item.quantity + " " + item.item.postfix.name,
-                "สถานะ": item.item.status,
-                "ฝ่ายที่รับผิดชอบ": item.item.division.name,
-            };
-        });
-        // สร้าง Worksheet
-        const ws = XLSX.utils.json_to_sheet(worksheetData);
-        // สร้าง Workbook
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Borrow Detail");
-        // ดาวน์โหลดไฟล์ Excel
-        XLSX.writeFile(wb, `Borrow_Detail_${borrow?.project}_${borrow?.name + ' ' + borrow?.lastname}.xlsx`);
-    };
+    // const exportToExcel = (data: BorrowDetail[]) => {
+    //     const worksheetData = data?.map((item) => {
+    //         return {
+    //             "ชื่ออุปกรณ์ / ชุดอุปกรณ์": item.item.name,
+    //             "จำนวน": item.quantity + " " + item.item.postfix.name,
+    //             "สถานะ": item.item.status,
+    //             "ฝ่ายที่รับผิดชอบ": item.item.division.name,
+    //         };
+    //     });
+    //     // สร้าง Worksheet
+    //     const ws = XLSX.utils.json_to_sheet(worksheetData);
+    //     // สร้าง Workbook
+    //     const wb = XLSX.utils.book_new();
+    //     XLSX.utils.book_append_sheet(wb, ws, "Borrow Detail");
+    //     // ดาวน์โหลดไฟล์ Excel
+    //     XLSX.writeFile(wb, `Borrow_Detail_${borrow?.project}_${borrow?.name + ' ' + borrow?.lastname}.xlsx`);
+    // };
     const exportToPDF = async (scale: number = 4) => {
         const element = document.getElementById("pdf-content");
         if (element) {
@@ -61,6 +61,8 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
             pdf.save(`Borrow_Detail_${borrow?.project}_${borrow?.name + ' ' + borrow?.lastname}.pdf`);
         }
     };
+
+
 
     const currentItems = useMemo(() => {
         if (!borrow) return []; // รอ borrow พร้อมก่อน
@@ -112,71 +114,82 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
                         <CardContent>
                             <Table>
                                 <TableHeader>
-                                    <TableRow className="border-b border-gray-800 ">
-                                        <TableHead className="text-stone-950 border-r border-gray-300 text-center ">#</TableHead>
-                                        <TableHead className="text-stone-950 border-r border-gray-300 text-center ">ภาพประกอบ</TableHead>
+                                    <TableRow className="border-b border-gray-800">
+                                        <TableHead className="text-stone-950 border-r border-gray-300 text-center">#</TableHead>
+                                        <TableHead className="text-stone-950 border-r border-gray-300 text-center">ภาพประกอบ</TableHead>
                                         <TableHead className="text-stone-950 border-r border-gray-300 text-center">ชื่ออุปกรณ์ / ชุดอุปกรณ์</TableHead>
                                         <TableHead className="text-stone-950 border-r border-gray-300 text-center">จำนวน</TableHead>
-                                        {
-                                            borrow.status != 4 ?
-                                                <TableHead className="text-stone-950 border-r border-gray-300 text-center">สถานะปัจจุบัน</TableHead>
-                                                :
-                                                <TableHead className="text-stone-950 border-r border-gray-300 text-center">สถานะตอนคืน</TableHead>
-                                        }
+                                        {borrow.status !== 4 ? (
+                                            <TableHead className="text-stone-950 border-r border-gray-300 text-center">สถานะปัจจุบัน</TableHead>
+                                        ) : (
+                                            <TableHead className="text-stone-950 border-r border-gray-300 text-center">สถานะตอนคืน</TableHead>
+                                        )}
                                         <TableHead className="text-stone-950 text-center">ฝ่ายที่รับผิดชอบ</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {currentItems.length > 0 ? (
-                                        currentItems.map((item, index) => (
-                                            <TableRow key={index} className="border-b border-gray-300 ">
-                                                <TableCell className="font-medium border-r border-gray-300 text-center">{index + 1}</TableCell>
-                                                <TableCell className="font-medium border-r border-gray-300 text-center">
-                                                    <div className="group group-hover:relative overflow-hidden">
-                                                        {/* กล่องแสดงภาพหลัก */}
-                                                        <div className="flex  justify-center items-center overflow-hidden">
-                                                            <img
-                                                                src={process.env.NEXT_PUBLIC_BASE_PATH + '/' + item.item.img!}
-                                                                width={90}
-                                                                height={90}
-                                                                alt="item image"
-                                                                className="transform  transition-all duration-300"
-                                                            />
+                                        currentItems.reduce<JSX.Element[]>((acc, item, index) => {
+                                            // ตรวจสอบการจัดกลุ่มตาม setId
+                                            if (index === 0 || item.setId !== currentItems[index - 1]?.setId) {
+                                                // ถ้าเป็นชุดใหม่ หรือไม่มีกลุ่มชุด ให้เพิ่มแถวแยกแสดงชื่อชุดอุปกรณ์
+                                                acc.push(
+                                                    <TableRow key={`set-${item.id}`} className="border-b">
+                                                        <TableCell colSpan={6} className="font-bold text-center bg-gray-200">
+                                                            {item.set?.name || "ไม่อยู่ในชุดอุปกรณ์"}
+                                                        </TableCell>
+                                                    </TableRow>
+                                                );
+                                            }
+                                            // เพิ่มข้อมูลในกลุ่ม
+                                            acc.push(
+                                                <TableRow key={item.id} className="border-b">
+                                                    <TableCell className="border-r border-gray-300 text-center">
+                                                        {index + 1} {/* ใช้ acc.length เป็นลำดับ */}
+                                                    </TableCell>
+                                                    <TableCell className="border-r border-gray-300 text-center">
+                                                        <div className="group group-hover:relative overflow-hidden">
+                                                            {/* กล่องแสดงภาพหลัก */}
+                                                            <div className="flex justify-center items-center overflow-hidden">
+                                                                <img
+                                                                    src={process.env.NEXT_PUBLIC_BASE_PATH + "/" + item.item.img!}
+                                                                    width={90}
+                                                                    height={90}
+                                                                    alt="item image"
+                                                                    className="transform transition-all duration-300"
+                                                                />
+                                                            </div>
+                                                            {/* กล่องสำหรับแสดงภาพซูม */}
+                                                            <div className={`absolute w-1/5 hidden group-hover:flex justify-center items-center right-1/2 transform z-100`}>
+                                                                <img
+                                                                    src={process.env.NEXT_PUBLIC_BASE_PATH + "/" + item.item.img!}
+                                                                    alt="Zoomed image"
+                                                                    className="transform w-full absolute"
+                                                                />
+                                                            </div>
                                                         </div>
-
-                                                        {/* กล่องสำหรับแสดงภาพซูม */}
-                                                        <div className={`absolute w-1/5 hidden group-hover:flex justify-center items-center
-                                                     right-1/2 transform z-100 
-                                                    `}
-                                                        >
-                                                            <img
-                                                                src={process.env.NEXT_PUBLIC_BASE_PATH + '/' + item.item.img!}
-                                                                alt="Zoomed image"
-                                                                className="transform w-full absolute"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell className="border-r border-gray-300 text-start">{item.item.name}</TableCell>
-                                                <TableCell className="border-r border-gray-300 text-center">{item.quantity + ' ' + item.item.postfix.name}</TableCell>
-                                                <TableCell className="border-r border-gray-300 text-center">{
-                                                    borrow.status == 4 ? item.item_status : borrow.status == 1 || borrow.status == 0 ? 'รอการยืนยัน' : item.item.status
-                                                }</TableCell>
-                                                <TableCell className="text-center ">
-                                                    {item.item.division.name}
-                                                </TableCell>
-                                            </TableRow>
-                                        ))
+                                                    </TableCell>
+                                                    <TableCell className="border-r border-gray-300 text-center">{item.item.name}</TableCell>
+                                                    <TableCell className="border-r border-gray-300 text-center">
+                                                        {item.quantity + " " + item.item.postfix.name}
+                                                    </TableCell>
+                                                    <TableCell className="border-r border-gray-300 text-center">
+                                                        {borrow.status === 4
+                                                            ? item.item_status
+                                                            : borrow.status === 1 || borrow.status === 0
+                                                                ? "รอการยืนยัน"
+                                                                : item.item.status}
+                                                    </TableCell>
+                                                    <TableCell className="text-center">{item.item.division.name}</TableCell>
+                                                </TableRow>
+                                            );
+                                            return acc;
+                                        }, [])
                                     ) : (
                                         <TableRow>
-                                            <TableCell colSpan={7} className="text-center ">
-                                                <p className="mt-5 text-2xl">
-                                                    ไม่พบข้อมูล
-                                                </p>
-                                            </TableCell>
+                                            <TableCell colSpan={7} className="text-center">ไม่พบข้อมูล</TableCell>
                                         </TableRow>
-                                    )
-                                    }
+                                    )}
                                 </TableBody>
                             </Table>
                         </CardContent>
@@ -187,7 +200,7 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
                             {borrow.status == 4 && (
                                 <>
                                     <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mr-2" onClick={() => exportToPDF(4)}>Export to PDF</button>
-                                    <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" onClick={() => exportToExcel(currentItems)}>Export to Excel</button>
+                                    {/* <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded" onClick={() => exportToExcel(currentItems)}>Export to Excel</button> */}
                                 </>
                             )}
                         </>}

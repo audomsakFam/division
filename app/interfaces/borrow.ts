@@ -33,15 +33,16 @@ export interface Origanization {
 }
 
 export interface BorrowDetail {
-  quantity: number
   id: number
-  item_status: string
-  setId: number
+  item_status: any
+  setId?: number
   itemId: number
   borrowId: number
   item: Item
-  set: Set
+  set?: Set
+  quantity?: number
 }
+
 export interface Item {
   id: number
   name: string
@@ -88,13 +89,16 @@ export interface ItemSet {
 export interface ItemInSet {
   id: number
   name: string
-  img?: string
+  img: string
   status: string
   createAt: string
   updateAt: string
   qrId: any
   divisionId: number
   postfixId: number
+  division: Division
+  postfix: Postfix
+  qr: any
 }
 
 /* eslint-disable*/
