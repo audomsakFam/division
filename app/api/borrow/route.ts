@@ -242,15 +242,16 @@ export async function GET(req: Request) {
                     }
                 }
             }
-        });
+        })
+    
 
         // ปรับข้อมูลเพื่อกรอง Item_set ให้ตรงกับข้อมูล Borrow_detail
-        data.forEach((borrow) => {
+        data.forEach((borrow: any) => {
             if (borrow.Borrow_detail) {
-                borrow.Borrow_detail.forEach((detail) => {
+                borrow.Borrow_detail.forEach((detail:any) => {
                     if (detail.set && detail.set.Item_set) {
                         // กรอง Item_set ให้มีเฉพาะ item ที่เกี่ยวข้องกับ Borrow_detail นี้
-                        detail.set.Item_set = detail.set.Item_set.filter((itemSet) =>
+                        detail.set.Item_set = detail.set.Item_set.filter((itemSet: any) =>
                             detail.itemId === itemSet.itemId
                         );
                     }
