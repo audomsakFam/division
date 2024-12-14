@@ -7,6 +7,8 @@ export default function DateComponent() {
   const [minPickupDate, setMinPickupDate] = useState("");
   const [pickupDate, setPickupDate] = useState("");
   const [minReturnDate, setMinReturnDate] = useState("");
+  const [returnDate, setReturnDate] = useState("");
+  const [purpose, setPurpose] = useState("");
 
   useEffect(() => {
     const today = new Date();
@@ -22,7 +24,19 @@ export default function DateComponent() {
   const handlePickupDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedPickupDate = e.target.value;
     setPickupDate(selectedPickupDate);
-    setMinReturnDate(selectedPickupDate.split('T')[0]);
+    setMinReturnDate(selectedPickupDate.split('T')[0]); // Set minimum return date based on pickup date
+  };
+
+  const handleReturnDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setReturnDate(e.target.value);
+  };
+
+  const handlePurposeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setPurpose(e.target.value);
+  };
+
+  const isFormValid = () => {
+    return pickupDate && returnDate && purpose;
   };
 
   return (
@@ -45,7 +59,15 @@ export default function DateComponent() {
             </div>
 
             <div className="mb-4">
-              <label htmlFor="pickup-time" className="block text-gray-700 font-medium mb-2">วันเวลาที่สะดวกเข้ามารับของ:</label>
+              <label
+                htmlFor="pickup-time"
+                className="block text-gray-700 font-medium mb-2 sm:flex sm:items-center sm:space-x-2 flex flex-col sm:flex-row items-start">
+                <span>วันเวลาที่สะดวกเข้ามารับของ:</span>
+                <p className="text-red-500 text-sm sm:inline sm:mt-0 mt-1">
+                  * อย่างน้อย 2 วัน หลังจากวันที่ยืม *
+                </p>
+              </label>
+
               <input
                 type="datetime-local"
                 id="pickup-time"
@@ -63,8 +85,11 @@ export default function DateComponent() {
                 type="date"
                 id="return-date"
                 min={minReturnDate}
+                value={returnDate}
+                onChange={handleReturnDateChange}
                 required
-                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+                disabled={!pickupDate} // Disable until pickup date is selected
+                className={`w-full p-2 border rounded-md focus:outline-none ${pickupDate ? "border-gray-300 focus:border-blue-500" : "border-gray-200 bg-gray-100 cursor-not-allowed"}`}
               />
             </div>
 
@@ -73,6 +98,8 @@ export default function DateComponent() {
               <textarea
                 id="purpose"
                 placeholder="ระบุ โครงการ/กิจกรรม ที่ท่านนำวัสดุอุปกรณ์ของกองพัฒนาศึกษาไปใช้..."
+                value={purpose}
+                onChange={handlePurposeChange}
                 required
                 className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
               />
@@ -87,10 +114,14 @@ export default function DateComponent() {
                   ย้อนกลับ
                 </button>
               </Link>
-              <Link href="/pages/user/summary">
+              <Link href={isFormValid() ? "/pages/user/summary" : "#"}>
                 <button
                   type="button"
-                  className="w-[100px] bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200"
+                  disabled={!isFormValid()}
+                  className={`w-[100px] py-2 px-4 rounded-md transition duration-200 ${isFormValid()
+                      ? "bg-blue-600 text-white hover:bg-blue-700"
+                      : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                    }`}
                 >
                   ยืนยัน
                 </button>

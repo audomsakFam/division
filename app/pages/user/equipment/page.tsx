@@ -1,7 +1,8 @@
 'use client'
 import { ResItemsGroup } from "@/app/interfaces/item";
 import { GetItemWithCache } from "@/lib/servers/getItemWithCache";
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
+
 import {
     Card,
     CardContent,
@@ -18,22 +19,35 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import Link from "next/link";
+
 export default function Equipment() {
     const [items, setItems] = useState<ResItemsGroup[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedDivision, setSelectedDivision] = useState("ทั้งหมด");
     const [selectAllState, setSelectAllState] = useState<Record<string, boolean>>({});
+    const [expandedImage, setExpandedImage] = useState<string | null>(null); // เก็บสถานะของภาพที่ถูกขยาย
+    const [inputValues, setInputValues] = useState<Record<string, Record<string, number>>>({});
 
+
+    const handleImageClick = (imgPath: string) => {
+        if (expandedImage === imgPath) {
+            setExpandedImage(null); // ถ้าภาพเดิมถูกคลิกอีกครั้ง จะปิดการขยาย
+        } else {
+            setExpandedImage(imgPath); // บันทึก path ของภาพที่ถูกคลิก
+        }
+    };
     useEffect(() => {
         GetItemWithCache().then((res) => { setItems(res); setLoading(false) });
     }, [])
     if (loading) return <div>Loading...</div>
 
-    const filteredItems = items.filter(item =>
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) &&
-        (selectedDivision === "เลือกหมวดหมู่วัสดุ - อุปกรณ์ (ทั้งหมด)" || selectedDivision === "ทั้งหมด" || item.divisionName === selectedDivision)
-    );
+    const filteredItems = items.filter(item => {
+        const matchesSearchTerm = item.name.toLowerCase().includes(searchTerm.toLowerCase());
+        const matchesDivision = selectedDivision === "เลือกหมวดหมู่วัสดุ - อุปกรณ์ (ทั้งหมด)" || selectedDivision === "ทั้งหมด" || item.divisionName === selectedDivision;
+        return matchesSearchTerm && matchesDivision;
+    });
+    
 
     const divisionNames = ["เลือกหมวดหมู่วัสดุ - อุปกรณ์ (ทั้งหมด)", ...Array.from(new Set(items.map(item => item.divisionName)))];
 
@@ -47,25 +61,37 @@ export default function Equipment() {
     }, {} as Record<string, ResItemsGroup[]>);
 
     const handleSelectAll = (divisionName: string) => {
-        setSelectAllState(prevState => ({
+        setSelectAllState((prevState) => ({
             ...prevState,
             [divisionName]: !prevState[divisionName],
         }));
 
         const isSelectAll = !selectAllState[divisionName];
-        if (isSelectAll) {
-            groupedByDivision[divisionName]?.forEach(item => {
-                const maxCount = item.statusCounts.find(v => v.status === 'ปกติ')?.count ?? 0;
-                const inputElement = document.querySelector(`input[data-division='${divisionName}'][data-item='${item.name}']`) as HTMLInputElement;
-                if (inputElement) inputElement.value = maxCount.toString();
+        setInputValues((prevValues) => {
+            const updatedValues = { ...prevValues };
+            groupedByDivision[divisionName]?.forEach((item) => {
+                const maxCount = item.statusCounts.find((v) => v.status === 'ปกติ')?.count ?? 0;
+                if (!updatedValues[divisionName]) {
+                    updatedValues[divisionName] = {};
+                }
+                updatedValues[divisionName][item.name] = isSelectAll ? maxCount : 0;
             });
-        } else {
-            groupedByDivision[divisionName]?.forEach(item => {
-                const inputElement = document.querySelector(`input[data-division='${divisionName}'][data-item='${item.name}']`) as HTMLInputElement;
-                if (inputElement) inputElement.value = "0";
-            });
-        }
+            return updatedValues;
+        });
     };
+
+    const handleInputChange = (divisionName: string, itemName: string, value: number) => {
+        setInputValues((prevValues) => ({
+            ...prevValues,
+            [divisionName]: {
+                ...prevValues[divisionName],
+                [itemName]: value,
+            },
+        }));
+    };
+    
+
+
 
     return (
         <>
@@ -145,11 +171,18 @@ export default function Equipment() {
                                                 <TableRow key={index}>
                                                     <TableCell className="pt-0 pb-0 text-stone-950 border-r border-gray-400 text-left">{item.name}</TableCell>
                                                     <TableCell className="pt-0 pb-0 pl-0 pr-0 text-stone-950 border-r border-gray-400 text-center">
-                                                        <div className="relative group flex justify-center items-center">
+                                                        <div className="relative flex justify-center items-center">
                                                             <img
                                                                 src={process.env.NEXT_PUBLIC_BASE_PATH + '/' + item.img}
                                                                 alt={item.name}
-                                                                className="h-12 w-[auto] object-cover transition-transform duration-300 ease-in-out sm:group-hover:scale-[7] group-hover:scale-[3] group-hover:z-50 group-hover:absolute group-hover:top-1/2 group-hover:left-1/2 group-hover:transform group-hover:-translate-x-1/2 group-hover:-translate-y-1/2"
+                                                                onClick={() =>
+                                                                    handleImageClick(process.env.NEXT_PUBLIC_BASE_PATH + '/' + item.img)
+                                                                }
+                                                                className={`h-12 w-auto object-cover transition-transform duration-300 ease-in-out cursor-pointer ${expandedImage ===
+                                                                    process.env.NEXT_PUBLIC_BASE_PATH + '/' + item.img
+                                                                    ? 'scale-[3] z-50 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'
+                                                                    : ''
+                                                                    }`}
                                                             />
                                                         </div>
                                                     </TableCell>
@@ -177,32 +210,21 @@ export default function Equipment() {
                                                     </TableCell>
                                                     <TableCell className="pt-0 pb-0 text-stone-950 border-r border-gray-400 text-center">{item.postfixName}</TableCell>
                                                     <TableCell className="pt-0 pb-0 text-stone-950 text-center">
-                                                        {/* <input
-                                                            type="number"
-                                                            className="w-16 px-2 py-1 border border-gray-400 rounded"
-                                                            max={item.statusCounts.find(v => v.status === 'ปกติ')?.count ?? 0}
-                                                            min={0}
-                                                            defaultValue={0}
-                                                            onChange={(e) => {
-                                                                const value = parseInt(e.target.value);
-                                                                const maxValue = item.statusCounts.find(v => v.status === 'ปกติ')?.count ?? 0;
-
-                                                                if (value > maxValue) {
-                                                                    e.target.value = maxValue.toString();
-                                                                } else if (value < 0) {
-                                                                    e.target.value = "0";
-                                                                }
-                                                            }}
-                                                        /> */}
                                                         <input
                                                             type="number"
                                                             data-division={divisionName}
                                                             data-item={item.name}
                                                             className="w-16 px-2 py-1 border border-gray-400 rounded"
-                                                            max={item.statusCounts.find(v => v.status === 'ปกติ')?.count ?? 0}
+                                                            max={item.statusCounts.find((v) => v.status === 'ปกติ')?.count ?? 0}
                                                             min={0}
-                                                            defaultValue={0}
+                                                            value={inputValues[divisionName]?.[item.name] ?? 0}
+                                                            onChange={(e) => {
+                                                                const maxValue = item.statusCounts.find((v) => v.status === 'ปกติ')?.count ?? 0;
+                                                                const value = Math.min(Math.max(0, parseInt(e.target.value) || 0), maxValue);
+                                                                handleInputChange(divisionName, item.name, value);
+                                                            }}
                                                         />
+
 
                                                     </TableCell>
                                                 </TableRow>

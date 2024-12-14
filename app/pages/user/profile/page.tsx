@@ -3,10 +3,42 @@ import Link from 'next/link';
 import React, { useState } from 'react';
 
 const Profile = () => {
+  
   const [status, setStatus] = useState<string>('staff');
+  const [formData, setFormData] = useState<any>({});
+  const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
 
   const toggleInfo = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setStatus(event.target.value);
+    setFormData({}); // Reset form data when status changes
+  };
+
+  const handleInputChange = (event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { id, value } = event.target;
+    setFormData({ ...formData, [id]: value });
+  };
+
+  const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setAcceptedTerms(event.target.checked);
+  };
+
+  const isStaffValid = () =>
+    formData['staff-name'] &&
+    formData['staff-phone'] &&
+    formData['office-phone'] &&
+    formData['faculty'];
+
+  const isStudentValid = () =>
+    formData['student-name'] &&
+    formData['student-phone'] &&
+    formData['student-faculty'] &&
+    formData['student-id'] &&
+    formData['advisor-name'] &&
+    formData['advisor-phone'] &&
+    formData['advisor-signature'];
+
+  const isFormValid = () => {
+    return (status === 'staff' ? isStaffValid() : isStudentValid()) && acceptedTerms;
   };
 
   return (
@@ -37,7 +69,7 @@ const Profile = () => {
                   <input
                     type="text"
                     id="staff-name"
-                    required
+                    onChange={handleInputChange}
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
                   />
                 </div>
@@ -46,7 +78,7 @@ const Profile = () => {
                   <input
                     type="tel"
                     id="staff-phone"
-                    required
+                    onChange={handleInputChange}
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
                   />
                 </div>
@@ -55,7 +87,7 @@ const Profile = () => {
                   <input
                     type="tel"
                     id="office-phone"
-                    required
+                    onChange={handleInputChange}
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
                   />
                 </div>
@@ -63,7 +95,7 @@ const Profile = () => {
                   <label htmlFor="faculty" className="block text-gray-700 font-medium mb-2">5. คณะ/หน่วยงาน:</label>
                   <select
                     id="faculty"
-                    required
+                    onChange={handleInputChange}
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
                   >
                     <option value="">เลือกคณะ</option>
@@ -82,7 +114,7 @@ const Profile = () => {
                   <input
                     type="text"
                     id="student-name"
-                    required
+                    onChange={handleInputChange}
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
                   />
                 </div>
@@ -91,7 +123,7 @@ const Profile = () => {
                   <input
                     type="tel"
                     id="student-phone"
-                    required
+                    onChange={handleInputChange}
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
                   />
                 </div>
@@ -99,7 +131,7 @@ const Profile = () => {
                   <label htmlFor="student-faculty" className="block text-gray-700 font-medium mb-2">4. คณะที่นักศึกษาอยู่:</label>
                   <select
                     id="student-faculty"
-                    required
+                    onChange={handleInputChange}
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
                   >
                     <option value="">เลือกคณะ</option>
@@ -113,7 +145,7 @@ const Profile = () => {
                   <input
                     type="file"
                     id="student-id"
-                    required
+                    onChange={handleInputChange}
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
                   />
                 </div>
@@ -122,7 +154,7 @@ const Profile = () => {
                   <input
                     type="text"
                     id="advisor-name"
-                    required
+                    onChange={handleInputChange}
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
                   />
                 </div>
@@ -131,18 +163,18 @@ const Profile = () => {
                   <input
                     type="tel"
                     id="advisor-phone"
-                    required
+                    onChange={handleInputChange}
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
                   />
                 </div>
                 <div className="mb-4">
                   <label htmlFor="advisor-signature" className="block text-gray-700 font-medium mb-2">8. ลายเซ็นรับรองจากอาจารย์:</label>
-                  <p className='text-red-500'>ตัวอย่าง :</p>
+                  <p className="text-red-500">ตัวอย่าง :</p>
                   <img src="/images/การรับรองการยืมของ.jpg" alt="signature" className="w-[100%]" />
                   <input
                     type="file"
                     id="advisor-signature"
-                    required
+                    onChange={handleInputChange}
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
                   />
                 </div>
@@ -150,13 +182,9 @@ const Profile = () => {
                   <label className="block text-gray-700 font-medium mb-2">9. ในวันที่มารับวัสดุ-อุปกรณ์ นักศึกษาสามารถให้บัตรที่ออกโดยราชการไว้</label>
                   <div className="flex items-center space-x-4">
                     <label className="flex items-center space-x-2">
-                      <input type="radio" name="choice" value="yes" className="form-radio" />
+                      <input type="checkbox" name="choice" value="yes" className="form-radio" />
                       <span>สามารถให้บัตรไว้ได้</span>
                     </label>
-                    {/* <label className="flex items-center space-x-2">
-                      <input type="radio" name="choice" value="no" className="form-radio" />
-                      <span>No</span>
-                    </label> */}
                   </div>
                 </div>
               </div>
@@ -171,14 +199,31 @@ const Profile = () => {
                   ย้อนกลับ
                 </button>
               </Link>
-              <Link href="/pages/user/date">
+              <Link href={isFormValid() ? "/pages/user/date" : "#"}>
                 <button
                   type="button"
-                  className="w-[100px] bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200"
+                  disabled={!isFormValid()}
+                  className={`w-[100px] py-2 px-4 rounded-md transition duration-200 ${
+                    isFormValid()
+                      ? "bg-blue-600 text-white hover:bg-blue-700"
+                      : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                  }`}
                 >
                   ยืนยัน
                 </button>
               </Link>
+            </div>
+            <div className="flex items-center space-x-4 mt-4">
+              <label className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  name="choice"
+                  value="yes"
+                  onChange={handleCheckboxChange}
+                  className="form-radio"
+                />
+                <span>ยอมรับตามเงื่อนไข</span>
+              </label>
             </div>
           </form>
         </section>
