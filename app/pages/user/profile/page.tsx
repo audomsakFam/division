@@ -169,8 +169,8 @@ const Profile = () => {
                 </div>
                 <div className="mb-4">
                   <label htmlFor="advisor-signature" className="block text-gray-700 font-medium mb-2">8. ลายเซ็นรับรองจากอาจารย์:</label>
-                  <p className="text-red-500">ตัวอย่าง :</p>
-                  <img src="/images/การรับรองการยืมของ.jpg" alt="signature" className="w-[100%]" />
+                  <p className='text-red-500'>ตัวอย่าง :</p>
+                  <img src={process.env.NEXT_PUBLIC_BASE_PATH + "/images/การรับรองการยืมของ.jpg"} alt="signature" className="w-[100%]" />
                   <input
                     type="file"
                     id="advisor-signature"
