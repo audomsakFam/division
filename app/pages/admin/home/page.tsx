@@ -325,7 +325,7 @@ export default function HomePage() {
                                                                             className="bg-green-500 w-full hover:bg-blue-900"
                                                                             onClick={(e) => {
                                                                                 e.stopPropagation();
-                                                                                const ids = item.Borrow_detail.map((v) => v.itemId || v.set.id); // ดึง id ทั้งหมดใน Borrow_detail
+                                                                                const ids = item.Borrow_detail.map((v) => v.itemId); // ดึง id ทั้งหมดใน Borrow_detail
                                                                                 ids.forEach((id) => toOpen(id)); // เรียกใช้ toOpen สำหรับแต่ละ id
                                                                             }}
                                                                         >

@@ -29,7 +29,6 @@ export default function Equipment() {
     const [expandedImage, setExpandedImage] = useState<string | null>(null); // เก็บสถานะของภาพที่ถูกขยาย
     const [inputValues, setInputValues] = useState<Record<string, Record<string, number>>>({});
 
-
     const handleImageClick = (imgPath: string) => {
         if (expandedImage === imgPath) {
             setExpandedImage(null); // ถ้าภาพเดิมถูกคลิกอีกครั้ง จะปิดการขยาย
@@ -37,9 +36,11 @@ export default function Equipment() {
             setExpandedImage(imgPath); // บันทึก path ของภาพที่ถูกคลิก
         }
     };
+
     useEffect(() => {
         GetItemWithCache().then((res) => { setItems(res); setLoading(false) });
     }, [])
+
     if (loading) return <div>Loading...</div>
 
     const filteredItems = items.filter(item => {
@@ -47,29 +48,43 @@ export default function Equipment() {
         const matchesDivision = selectedDivision === "เลือกหมวดหมู่วัสดุ - อุปกรณ์ (ทั้งหมด)" || selectedDivision === "ทั้งหมด" || item.divisionName === selectedDivision;
         return matchesSearchTerm && matchesDivision;
     });
-    
 
     const divisionNames = ["เลือกหมวดหมู่วัสดุ - อุปกรณ์ (ทั้งหมด)", ...Array.from(new Set(items.map(item => item.divisionName)))];
 
-    const groupedByDivision = filteredItems.reduce((acc, item) => {
-        const { divisionName } = item;
-        if (!acc[divisionName]) {
-            acc[divisionName] = [];
-        }
-        acc[divisionName].push(item);
-        return acc;
-    }, {} as Record<string, ResItemsGroup[]>);
+    const groupedByDivisionAndSet = filteredItems.reduce((acc, item) => {
+        const { divisionName, itemSets } = item;
 
-    const handleSelectAll = (divisionName: string) => {
+        if (!acc[divisionName]) {
+            acc[divisionName] = {};
+        }
+
+        if (itemSets.length > 0) {
+            itemSets.forEach(({ setName }) => {
+                if (!acc[divisionName][setName]) {
+                    acc[divisionName][setName] = [];
+                }
+                acc[divisionName][setName].push(item);
+            });
+        } else {
+            if (!acc[divisionName]["ไม่มีหมวดหมู่"]) {
+                acc[divisionName]["ไม่มีหมวดหมู่"] = [];
+            }
+            acc[divisionName]["ไม่มีหมวดหมู่"].push(item);
+        }
+
+        return acc;
+    }, {} as Record<string, Record<string, ResItemsGroup[]>>);
+
+    const handleSelectAll = (divisionName: string, setName: string) => {
         setSelectAllState((prevState) => ({
             ...prevState,
-            [divisionName]: !prevState[divisionName],
+            [`${divisionName}-${setName}`]: !prevState[`${divisionName}-${setName}`],
         }));
 
-        const isSelectAll = !selectAllState[divisionName];
+        const isSelectAll = !selectAllState[`${divisionName}-${setName}`];
         setInputValues((prevValues) => {
             const updatedValues = { ...prevValues };
-            groupedByDivision[divisionName]?.forEach((item) => {
+            groupedByDivisionAndSet[divisionName]?.[setName]?.forEach((item) => {
                 const maxCount = item.statusCounts.find((v) => v.status === 'ปกติ')?.count ?? 0;
                 if (!updatedValues[divisionName]) {
                     updatedValues[divisionName] = {};
@@ -89,9 +104,6 @@ export default function Equipment() {
             },
         }));
     };
-    
-
-
 
     return (
         <>
@@ -148,90 +160,111 @@ export default function Equipment() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody className="border-b border-t border-l border-r border-gray-800">
-                                    {groupedByDivision && Object.entries(groupedByDivision).map(([divisionName, items]) => (
-                                        <>
-                                            <TableRow key={divisionName} className="bg-gray-200">
-                                                <TableCell colSpan={7} className="text-stone-950 font-bold">
-                                                    <div className="flex justify-between items-center">
-                                                        <span>{divisionName}</span>
-                                                        <div className="flex items-center">
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={selectAllState[divisionName] || false}
-                                                                onChange={() => handleSelectAll(divisionName)}
-                                                                className="ml-2 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                                                            />
-                                                            <span className="ml-2">เลือกทั้งหมด</span>
-                                                        </div>
-                                                    </div>
+                                    {Object.entries(groupedByDivisionAndSet).length === 0 || Object.entries(groupedByDivisionAndSet).every(([divisionName, sets]) => Object.entries(sets).every(([setName, items]) => items.length === 0))
+                                        ? (
+                                            <TableRow>
+                                                <TableCell colSpan={7} className="text-center text-stone-950 py-4">
+                                                    ไม่มีข้อมูล
                                                 </TableCell>
                                             </TableRow>
+                                        ) : (
+                                            Object.entries(groupedByDivisionAndSet).map(([divisionName, sets]) => (
+                                                <>
+                                                    {Object.entries(sets).map(([setName, items]) => (
+                                                        <>
+                                                            <TableRow key={`${divisionName}-${setName}`} className="bg-gray-200">
+                                                                <TableCell colSpan={7} className="text-stone-950 font-bold">
+                                                                    <div className="flex justify-between items-center">
+                                                                        <span>{setName === 'ไม่มีหมวดหมู่' ? divisionName : `${divisionName} - ${setName}`}</span>
+                                                                        <div className="flex items-center">
+                                                                            <input
+                                                                                type="checkbox"
+                                                                                checked={selectAllState[`${divisionName}-${setName}`] || false}
+                                                                                onChange={() => handleSelectAll(divisionName, setName)}
+                                                                                className="ml-2 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                                                            />
+                                                                            <span className="ml-2">เลือกทั้งหมด</span>
+                                                                        </div>
+                                                                    </div>
+                                                                </TableCell>
+                                                            </TableRow>
 
-                                            {items.map((item, index) => (
-                                                <TableRow key={index}>
-                                                    <TableCell className="pt-0 pb-0 text-stone-950 border-r border-gray-400 text-left">{item.name}</TableCell>
-                                                    <TableCell className="pt-0 pb-0 pl-0 pr-0 text-stone-950 border-r border-gray-400 text-center">
-                                                        <div className="relative flex justify-center items-center">
-                                                            <img
-                                                                src={process.env.NEXT_PUBLIC_BASE_PATH + '/' + item.img}
-                                                                alt={item.name}
-                                                                onClick={() =>
-                                                                    handleImageClick(process.env.NEXT_PUBLIC_BASE_PATH + '/' + item.img)
-                                                                }
-                                                                className={`h-12 w-auto object-cover transition-transform duration-300 ease-in-out cursor-pointer ${expandedImage ===
-                                                                    process.env.NEXT_PUBLIC_BASE_PATH + '/' + item.img
-                                                                    ? 'scale-[3] z-50 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'
-                                                                    : ''
-                                                                    }`}
-                                                            />
-                                                        </div>
-                                                    </TableCell>
+                                                            {items.map((item, index) => (
+                                                                <TableRow key={index}>
+                                                                    <TableCell className="pt-0 pb-0 text-stone-950 border-r border-gray-400 text-left">{item.name}</TableCell>
+                                                                    <TableCell className="pt-0 pb-0 pl-0 pr-0 text-stone-950 border-r border-gray-400 text-center">
+                                                                        <div className="relative flex justify-center items-center">
+                                                                            <img
+                                                                                src={process.env.NEXT_PUBLIC_BASE_PATH + '/' + item.img}
+                                                                                alt={item.name}
+                                                                                onClick={() =>
+                                                                                    handleImageClick(process.env.NEXT_PUBLIC_BASE_PATH + '/' + item.img)
+                                                                                }
+                                                                                className={`h-12 w-auto object-cover transition-transform duration-300 ease-in-out cursor-pointer ${expandedImage ===
+                                                                                    process.env.NEXT_PUBLIC_BASE_PATH + '/' + item.img
+                                                                                    ? 'scale-[3] z-50 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'
+                                                                                    : ''
+                                                                                    }`}
+                                                                            />
+                                                                        </div>
+                                                                    </TableCell>
 
-                                                    <TableCell className="pt-0 pb-0 text-stone-950 mb-2 border-r border-gray-400">
-                                                        <div className="flex justify-around">
-                                                            <div className="text-stone-950 border-r border-gray-400 flex items-center justify-center w-full">{item.statusCounts.map((statusCount) => statusCount.count).reduce((a, b) => a + b, 0)}</div>
-                                                            <div className="text-stone-950 flex items-center justify-center w-full">{item.statusCounts.find(v => v.status === 'ปกติ')?.count ?? 0}</div>
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell className="pt-0 pb-0 mb-2 border-r border-gray-400 text-center">
-                                                        <div className="flex justify-around text-center">
-                                                            <div className="text-center text-stone-950 border-r border-gray-400 flex items-center justify-center w-full">
-                                                                {item.statusCounts.find(v => v.status === 'ปกติ')?.count ?? 0}</div>
-                                                            <div className="text-center text-stone-950 border-r border-gray-400 flex items-center justify-center w-full">
-                                                                {item.statusCounts.find(v => v.status === 'ถูกยืม')?.count ?? 0}
-                                                            </div>
-                                                            <div className="text-center text-stone-950 border-r border-gray-400 flex items-center justify-center w-full">
-                                                                {item.statusCounts.find(v => v.status === 'ชำรุด')?.count ?? 0}
-                                                            </div>
-                                                            <div className="text-center text-stone-950 flex items-center justify-center w-full">
-                                                                {item.statusCounts.find(v => v.status === 'หาย')?.count ?? 0}
-                                                            </div>
-                                                        </div>
-                                                    </TableCell>
-                                                    <TableCell className="pt-0 pb-0 text-stone-950 border-r border-gray-400 text-center">{item.postfixName}</TableCell>
-                                                    <TableCell className="pt-0 pb-0 text-stone-950 text-center">
-                                                        <input
-                                                            type="number"
-                                                            data-division={divisionName}
-                                                            data-item={item.name}
-                                                            className="w-16 px-2 py-1 border border-gray-400 rounded"
-                                                            max={item.statusCounts.find((v) => v.status === 'ปกติ')?.count ?? 0}
-                                                            min={0}
-                                                            value={inputValues[divisionName]?.[item.name] ?? 0}
-                                                            onChange={(e) => {
-                                                                const maxValue = item.statusCounts.find((v) => v.status === 'ปกติ')?.count ?? 0;
-                                                                const value = Math.min(Math.max(0, parseInt(e.target.value) || 0), maxValue);
-                                                                handleInputChange(divisionName, item.name, value);
-                                                            }}
-                                                        />
+                                                                    <TableCell className="pt-0 pb-0 text-stone-950 mb-2 border-r border-gray-400">
+                                                                        <div className="flex justify-around">
+                                                                            <div className="text-stone-950 border-r border-gray-400 flex items-center justify-center w-full">
+                                                                                {item.statusCounts.map((statusCount) => statusCount.count).reduce((a, b) => a + b, 0)}
+                                                                            </div>
+                                                                            <div className="text-stone-950 flex items-center justify-center w-full">
+                                                                                {item.statusCounts.find(v => v.status === 'ปกติ')?.count ?? 0}
+                                                                            </div>
+                                                                        </div>
+                                                                    </TableCell>
 
+                                                                    <TableCell className="pt-0 pb-0 mb-2 border-r border-gray-400 text-center">
+                                                                        <div className="flex justify-around text-center">
+                                                                            <div className="text-center text-stone-950 border-r border-gray-400 flex items-center justify-center w-full">
+                                                                                {item.statusCounts.find(v => v.status === 'ปกติ')?.count ?? 0}</div>
+                                                                            <div className="text-center text-stone-950 border-r border-gray-400 flex items-center justify-center w-full">
+                                                                                {item.statusCounts.find(v => v.status === 'ถูกยืม')?.count ?? 0}
+                                                                            </div>
+                                                                            <div className="text-center text-stone-950 border-r border-gray-400 flex items-center justify-center w-full">
+                                                                                {item.statusCounts.find(v => v.status === 'ชำรุด')?.count ?? 0}
+                                                                            </div>
+                                                                            <div className="text-center text-stone-950 flex items-center justify-center w-full">
+                                                                                {item.statusCounts.find(v => v.status === 'หาย')?.count ?? 0}
+                                                                            </div>
+                                                                        </div>
+                                                                    </TableCell>
 
-                                                    </TableCell>
-                                                </TableRow>
-                                            ))}
-                                        </>
-                                    ))}
+                                                                    <TableCell className="pt-0 pb-0 text-stone-950 border-r border-gray-400 text-center">
+                                                                        {item.postfixName}
+                                                                    </TableCell>
+
+                                                                    <TableCell className="pt-0 pb-0 text-stone-950 text-center">
+                                                                        <input
+                                                                            type="number"
+                                                                            data-division={divisionName}
+                                                                            data-item={item.name}
+                                                                            className="w-16 px-2 py-1 border border-gray-400 rounded"
+                                                                            max={item.statusCounts.find((v) => v.status === 'ปกติ')?.count ?? 0}
+                                                                            min={0}
+                                                                            value={inputValues[divisionName]?.[item.name] ?? 0}
+                                                                            onChange={(e) => {
+                                                                                const maxValue = item.statusCounts.find((v) => v.status === 'ปกติ')?.count ?? 0;
+                                                                                const value = Math.min(Math.max(0, parseInt(e.target.value) || 0), maxValue);
+                                                                                handleInputChange(divisionName, item.name, value);
+                                                                            }}
+                                                                        />
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            ))}
+                                                        </>
+                                                    ))}
+                                                </>
+                                            ))
+                                        )}
                                 </TableBody>
+
                                 <TableFooter>
                                 </TableFooter>
                             </Table>

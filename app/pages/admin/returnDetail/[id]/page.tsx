@@ -99,16 +99,48 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
                         <CardHeader >
                             <div className="flex justify-between p-4">
                                 <div>
-                                    <h3 className="text-xl font-semibold">รายละเอียดการยืมของ {borrow?.project}</h3>
-                                    <h3 className="text-xl font-semibold">ผู้ยืม {borrow?.name + ' ' + borrow?.lastname}</h3>
+                                    <h3 className="text-xl font-semibold">รายละเอียดการยืมของ: {borrow?.project}</h3>
+                                    <div className="flex flex-col">
+                                        <h3 className="text-xl font-semibold mr-2">ผู้ยืม: {borrow?.name + ' ' + borrow?.lastname}</h3>
+                                        <h3 className="text-xl font-semibold">องค์กร: {borrow?.origanization.name}</h3>
+                                    </div>
+                                    {borrow.mentor_name && (
+                                        <div>
+                                            <h3 className="text-xl font-semibold mb-2">ที่ปรึกษา: {borrow?.mentor_name + ' ' + borrow?.mentor_last}</h3>
+                                            <div className="group group-hover:relative overflow-hidden mb-4">
+                                                {/* กล่องแสดงภาพหลัก */}
+                                                <div className="flex justify-start items-center overflow-hidden">
+                                                    <img
+                                                        src={process.env.NEXT_PUBLIC_BASE_PATH + "/" + borrow.img_sign}
+                                                        width={200}
+                                                        height={200}
+                                                        alt="item image"
+                                                        className="transform transition-all duration-300"
+                                                    />
+                                                </div>
+                                                {/* กล่องสำหรับแสดงภาพซูม */}
+                                                <div className={`absolute w-1/5 hidden group-hover:flex justify-center items-center transform z-100`}>
+                                                    <img
+                                                        src={process.env.NEXT_PUBLIC_BASE_PATH + "/" + borrow.img_sign}
+                                                        alt="Zoomed image"
+                                                        className="transform w-full absolute"
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                                 <div>
                                     {borrow.status != 4 ?
                                         <h3 className="text-xl font-semibold">วันที่ยืม {borrow.createAt.split('T')[0]}</h3>
                                         :
-                                        <h3 className="text-xl font-semibold">วันที่คืน {borrow.retureAt.split('T')[0]}</h3>
+                                        <>
+                                            <h3 className="text-xl font-semibold">วันที่ยืม {borrow.createAt.split('T')[0]}</h3>
+                                            <h3 className="text-xl font-semibold">วันที่คืน {borrow.retureAt.split('T')[0]}</h3>
+                                        </>
                                     }
                                 </div>
+
                             </div>
                         </CardHeader>
                         <CardContent>
@@ -136,7 +168,7 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
                                                 acc.push(
                                                     <TableRow key={`set-${item.id}`} className="border-b">
                                                         <TableCell colSpan={6} className="font-bold text-center bg-gray-200">
-                                                            {item.set?.name || "ไม่อยู่ในชุดอุปกรณ์"}
+                                                            {item.set ? "อุปกรณ์ยืมชุด *" + item.set.name : "อุปกรณ์ยืมเดียว"}
                                                         </TableCell>
                                                     </TableRow>
                                                 );
