@@ -30,27 +30,28 @@ export async function POST(req: Request) {
         const mentor_last = fData.get("mentor_last")?.toString();
         const project = fData.get("project")?.toString();
         const serveAt = fData.get("serveAt")?.toString();
+        const borrower_id = fData.get("borrower_id")?.toString();
         const retureAt = fData.get("retureAt")?.toString();
         const origanizationId = fData.get("origanizationId")?.toString();
         const borrowDetails = JSON.parse(fData.get("borrowDetails")?.toString() || "[]");
-    
+
         const fileUpload = fData.get("image");
         if (!fileUpload || !(fileUpload instanceof File)) {
             return NextResponse.json({ error: "Image file is required", status: 400 });
         }
-    
+
         const arrayBuffer = await fileUpload.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
         const fileName = fileUpload.name;
         const filePath = `images/sign/${fileName}`;
         await writeImageToPublic(fileName, buffer);
-    
+
         // ตรวจสอบข้อมูลที่จำเป็น
         if (!borrowDetails || borrowDetails.length === 0) {
             return NextResponse.json({ error: 'No borrow details provided' }, { status: 400 });
         }
-    
-        if (!name || !lastname || !tel || !project || !serveAt || !retureAt || !origanizationId) {
+
+        if (!name || !lastname || !tel || !project || !serveAt || !retureAt || !origanizationId || !borrower_id) {
             return NextResponse.json({ error: 'Missing required fields', status: 400 });
         }
 
@@ -64,6 +65,7 @@ export async function POST(req: Request) {
                     other_tel: otherTel || '-',
                     mentor_last: mentor_last || '-',
                     mentor_name: mentor_name || '-',
+                    borrower_id: borrower_id,
                     project: project,
                     serveAt: new Date(serveAt),
                     retureAt: new Date(retureAt),
@@ -77,31 +79,46 @@ export async function POST(req: Request) {
 
             // 2. สร้าง Borrow_detail
             for (const detail of borrowDetails) {
-                // เพิ่ม Borrow_detail สำหรับ `itemId` เดี่ยว
-                if (detail.itemId) {
-                    await tx.borrow_detail.create({
-                        data: {
-                            borrowId: createdBorrow.id,
-                            itemId: detail.itemId,
-                        },
-                    });
-                }
 
-                // เพิ่ม Borrow_detail สำหรับ `setId` และรายการ `Item_set`
                 if (detail.setId && detail.set?.Item_set) {
+                    // เพิ่ม Borrow_detail สำหรับ `setId` และ `Item_set`
                     for (const itemSet of detail.set.Item_set) {
-                        const data = await tx.borrow_detail.create({
-                            data: {
-                                borrowId: createdBorrow.id,
-                                setId: detail.setId,
-                                itemId: itemSet.itemId, // เพิ่ม itemId จาก Item_set
-                            },
+                        const item = await prisma.items.findFirst({
+                            where: { name: itemSet.itemName },
                         });
-                        console.log('data createset in tx=====>', data)
-                    }
-                }
-            }
 
+                        if (item) {
+                            // สร้าง borrow_detail ตามจำนวน value ที่กำหนด
+                            for (let i = 0; i < itemSet.value; i++) {
+                                await tx.borrow_detail.create({
+                                    data: {
+                                        borrowId: createdBorrow.id,
+                                        setId: detail.setId,
+                                        itemId: item.id,
+                                    },
+                                });
+                            }
+                        }
+                    }
+                } else if (detail.itemName) {
+                    // เพิ่ม Borrow_detail สำหรับ `itemName` เดี่ยว
+                    const item = await prisma.items.findFirst({
+                        where: { name: detail.itemName },
+                    });
+
+                    if (item) {
+                        // สร้าง borrow_detail ตามจำนวน value ที่กำหนด
+                        for (let i = 0; i < detail.value; i++) {
+                            await tx.borrow_detail.create({
+                                data: {
+                                    borrowId: createdBorrow.id,
+                                    itemId: item.id,
+                                },
+                            });
+                        }
+                    }
+                } 
+            }
 
             // ดึงข้อมูล Borrow พร้อม Borrow_detail
             const borrowWithDetails = await tx.borrow.findUnique({

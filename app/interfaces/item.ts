@@ -4,18 +4,21 @@ export interface ResItemsGroup {
   name: string
   statusCounts: StatusCount[]
   divisionName: string
+  divisionId: number
   postfixName: string
   img: string
   itemSets: ItemSet[]
 }
 
 export interface StatusCount {
+  itemId: number
   status: string
   count: number
 }
 
 export interface ItemSet {
   setName: string
+  setId: number
 }
 
 export interface ResItemDetial {

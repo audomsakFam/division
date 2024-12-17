@@ -8,7 +8,7 @@ export async function GET(req: Request) {
     const url = new URL(req.url);
     try {
         const data = await prisma.items.groupBy({
-            by: ['name', 'status', 'divisionId', 'postfixId', 'img'], // กำหนดให้ทำการ group by ตามฟิลด์ที่ต้องการ
+            by: ['id','name', 'status', 'divisionId', 'postfixId', 'img'], // กำหนดให้ทำการ group by ตามฟิลด์ที่ต้องการ
             _count: {
                 status: true, // นับจำนวนของแต่ละสถานะ
             },
@@ -42,6 +42,7 @@ export async function GET(req: Request) {
                     name: item.name,
                     statusCounts: [],
                     divisionName: division ? division.name : null,
+                    divisionId: division ? division.id : null,
                     postfixName: postfix ? postfix.name : null,
                     img: item.img,
                     itemSets: [], // เพิ่มฟิลด์ itemSets
@@ -51,6 +52,7 @@ export async function GET(req: Request) {
 
             // เพิ่มข้อมูลเกี่ยวกับ status และจำนวนที่สัมพันธ์กับสถานะ
             existingGroup.statusCounts.push({
+                itemId: item.id,
                 status: item.status,
                 count: item._count.status,
             });
@@ -60,6 +62,7 @@ export async function GET(req: Request) {
                 .filter(is => is.item.name === item.name)
                 .map(is => ({
                     setName: is.set.name, // เก็บชื่อของ set
+                    setId : is.set.id
                 }));
 
             existingGroup.itemSets = [

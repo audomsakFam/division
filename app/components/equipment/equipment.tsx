@@ -20,7 +20,24 @@ import {
 } from "@/components/ui/table"
 import Link from "next/link";
 
-export default function Equipment() {
+interface ReqBorrowItem {
+    setId?: number
+    set?: Set
+    itemName?: string
+    value?: number
+}
+
+export interface Set {
+    Item_set: ItemSet[]
+}
+
+export interface ItemSet {
+    itemName: string
+    value: number
+}
+
+
+export default function Equipment({ onSelected }: { onSelected: (item: ReqBorrowItem[]) => void }) {
     const [items, setItems] = useState<ResItemsGroup[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -59,55 +76,145 @@ export default function Equipment() {
         }
 
         if (itemSets.length > 0) {
-            itemSets.forEach(({ setName }) => {
+            itemSets.forEach(({ setName, setId }) => {
                 if (!acc[divisionName][setName]) {
-                    acc[divisionName][setName] = [];
+                    acc[divisionName][setName] = {
+                        items: [],
+                        setId, // เพิ่ม setId ในข้อมูลของกลุ่ม
+                    };
                 }
-                acc[divisionName][setName].push(item);
+
+                acc[divisionName][setName].items.push(item);
             });
         } else {
             if (!acc[divisionName]["ไม่มีหมวดหมู่"]) {
-                acc[divisionName]["ไม่มีหมวดหมู่"] = [];
+                acc[divisionName]["ไม่มีหมวดหมู่"] = {
+                    items: [],
+                    setId: null, // กรณีไม่มี `setId`
+                };
             }
-            acc[divisionName]["ไม่มีหมวดหมู่"].push(item);
+            acc[divisionName]["ไม่มีหมวดหมู่"].items.push(item);
         }
 
         return acc;
-    }, {} as Record<string, Record<string, ResItemsGroup[]>>);
+    }, {} as Record<
+        string,
+        Record<string, { items: ResItemsGroup[]; setId: number | null }>
+    >);
 
-    const handleSelectAll = (divisionName: string, setName: string) => {
-        setSelectAllState((prevState) => ({
-            ...prevState,
-            [`${divisionName}-${setName}`]: !prevState[`${divisionName}-${setName}`],
-        }));
 
-        const isSelectAll = !selectAllState[`${divisionName}-${setName}`];
+    const handleSelectAll = (divisionName: string, setName: string, setId?: number) => {
+        const key = `${divisionName}-${setName}-${setId ?? 'null'}`;
+
+        // Toggle the selection state and ensure it toggles the correct value
+        setSelectAllState((prevState) => {
+            const newState = { ...prevState, [key]: !(prevState[key] || false) };
+            return newState;
+        });
+
         setInputValues((prevValues) => {
             const updatedValues = { ...prevValues };
-            groupedByDivisionAndSet[divisionName]?.[setName]?.forEach((item) => {
-                const maxCount = item.statusCounts.find((v) => v.status === 'ปกติ')?.count ?? 0;
-                if (!updatedValues[divisionName]) {
-                    updatedValues[divisionName] = {};
+            const items = groupedByDivisionAndSet[divisionName]?.[setName]?.items || [];
+
+            items.forEach((item) => {
+                const maxCount = item.statusCounts
+                    .filter((v) => v.status === "ปกติ")
+                    .map((statusCount) => statusCount.count)
+                    .reduce((a, b) => a + b, 0);
+
+                if (!updatedValues[key]) {
+                    updatedValues[key] = {};
                 }
-                updatedValues[divisionName][item.name] = isSelectAll ? maxCount : 0;
+
+                updatedValues[key][item.name] = !selectAllState[key] ? maxCount : 0;
             });
+
             return updatedValues;
         });
     };
 
     const handleInputChange = (divisionName: string, itemName: string, value: number) => {
-        setInputValues((prevValues) => ({
-            ...prevValues,
-            [divisionName]: {
-                ...prevValues[divisionName],
-                [itemName]: value,
-            },
-        }));
+        setInputValues((prevValues) => {
+            const updatedValues = { ...prevValues };
+
+            // If value is 0, remove the item from inputValues
+            if (value === 0) {
+                const divisionItems = updatedValues[divisionName] || {};
+                delete divisionItems[itemName]; // Remove the item from the division
+                updatedValues[divisionName] = divisionItems; // Reassign the updated division back
+            } else {
+                const existingDivision = updatedValues[divisionName] || {};
+                updatedValues[divisionName] = {
+                    ...existingDivision,
+                    [itemName]: value, // Update the value if it's not 0
+                };
+            }
+
+            return updatedValues;
+        });
     };
+
+
+    const transformInputValues = (
+        inputValues: Record<string, Record<string, number>>
+    ): ReqBorrowItem[] => {
+        const result: ReqBorrowItem[] = [];
+    
+        Object.entries(inputValues).forEach(([divisionKey, items]) => {
+            // Extract setId from the divisionKey
+            const [divisionName, setName, setIdStr] = divisionKey.split("-");
+            const setId = setIdStr !== "null" ? parseInt(setIdStr, 10) : null;
+    
+            if (setId !== null) {
+                // Group items into Item_set for a valid setId
+                const itemSet: ItemSet[] = [];
+    
+                Object.entries(items).forEach(([itemName, value]) => {
+                    if (value !== 0) {
+                        itemSet.push({
+                            itemName: itemName.trim(),
+                            value,
+                        });
+                    }
+                });
+    
+                if (itemSet.length > 0) {
+                    result.push({
+                        setId,
+                        set: {
+                            Item_set: itemSet,
+                        },
+                    });
+                }
+            } else {
+                // Handle items without a setId
+                Object.entries(items).forEach(([itemName, value]) => {
+                    if (value !== 0) {
+                        result.push({
+                            itemName: itemName.trim(),
+                            value,
+                        });
+                    }
+                });
+            }
+        });
+    
+        return result;
+    };
+    
+
+
+
+    const toNextStep = () => {
+        console.log('input data-==-=-=-=-=-=>', transformInputValues(inputValues))
+        console.log('select data-==-=-=-=-=-=>', inputValues)
+        // onSelected()
+    }
 
     return (
         <>
             <div className="flex justify-center items-center w-full h-full mt-2">
+                {/* {console.log('data -==-=-=-=-=-=-=>', groupedByDivisionAndSet)} */}
                 <div className="overflow-auto w-[900px] flex flex-col items-center">
                     <Card className="w-full p-0">
                         <CardHeader>
@@ -159,8 +266,13 @@ export default function Equipment() {
                                         <TableHead className="text-stone-950 text-center w[8px]">เลือกจำนวน</TableHead>
                                     </TableRow>
                                 </TableHeader>
+                                {/* {console.log('data -==-=-=-=-=-=-=>', inputValues)}
+                                {console.log('groupedByDivisionAndSet -==-=-=-=-=-=-=>', groupedByDivisionAndSet)} */}
                                 <TableBody className="border-b border-t border-l border-r border-gray-800">
-                                    {Object.entries(groupedByDivisionAndSet).length === 0 || Object.entries(groupedByDivisionAndSet).every(([divisionName, sets]) => Object.entries(sets).every(([setName, items]) => items.length === 0))
+                                    {Object.entries(groupedByDivisionAndSet).length === 0 ||
+                                        Object.entries(groupedByDivisionAndSet).every(([divisionName, sets]) =>
+                                            Object.entries(sets).every(([setName, setData]) => setData.items.length === 0)
+                                        )
                                         ? (
                                             <TableRow>
                                                 <TableCell colSpan={7} className="text-center text-stone-950 py-4">
@@ -170,18 +282,25 @@ export default function Equipment() {
                                         ) : (
                                             Object.entries(groupedByDivisionAndSet).map(([divisionName, sets]) => (
                                                 <>
-                                                    {Object.entries(sets).map(([setName, items]) => (
+                                                    {Object.entries(sets).map(([setName, { items, setId }]) => (
                                                         <>
-                                                            <TableRow key={`${divisionName}-${setName}`} className="bg-gray-200">
+                                                            <TableRow key={`${divisionName}-${setName}-${setId}`} className="bg-gray-200">
                                                                 <TableCell colSpan={7} className="text-stone-950 font-bold">
                                                                     <div className="flex justify-between items-center">
-                                                                        <span>{setName === 'ไม่มีหมวดหมู่' ? divisionName : `${divisionName} - ${setName}`}</span>
+                                                                        <span>
+                                                                            {setName === 'ไม่มีหมวดหมู่'
+                                                                                ? divisionName
+                                                                                : `${divisionName} - ${setName}`}
+                                                                        </span>
                                                                         <div className="flex items-center">
                                                                             <input
                                                                                 type="checkbox"
-                                                                                checked={selectAllState[`${divisionName}-${setName}`] || false}
-                                                                                onChange={() => handleSelectAll(divisionName, setName)}
-                                                                                className="ml-2 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                                                                checked={selectAllState[`${divisionName}-${setName}-${setId}`] || false}
+                                                                                onChange={() => {
+                                                                                    console.log(`Checkbox clicked for ${divisionName}-${setName}-${setId}`);
+                                                                                    handleSelectAll(divisionName, setName, setId || undefined);
+                                                                                }}
+                                                                                className="ml-2 w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded"
                                                                             />
                                                                             <span className="ml-2">เลือกทั้งหมด</span>
                                                                         </div>
@@ -191,14 +310,18 @@ export default function Equipment() {
 
                                                             {items.map((item, index) => (
                                                                 <TableRow key={index}>
-                                                                    <TableCell className="pt-0 pb-0 text-stone-950 border-r border-gray-400 text-left">{item.name}</TableCell>
+                                                                    <TableCell className="pt-0 pb-0 text-stone-950 border-r border-gray-400 text-left">
+                                                                        {item.name}
+                                                                    </TableCell>
                                                                     <TableCell className="pt-0 pb-0 pl-0 pr-0 text-stone-950 border-r border-gray-400 text-center">
                                                                         <div className="relative flex justify-center items-center">
                                                                             <img
                                                                                 src={process.env.NEXT_PUBLIC_BASE_PATH + '/' + item.img}
                                                                                 alt={item.name}
                                                                                 onClick={() =>
-                                                                                    handleImageClick(process.env.NEXT_PUBLIC_BASE_PATH + '/' + item.img)
+                                                                                    handleImageClick(
+                                                                                        process.env.NEXT_PUBLIC_BASE_PATH + '/' + item.img
+                                                                                    )
                                                                                 }
                                                                                 className={`h-12 w-auto object-cover transition-transform duration-300 ease-in-out cursor-pointer ${expandedImage ===
                                                                                     process.env.NEXT_PUBLIC_BASE_PATH + '/' + item.img
@@ -212,27 +335,32 @@ export default function Equipment() {
                                                                     <TableCell className="pt-0 pb-0 text-stone-950 mb-2 border-r border-gray-400">
                                                                         <div className="flex justify-around">
                                                                             <div className="text-stone-950 border-r border-gray-400 flex items-center justify-center w-full">
-                                                                                {item.statusCounts.map((statusCount) => statusCount.count).reduce((a, b) => a + b, 0)}
+                                                                                {item.statusCounts
+                                                                                    .map((statusCount) => statusCount.count)
+                                                                                    .reduce((a, b) => a + b, 0)}
                                                                             </div>
                                                                             <div className="text-stone-950 flex items-center justify-center w-full">
-                                                                                {item.statusCounts.find(v => v.status === 'ปกติ')?.count ?? 0}
+                                                                                {item.statusCounts
+                                                                                    .filter((v) => v.status === 'ปกติ')
+                                                                                    .map((statusCount) => statusCount.count)
+                                                                                    .reduce((a, b) => a + b, 0)}
                                                                             </div>
                                                                         </div>
                                                                     </TableCell>
 
                                                                     <TableCell className="pt-0 pb-0 mb-2 border-r border-gray-400 text-center">
                                                                         <div className="flex justify-around text-center">
-                                                                            <div className="text-center text-stone-950 border-r border-gray-400 flex items-center justify-center w-full">
-                                                                                {item.statusCounts.find(v => v.status === 'ปกติ')?.count ?? 0}</div>
-                                                                            <div className="text-center text-stone-950 border-r border-gray-400 flex items-center justify-center w-full">
-                                                                                {item.statusCounts.find(v => v.status === 'ถูกยืม')?.count ?? 0}
-                                                                            </div>
-                                                                            <div className="text-center text-stone-950 border-r border-gray-400 flex items-center justify-center w-full">
-                                                                                {item.statusCounts.find(v => v.status === 'ชำรุด')?.count ?? 0}
-                                                                            </div>
-                                                                            <div className="text-center text-stone-950 flex items-center justify-center w-full">
-                                                                                {item.statusCounts.find(v => v.status === 'หาย')?.count ?? 0}
-                                                                            </div>
+                                                                            {['ปกติ', 'ถูกยืม', 'ชำรุด', 'หาย'].map((status) => (
+                                                                                <div
+                                                                                    key={status}
+                                                                                    className="text-center text-stone-950 border-r border-gray-400 flex items-center justify-center w-full"
+                                                                                >
+                                                                                    {item.statusCounts
+                                                                                        .filter((v) => v.status === status)
+                                                                                        .map((statusCount) => statusCount.count)
+                                                                                        .reduce((a, b) => a + b, 0)}
+                                                                                </div>
+                                                                            ))}
                                                                         </div>
                                                                     </TableCell>
 
@@ -243,16 +371,32 @@ export default function Equipment() {
                                                                     <TableCell className="pt-0 pb-0 text-stone-950 text-center">
                                                                         <input
                                                                             type="number"
-                                                                            data-division={divisionName}
+                                                                            data-division={`${divisionName}-${setName}-${setId}`}
                                                                             data-item={item.name}
                                                                             className="w-16 px-2 py-1 border border-gray-400 rounded"
-                                                                            max={item.statusCounts.find((v) => v.status === 'ปกติ')?.count ?? 0}
+                                                                            max={item.statusCounts
+                                                                                .filter((v) => v.status === 'ปกติ')
+                                                                                .map((statusCount) => statusCount.count)
+                                                                                .reduce((a, b) => a + b, 0)}
                                                                             min={0}
-                                                                            value={inputValues[divisionName]?.[item.name] ?? 0}
+                                                                            value={inputValues[`${divisionName}-${setName}-${setId}`]?.[item.name] ?? 0}
                                                                             onChange={(e) => {
-                                                                                const maxValue = item.statusCounts.find((v) => v.status === 'ปกติ')?.count ?? 0;
-                                                                                const value = Math.min(Math.max(0, parseInt(e.target.value) || 0), maxValue);
-                                                                                handleInputChange(divisionName, item.name, value);
+                                                                                const maxValue = item.statusCounts
+                                                                                    .filter((v) => v.status === 'ปกติ')
+                                                                                    .map((statusCount) => statusCount.count)
+                                                                                    .reduce((a, b) => a + b, 0);
+                                                                                const newValue = parseInt(e.target.value) || 0;
+
+                                                                                const currentValue =
+                                                                                    inputValues[`${divisionName}-${setName}-${setId}`]?.[item.name] || 0;
+                                                                                const difference = newValue - currentValue;
+
+                                                                                const value = Math.min(
+                                                                                    Math.max(0, currentValue + difference),
+                                                                                    maxValue
+                                                                                );
+
+                                                                                handleInputChange(`${divisionName}-${setName}-${setId}`, item.name, value);
                                                                             }}
                                                                         />
                                                                     </TableCell>
@@ -262,9 +406,9 @@ export default function Equipment() {
                                                     ))}
                                                 </>
                                             ))
+
                                         )}
                                 </TableBody>
-
                                 <TableFooter>
                                 </TableFooter>
                             </Table>
@@ -273,14 +417,15 @@ export default function Equipment() {
                 </div>
             </div>
             <div className="mt-6 mb-6 flex justify-center space-x-4">
-                <Link href="/pages/user/home">
-                    <button
-                        type="button"
-                        className="w-[100px] bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 transition duration-200"
-                    >
-                        ย้อนกลับ
-                    </button>
-                </Link>
+                {/* <Link href="/pages/user/home"> */}
+                <button
+                    onClick={() => toNextStep()}
+                    type="button"
+                    className="w-[100px] bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 transition duration-200"
+                >
+                    ย้อนกลับ
+                </button>
+                {/* </Link> */}
                 <Link href="/pages/user/profile">
                     <button
                         type="button"

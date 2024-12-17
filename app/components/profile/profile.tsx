@@ -1,12 +1,28 @@
 'use client'
+import { ResOri, ResOriData } from '@/app/interfaces/ori';
+import axios from 'axios';
 import Link from 'next/link';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
-const Profile = () => {
-  
+const Profile = ({ onNext }) => {
+
   const [status, setStatus] = useState<string>('staff');
   const [formData, setFormData] = useState<any>({});
   const [acceptedTerms, setAcceptedTerms] = useState<boolean>(false);
+  const [ori, setOri] = useState<ResOriData[]>([]);
+
+  useEffect(() => {
+    const fetchOri = async () => {
+      try {
+        const res = await axios.get<ResOri>('/division-borrow/api/Origanization');
+        setOri(res.data.data);
+      } catch (err) {
+        console.error('err get ori --->', err);
+      }
+    }
+
+    fetchOri();
+  }, [])
 
   const toggleInfo = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setStatus(event.target.value);
@@ -23,17 +39,17 @@ const Profile = () => {
   };
 
   const isStaffValid = () =>
-    formData['staff-name'] &&
-    formData['staff-phone'] &&
-    formData['office-phone'] &&
-    formData['faculty'];
+    formData['name'] &&
+    formData['tel'] &&
+    formData['otherTel'] &&
+    formData['origanizationId'];
 
   const isStudentValid = () =>
-    formData['student-name'] &&
-    formData['student-phone'] &&
-    formData['student-faculty'] &&
-    formData['student-id'] &&
-    formData['advisor-name'] &&
+    formData['name'] &&
+    formData['tel'] &&
+    formData['otherTel'] &&
+    formData['borrower_id'] &&
+    formData['mentor_name'] &&
     formData['advisor-phone'] &&
     formData['advisor-signature'];
 
@@ -99,9 +115,11 @@ const Profile = () => {
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
                   >
                     <option value="">เลือกคณะ</option>
-                    <option value="engineering">วิศวกรรมศาสตร์</option>
-                    <option value="business">บริหารธุรกิจ</option>
-                    <option value="home-economics">คหกรรมศาสตร์</option>
+                    {
+                      ori.map((v, i) => (
+                        <option value={v.name} key={i} className="">{v.name}</option>
+                      ))
+                    }
                   </select>
                 </div>
               </div>
@@ -135,9 +153,11 @@ const Profile = () => {
                     className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
                   >
                     <option value="">เลือกคณะ</option>
-                    <option value="engineering">วิศวกรรมศาสตร์</option>
-                    <option value="business">บริหารธุรกิจ</option>
-                    <option value="home-economics">คหกรรมศาสตร์</option>
+                    {
+                      ori.map((v, i) => (
+                        v.group === 1 && <option value={v.name} key={i} className="">{v.name}</option>
+                      ))
+                    }
                   </select>
                 </div>
                 <div className="mb-4">
@@ -203,11 +223,10 @@ const Profile = () => {
                 <button
                   type="button"
                   disabled={!isFormValid()}
-                  className={`w-[100px] py-2 px-4 rounded-md transition duration-200 ${
-                    isFormValid()
-                      ? "bg-blue-600 text-white hover:bg-blue-700"
-                      : "bg-gray-400 text-gray-200 cursor-not-allowed"
-                  }`}
+                  className={`w-[100px] py-2 px-4 rounded-md transition duration-200 ${isFormValid()
+                    ? "bg-blue-600 text-white hover:bg-blue-700"
+                    : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                    }`}
                 >
                   ยืนยัน
                 </button>

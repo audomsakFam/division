@@ -516,16 +516,23 @@ export default function Items() {
                                                         {item.statusCounts.reduce((total, status) => total + status.count, 0)}
                                                     </div>
                                                     <div className="flex items-center justify-center w-full">
-                                                        {item.statusCounts.find(v => v.status === 'ปกติ')?.count ?? 0}
+                                                        {item.statusCounts.filter(v => v.status === 'ปกติ').map((statusCount) => statusCount.count).reduce((a, b) => a + b, 0)}
+
                                                     </div>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="border-r border-gray-300 text-center text-center">
                                                 <div className="flex justify-around ">
-                                                    <div className="border-r border-gray-300 flex items-center justify-center w-full">{item.statusCounts.find(v => v.status === 'ปกติ')?.count ?? 0}</div>
-                                                    <div className="border-r border-gray-300 flex items-center justify-center w-full">{item.statusCounts.find(v => v.status === 'ถูกยืม')?.count ?? 0}</div>
-                                                    <div className="border-r border-gray-300 flex items-center justify-center w-full">{item.statusCounts.find(v => v.status === 'ชำรุด')?.count ?? 0}</div>
-                                                    <div className="flex items-center justify-center w-full">{item.statusCounts.find(v => v.status === 'หาย')?.count ?? 0}</div>
+                                                    <div className="border-r border-gray-300 flex items-center justify-center w-full"> {item.statusCounts.filter(v => v.status === 'ปกติ').map((statusCount) => statusCount.count).reduce((a, b) => a + b, 0)}</div>
+                                                    <div className="border-r border-gray-300 flex items-center justify-center w-full">
+                                                        {item.statusCounts.filter(v => v.status === 'ถูกยืม').map((statusCount) => statusCount.count).reduce((a, b) => a + b, 0)}
+                                                    </div>
+                                                    <div className="border-r border-gray-300 flex items-center justify-center w-full">
+                                                        {item.statusCounts.filter(v => v.status === 'ชำรุด').map((statusCount) => statusCount.count).reduce((a, b) => a + b, 0)}
+                                                    </div>
+                                                    <div className="flex items-center justify-center w-full">
+                                                        {item.statusCounts.filter(v => v.status === 'หาย').map((statusCount) => statusCount.count).reduce((a, b) => a + b, 0)}
+                                                    </div>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="border-r border-gray-300 text-center">{item.postfixName}</TableCell>
