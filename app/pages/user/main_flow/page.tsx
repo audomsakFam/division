@@ -1,5 +1,5 @@
 'use client'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
     Card,
     CardContent,
@@ -21,49 +21,148 @@ import Link from 'next/link'
 import Equipment from '@/app/components/equipment/equipment'
 import Profile from '@/app/components/profile/profile'
 import DateComponent from '@/app/components/date/date'
+import { ResOri, ResOriData } from '@/app/interfaces/ori'
+import axios from 'axios'
+import { useRouter } from 'next/navigation'
+interface ReqBorrowItem {
+    setId?: number
+    set?: Set
+    itemName?: string
+    value?: number
+    division: string
+}
 
+export interface Set {
+    Item_set: ItemSet[]
+}
+
+export interface ItemSet {
+    itemName: string
+    value: number
+}
 
 export default function Summary() {
     const [step, setStep] = useState(1);
-    const [selectedItems, setSelectedItems] = useState([]);
-    const [personalData, setPersonalData] = useState({});
-    const [dates, setDates] = useState({});
+    const [selectedItems, setSelectedItems] = useState<ReqBorrowItem[]>([]);
+    const [personalData, setPersonalData] = useState<any>({});
+    const [dates, setDates] = useState<any>({});
+    const [ori, setOri] = useState<ResOriData[]>([]);
+    const [set, setSet] = useState<any[]>([]);
+    const router = useRouter();
 
-    const handleItemSelect = (items:any) => {
+    const getSet = async () => {
+        try {
+            const data = await axios.get(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/set`);
+            if (data.status === 200) {
+                setSet(data.data.data);
+            } else {
+                throw new Error(data.data.message)
+            }
+        } catch (err) {
+            console.log(err)
+        }
+    }
+
+    const sendBorrow = async () => {
+        try {
+            const formData = new FormData();
+
+            // เพิ่มข้อมูลส่วนบุคคล
+            formData.append("lastname", personalData.lastname || "");
+            formData.append("name", personalData.name || "");
+            formData.append("mentor_name", personalData.mentor_name || "");
+            formData.append("mentor_last", personalData.mentor_last || "");
+            formData.append("project", dates.project || "");
+            formData.append("tel", personalData.tel || "");
+            formData.append("otherTel", personalData.otherTel || "");
+            formData.append("serveAt", dates.serveAt || "");
+            formData.append("type_borrow", personalData.type_borrow || "");
+            formData.append("retureAt", dates.retureAt || "");
+            formData.append("origanizationId", personalData.origanizationId || "");
+
+            // เพิ่ม borrowDetails
+            formData.append("borrowDetails", JSON.stringify(selectedItems));
+
+            // เพิ่มไฟล์ (ตรวจสอบว่าไฟล์มีค่า)
+            if (personalData.image instanceof File) {
+                formData.append("image", personalData.image);
+            }
+
+            if (personalData.borrower_id instanceof File) {
+                formData.append("borrower_id", personalData.borrower_id);
+            }
+            console.log("FormData content:");
+            for (const [key, value] of formData.entries()) {
+                console.log(`${key}:`, value instanceof File ? value.name : value);
+            }
+            const res = await axios.post(
+                `${process.env.NEXT_PUBLIC_BASE_PATH}/api/borrow`,
+                formData, // ส่ง formData โดยตรง
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                }
+            );
+            if (res.status == 200) {
+                console.log(res.data)
+            }
+        } catch (err) {
+            console.error("err send borrow", err)
+        }
+    }
+
+    useEffect(() => {
+        const fetchOri = async () => {
+            try {
+                const res = await axios.get<ResOri>('/division-borrow/api/Origanization');
+                setOri(res.data.data);
+            } catch (err) {
+                console.error('err get ori --->', err);
+            }
+        }
+
+        fetchOri();
+        getSet();
+    }, [])
+
+    const handleItemSelect = (items: ReqBorrowItem[]) => {
         setSelectedItems(items);
         setStep(2); // ไปยังขั้นตอนกรอกข้อมูลส่วนตัว
     };
 
-    const handlePersonalInfo = (data) => {
+    const handlePersonalInfo = (data: any) => {
         setPersonalData(data);
         setStep(3); // ไปยังขั้นตอนกรอกวันเวลา
     };
 
-    const handleDateTimeSubmit = (data) => {
+    const handleDateTimeSubmit = (data: any) => {
         setDates(data);
         // ส่งข้อมูลทั้งหมดที่ได้
         const finalData = {
             selectedItems,
             personalData,
-            dates,
+            dates: dates,
         };
-        console.log(finalData); // ส่งข้อมูลทั้งหมดที่กรอก
+        finalData
+        setStep(4);
+        console.log('finalData--=-=-=-=-=-=-=-==-=>', finalData); // ส่งข้อมูลทั้งหมดที่กรอก
     };
     return (
         <>
             {
                 step == 1 && (
-                    <Equipment onSelected={handleItemSelect}/>
+                    <Equipment onSelected={handleItemSelect} />
                 )
             }
             {
                 step == 2 && (
-                    <Profile />
+                    <Profile onBack={() => setStep(1)} onNext={handlePersonalInfo} />
                 )
             }
             {
                 step == 3 && (
-                    <DateComponent />
+                    <DateComponent onBack={() => setStep(2)} onNext={handleDateTimeSubmit} />
                 )
             }
             {
@@ -71,17 +170,30 @@ export default function Summary() {
                     <div className='flex justify-center items-center h-100vh mt-8 mb-8'>
                         <Card className='w-[1000px] ml-2 mr-2 pl-0 pr-0'>
                             <CardHeader>
-                                <CardTitle className='text-xl'>ใบสรุปรายการ</CardTitle>
+                                <CardTitle className='text-xl'>ใบสรุปรายการ {dates.project}</CardTitle>
                             </CardHeader>
                             <CardContent className='pl-2 pr-2'>
                                 <div className='mb-5'>
-                                    <ul>
-                                        <li><strong>สถานะ : </strong>บุคลากร</li>
-                                        <li><strong>ชื่อ-นามสกุล : </strong>สมชาย ใจดี</li>
-                                        <li><strong>เบอร์โทรศัพท์มือถือ : </strong>098-123456</li>
-                                        <li><strong>เบอร์โทรสำนักงาน : </strong>02-123456</li>
-                                        <li><strong>คณะ/หน่วยงาน : </strong>กองพัฒนานักศึกษา</li>
-                                    </ul>
+                                    {
+                                        personalData.type_borrow == 'staff' ? (
+                                            <ul>
+                                                <li><strong>สถานะ : </strong>{personalData.type_borrow}</li>
+                                                <li><strong>ชื่อ-นามสกุล : </strong>{personalData.name + ' ' + personalData.lastname}</li>
+                                                <li><strong>เบอร์โทรศัพท์มือถือ : </strong>{personalData.tel}</li>
+                                                <li><strong>เบอร์โทรสำนักงาน : </strong>{personalData.otherTel}</li>
+                                                <li><strong>คณะ/หน่วยงาน : </strong>{ori.find(ori => ori.id == personalData.origanizationId)?.name}</li>
+                                            </ul>
+                                        ) : (
+                                            <ul>
+                                               <li><strong>สถานะ : </strong>{personalData.type_borrow}</li>
+                                                <li><strong>ชื่อ-นามสกุล : </strong>{personalData.name + ' ' + personalData.lastname}</li>
+                                                <li><strong>เบอร์โทรศัพท์มือถือ : </strong>{personalData.tel}</li>
+                                                <li><strong>ชื่อ-นามสกุล-อาจารย์ที่ปรึกษา : </strong>{personalData.mentor_name + ' ' + personalData.mentor_last}</li>
+                                                <li><strong>เบอร์โทร-อาจารย์ที่ปรึกษา : </strong>{personalData.otherTel}</li>
+                                                <li><strong>คณะ/หน่วยงาน : </strong>{ori.find(ori => ori.id == personalData.origanizationId)?.name}</li>
+                                            </ul>
+                                        )
+                                    }
                                 </div>
                                 <Card className='w-full mb-5'>
                                     <CardHeader className='text-xl font-semibold m-0 p-3'>
@@ -97,191 +209,65 @@ export default function Summary() {
                                             </TableRow>
                                         </TableHeader>
                                         <TableBody>
-                                            <TableRow>
-                                                <TableCell className="font-medium text-center">1</TableCell>
-                                                <TableCell className='text-left'>คอมพิวเตอร์</TableCell>
-                                                <TableCell className='text-center'>5</TableCell>
-                                                <TableCell className="text-left">ฝ่ายบริหารงานทั่วไป</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium text-center">1</TableCell>
-                                                <TableCell className='text-left'>คอมพิวเตอร์</TableCell>
-                                                <TableCell className='text-center'>5</TableCell>
-                                                <TableCell className="text-left">ฝ่ายบริหารงานทั่วไป</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium text-center">1</TableCell>
-                                                <TableCell className='text-left'>คอมพิวเตอร์</TableCell>
-                                                <TableCell className='text-center'>5</TableCell>
-                                                <TableCell className="text-left">ฝ่ายบริหารงานทั่วไป</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium text-center">1</TableCell>
-                                                <TableCell className='text-left'>คอมพิวเตอร์</TableCell>
-                                                <TableCell className='text-center'>5</TableCell>
-                                                <TableCell className="text-left">ฝ่ายบริหารงานทั่วไป</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium text-center">1</TableCell>
-                                                <TableCell className='text-left'>คอมพิวเตอร์</TableCell>
-                                                <TableCell className='text-center'>5</TableCell>
-                                                <TableCell className="text-left">ฝ่ายบริหารงานทั่วไป</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium text-center">1</TableCell>
-                                                <TableCell className='text-left'>คอมพิวเตอร์</TableCell>
-                                                <TableCell className='text-center'>5</TableCell>
-                                                <TableCell className="text-left">ฝ่ายบริหารงานทั่วไป</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium text-center">1</TableCell>
-                                                <TableCell className='text-left'>คอมพิวเตอร์</TableCell>
-                                                <TableCell className='text-center'>5</TableCell>
-                                                <TableCell className="text-left">ฝ่ายบริหารงานทั่วไป</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium text-center">1</TableCell>
-                                                <TableCell className='text-left'>คอมพิวเตอร์</TableCell>
-                                                <TableCell className='text-center'>5</TableCell>
-                                                <TableCell className="text-left">ฝ่ายบริหารงานทั่วไป</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium text-center">1</TableCell>
-                                                <TableCell className='text-left'>คอมพิวเตอร์</TableCell>
-                                                <TableCell className='text-center'>5</TableCell>
-                                                <TableCell className="text-left">ฝ่ายบริหารงานทั่วไป</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium text-center">1</TableCell>
-                                                <TableCell className='text-left'>คอมพิวเตอร์</TableCell>
-                                                <TableCell className='text-center'>5</TableCell>
-                                                <TableCell className="text-left">ฝ่ายบริหารงานทั่วไป</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium text-center">1</TableCell>
-                                                <TableCell className='text-left'>คอมพิวเตอร์</TableCell>
-                                                <TableCell className='text-center'>5</TableCell>
-                                                <TableCell className="text-left">ฝ่ายบริหารงานทั่วไป</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium text-center">1</TableCell>
-                                                <TableCell className='text-left'>คอมพิวเตอร์</TableCell>
-                                                <TableCell className='text-center'>5</TableCell>
-                                                <TableCell className="text-left">ฝ่ายบริหารงานทั่วไป</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium text-center">1</TableCell>
-                                                <TableCell className='text-left'>คอมพิวเตอร์</TableCell>
-                                                <TableCell className='text-center'>5</TableCell>
-                                                <TableCell className="text-left">ฝ่ายบริหารงานทั่วไป</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium text-center">1</TableCell>
-                                                <TableCell className='text-left'>คอมพิวเตอร์</TableCell>
-                                                <TableCell className='text-center'>5</TableCell>
-                                                <TableCell className="text-left">ฝ่ายบริหารงานทั่วไป</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium text-center">1</TableCell>
-                                                <TableCell className='text-left'>คอมพิวเตอร์</TableCell>
-                                                <TableCell className='text-center'>5</TableCell>
-                                                <TableCell className="text-left">ฝ่ายบริหารงานทั่วไป</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium text-center">1</TableCell>
-                                                <TableCell className='text-left'>คอมพิวเตอร์</TableCell>
-                                                <TableCell className='text-center'>5</TableCell>
-                                                <TableCell className="text-left">ฝ่ายบริหารงานทั่วไป</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium text-center">1</TableCell>
-                                                <TableCell className='text-left'>คอมพิวเตอร์</TableCell>
-                                                <TableCell className='text-center'>5</TableCell>
-                                                <TableCell className="text-left">ฝ่ายบริหารงานทั่วไป</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium text-center">1</TableCell>
-                                                <TableCell className='text-left'>คอมพิวเตอร์</TableCell>
-                                                <TableCell className='text-center'>5</TableCell>
-                                                <TableCell className="text-left">ฝ่ายบริหารงานทั่วไป</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium text-center">1</TableCell>
-                                                <TableCell className='text-left'>คอมพิวเตอร์</TableCell>
-                                                <TableCell className='text-center'>5</TableCell>
-                                                <TableCell className="text-left">ฝ่ายบริหารงานทั่วไป</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium text-center">1</TableCell>
-                                                <TableCell className='text-left'>คอมพิวเตอร์</TableCell>
-                                                <TableCell className='text-center'>5</TableCell>
-                                                <TableCell className="text-left">ฝ่ายบริหารงานทั่วไป</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium text-center">1</TableCell>
-                                                <TableCell className='text-left'>คอมพิวเตอร์</TableCell>
-                                                <TableCell className='text-center'>5</TableCell>
-                                                <TableCell className="text-left">ฝ่ายบริหารงานทั่วไป</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium text-center">1</TableCell>
-                                                <TableCell className='text-left'>คอมพิวเตอร์</TableCell>
-                                                <TableCell className='text-center'>5</TableCell>
-                                                <TableCell className="text-left">ฝ่ายบริหารงานทั่วไป</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium text-center">1</TableCell>
-                                                <TableCell className='text-left'>คอมพิวเตอร์</TableCell>
-                                                <TableCell className='text-center'>5</TableCell>
-                                                <TableCell className="text-left">ฝ่ายบริหารงานทั่วไป</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium text-center">1</TableCell>
-                                                <TableCell className='text-left'>คอมพิวเตอร์</TableCell>
-                                                <TableCell className='text-center'>5</TableCell>
-                                                <TableCell className="text-left">ฝ่ายบริหารงานทั่วไป</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium text-center">1</TableCell>
-                                                <TableCell className='text-left'>คอมพิวเตอร์</TableCell>
-                                                <TableCell className='text-center'>5</TableCell>
-                                                <TableCell className="text-left">ฝ่ายบริหารงานทั่วไป</TableCell>
-                                            </TableRow>
-                                            <TableRow>
-                                                <TableCell className="font-medium text-center">1</TableCell>
-                                                <TableCell className='text-left'>คอมพิวเตอร์</TableCell>
-                                                <TableCell className='text-center'>5</TableCell>
-                                                <TableCell className="text-left">ฝ่ายบริหารงานทั่วไป</TableCell>
-                                            </TableRow>
+                                            {selectedItems && (
+                                                selectedItems.map((v, i) => (
+                                                    v.setId ? (
+                                                        <>
+                                                            {i === 0 || selectedItems[i - 1].setId !== v.setId ? (
+                                                                <TableRow key={`header-${v.setId}`}>
+                                                                    <TableCell colSpan={5} className="font-medium text-center bg-gray-200">
+                                                                        {set.find((v2) => v2.id === v.setId)?.name}
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            ) : null}
+                                                            {
+                                                                v.set?.Item_set.map((v2, i2) => (
+                                                                    <TableRow key={i}>
+                                                                        <TableCell className="font-medium text-center">{i2 + 1}</TableCell>
+                                                                        <TableCell className='text-left'>{v2.itemName}</TableCell>
+                                                                        <TableCell className='text-center'>{v2.value}</TableCell>
+                                                                        <TableCell className="text-left">{v.division}</TableCell>
+                                                                    </TableRow>
+                                                                ))
+                                                            }
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            {/* <TableRow key={i}>
+                                                                <TableCell colSpan={4} className="font-medium text-center bg-gray-200">
+                                                                    ไม่อยู่ในกลุ่มอุปกรณ์
+                                                                </TableCell>
+                                                            </TableRow> */}
+                                                            <TableRow key={`no-set-${i}`}>
+                                                                <TableCell className="font-medium text-center">{i + 1}</TableCell>
+                                                                <TableCell className='text-left'>{v.itemName}</TableCell>
+                                                                <TableCell className='text-center'>{v.value}</TableCell>
+                                                                <TableCell className="text-left">{v.division}</TableCell>
+                                                            </TableRow>
+                                                        </>
+                                                    )
+                                                ))
+                                            )}
                                         </TableBody>
+
                                     </Table>
                                 </Card>
-                                <div className='mt-10'>
-                                    <ul>
-                                        <li><strong>วันที่ยืมวัสดุ - อุปกรณ์ : </strong> 5/12/2567</li>
-                                        <li><strong>วันและเวลาทีเข้ารับวัสดุ - อุปกรณ์ : </strong>7/12/2567-13:00 น.</li>
-                                        <li><strong>วันที่คืนวัสดุ - อุปกรณ์ : </strong> 10/12/2567</li>
-                                        <li><strong>โครงการ/กิจกรรม : </strong>กิจกรรมสัมมนา</li>
-                                    </ul>
-                                </div>
                             </CardContent>
                             <div className="mt-6 mb-6 flex justify-center space-x-4">
-                                <Link href="/">
-                                    <button
-                                        type="button"
-                                        className="w-[100px] bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 transition duration-200"
-                                    >
-                                        ย้อนกลับ
-                                    </button>
-                                </Link>
-                                <Link href="/">
-                                    <button
-                                        type="button"
-                                        className="w-[100px] bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200"
-                                    >
-                                        ยืนยัน
-                                    </button>
-                                </Link>
+                                <button
+                                    onClick={() => setStep(step - 1)}
+                                    type="button"
+                                    className="w-[100px] bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 transition duration-200"
+                                >
+                                    ย้อนกลับ
+                                </button>
+                                <button
+                                    onClick={() => {sendBorrow(); router.push('/');}}
+                                    type="button"
+                                    className="w-[100px] bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200"
+                                >
+                                    ยืนยัน
+                                </button>
                             </div>
                         </Card>
 

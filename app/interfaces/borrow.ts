@@ -15,6 +15,7 @@ export interface ResBorrowData {
   mentor_name: any
   mentor_last: any
   img_sign: any
+  borrower_id: any
   status: number
   createAt: string
   retureAt: string

@@ -2,13 +2,11 @@
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
 
-export default function DateComponent() {
+export default function DateComponent({ onNext, onBack }: any) {
   const [currentDate, setCurrentDate] = useState("");
   const [minPickupDate, setMinPickupDate] = useState("");
-  const [pickupDate, setPickupDate] = useState("");
-  const [minReturnDate, setMinReturnDate] = useState("");
-  const [returnDate, setReturnDate] = useState("");
-  const [purpose, setPurpose] = useState("");
+  const [formData, setFormData] = useState<any>({});
+
 
   useEffect(() => {
     const today = new Date();
@@ -20,23 +18,22 @@ export default function DateComponent() {
     const formattedMinPickup = minPickup.toISOString().slice(0, 16);
     setMinPickupDate(formattedMinPickup);
   }, []);
-
-  const handlePickupDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedPickupDate = e.target.value;
-    setPickupDate(selectedPickupDate);
-    setMinReturnDate(selectedPickupDate.split('T')[0]); // Set minimum return date based on pickup date
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prevData: any) => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
-
-  const handleReturnDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setReturnDate(e.target.value);
-  };
-
-  const handlePurposeChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setPurpose(e.target.value);
-  };
-
   const isFormValid = () => {
-    return pickupDate && returnDate && purpose;
+    return formData.serveAt && formData.retureAt && formData.project;
+  };
+
+  const summit = () => {
+    if (isFormValid()) {
+      console.log("Form Data:", formData);
+      onNext(formData);
+    }
   };
 
   return (
@@ -60,7 +57,7 @@ export default function DateComponent() {
 
             <div className="mb-4">
               <label
-                htmlFor="pickup-time"
+                htmlFor="serveAt"
                 className="block text-gray-700 font-medium mb-2 sm:flex sm:items-center sm:space-x-2 flex flex-col sm:flex-row items-start">
                 <span>วันเวลาที่สะดวกเข้ามารับของ:</span>
                 <p className="text-red-500 text-sm sm:inline sm:mt-0 mt-1">
@@ -70,62 +67,63 @@ export default function DateComponent() {
 
               <input
                 type="datetime-local"
-                id="pickup-time"
+                id="serveAt"
+                name="serveAt"
                 min={minPickupDate}
-                value={pickupDate}
-                onChange={handlePickupDateChange}
+                value={formData.serveAt || ""}
+                onChange={handleChange}
                 required
                 className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
               />
             </div>
 
             <div className="mb-4">
-              <label htmlFor="return-date" className="block text-gray-700 font-medium mb-2">วันที่คืน:</label>
+              <label htmlFor="retureAt" className="block text-gray-700 font-medium mb-2">วันที่คืน:</label>
               <input
-                type="date"
-                id="return-date"
-                min={minReturnDate}
-                value={returnDate}
-                onChange={handleReturnDateChange}
+                type="datetime-local"
+                id="retureAt"
+                name="retureAt"
+                min={minPickupDate}
+                value={formData.retureAt || ""}
+                onChange={handleChange}
                 required
-                disabled={!pickupDate} // Disable until pickup date is selected
-                className={`w-full p-2 border rounded-md focus:outline-none ${pickupDate ? "border-gray-300 focus:border-blue-500" : "border-gray-200 bg-gray-100 cursor-not-allowed"}`}
+                disabled={!formData.serveAt} // Disable until pickup date is selected
+                className={`w-full p-2 border rounded-md focus:outline-none ${formData.serveAt ? "border-gray-300 focus:border-blue-500" : "border-gray-200 bg-gray-100 cursor-not-allowed"}`}
               />
             </div>
 
             <div className="mb-4">
-              <label htmlFor="purpose" className="block text-gray-700 font-medium mb-2">โครงการ/กิจกรรม:</label>
-              <textarea
-                id="purpose"
+              <label htmlFor="project" className="block text-gray-700 font-medium mb-2">โครงการ/กิจกรรม:</label>
+              <input
+                id="project"
+                name="project"
                 placeholder="ระบุ โครงการ/กิจกรรม ที่ท่านนำวัสดุอุปกรณ์ของกองพัฒนาศึกษาไปใช้..."
-                value={purpose}
-                onChange={handlePurposeChange}
+                value={formData.project || ""}
+                onChange={handleChange}
                 required
                 className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
               />
             </div>
 
             <div className="mt-6 flex justify-center space-x-4">
-              <Link href="/pages/user/profile">
-                <button
-                  type="button"
-                  className="w-[100px] bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 transition duration-200"
-                >
-                  ย้อนกลับ
-                </button>
-              </Link>
-              <Link href={isFormValid() ? "/pages/user/summary" : "#"}>
-                <button
-                  type="button"
-                  disabled={!isFormValid()}
-                  className={`w-[100px] py-2 px-4 rounded-md transition duration-200 ${isFormValid()
-                      ? "bg-blue-600 text-white hover:bg-blue-700"
-                      : "bg-gray-400 text-gray-200 cursor-not-allowed"
-                    }`}
-                >
-                  ยืนยัน
-                </button>
-              </Link>
+              <button
+                onClick={() => onBack()}
+                type="button"
+                className="w-[100px] bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 transition duration-200"
+              >
+                ย้อนกลับ
+              </button>
+              <button
+                onClick={() => summit()}
+                type="button"
+                disabled={!isFormValid()}
+                className={`w-[100px] py-2 px-4 rounded-md transition duration-200 ${isFormValid()
+                  ? "bg-blue-600 text-white hover:bg-blue-700"
+                  : "bg-gray-400 text-gray-200 cursor-not-allowed"
+                  }`}
+              >
+                ยืนยัน
+              </button>
             </div>
           </form>
         </section>

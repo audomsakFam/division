@@ -17,7 +17,7 @@ import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 // import * as XLSX from "xlsx";
 
-const itemsPerPage = 20;
+const itemsPerPage = 200;
 export default function ReturnDetail({ params }: { params: { id: string } }) {
     const id = Number(decodeURIComponent(params.id));
     const [borrow, setBorrow] = useState<ResBorrowData>();
@@ -104,27 +104,49 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
                                         <h3 className="text-xl font-semibold mr-2">ผู้ยืม: {borrow?.name + ' ' + borrow?.lastname}</h3>
                                         <h3 className="text-xl font-semibold">องค์กร: {borrow?.origanization.name}</h3>
                                     </div>
-                                    {borrow.mentor_name && (
+                                    {borrow.mentor_name != '-' && (
                                         <div>
                                             <h3 className="text-xl font-semibold mb-2">ที่ปรึกษา: {borrow?.mentor_name + ' ' + borrow?.mentor_last}</h3>
-                                            <div className="group group-hover:relative overflow-hidden mb-4">
-                                                {/* กล่องแสดงภาพหลัก */}
-                                                <div className="flex justify-start items-center overflow-hidden">
-                                                    <img
-                                                        src={process.env.NEXT_PUBLIC_BASE_PATH + "/" + borrow.img_sign}
-                                                        width={200}
-                                                        height={200}
-                                                        alt="item image"
-                                                        className="transform transition-all duration-300"
-                                                    />
+                                            <div className="flex">
+                                                <div className="group group-hover:relative overflow-hidden mb-4 mr-4">
+                                                    {/* กล่องแสดงภาพหลัก */}
+                                                    <div className="flex justify-start items-center overflow-hidden">
+                                                        <img
+                                                            src={process.env.NEXT_PUBLIC_BASE_PATH + "/" + borrow.img_sign}
+                                                            width={200}
+                                                            height={200}
+                                                            alt="item image"
+                                                            className="transform transition-all duration-300"
+                                                        />
+                                                    </div>
+                                                    {/* กล่องสำหรับแสดงภาพซูม */}
+                                                    <div className={`absolute w-1/2 hidden group-hover:flex justify-center items-center transform z-1000`}>
+                                                        <img
+                                                            src={process.env.NEXT_PUBLIC_BASE_PATH + "/" + borrow.img_sign}
+                                                            alt="Zoomed image"
+                                                            className="transform w-full absolute w-[400px] "
+                                                        />
+                                                    </div>
                                                 </div>
-                                                {/* กล่องสำหรับแสดงภาพซูม */}
-                                                <div className={`absolute w-1/5 hidden group-hover:flex justify-center items-center transform z-100`}>
-                                                    <img
-                                                        src={process.env.NEXT_PUBLIC_BASE_PATH + "/" + borrow.img_sign}
-                                                        alt="Zoomed image"
-                                                        className="transform w-full absolute"
-                                                    />
+                                                <div className="group group-hover:relative overflow-hidden mb-4">
+                                                    {/* กล่องแสดงภาพหลัก */}
+                                                    <div className="flex justify-start items-center overflow-hidden">
+                                                        <img
+                                                            src={process.env.NEXT_PUBLIC_BASE_PATH + "/" + borrow.borrower_id}
+                                                            width={200}
+                                                            height={200}
+                                                            alt="item image"
+                                                            className="transform transition-all duration-300"
+                                                        />
+                                                    </div>
+                                                    {/* กล่องสำหรับแสดงภาพซูม */}
+                                                    <div className={`absolute w-1/2  hidden group-hover:flex justify-center items-center transform z-1000`}>
+                                                        <img
+                                                            src={process.env.NEXT_PUBLIC_BASE_PATH + "/" + borrow.borrower_id}
+                                                            alt="Zoomed image"
+                                                            className="transform w-full absolute w-[400px] "
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -228,7 +250,7 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
                     </span>
                     <CardFooter className="flex justify-center items-center w-full">
                         {currentItems.length <= 0 ? null : <>
-                            {PaginationComponent({ currentPage, totalPages, onPageChange: setCurrentPage })}
+                            {/* {PaginationComponent({ currentPage, totalPages, onPageChange: setCurrentPage })} */}
                             {borrow.status == 4 && (
                                 <>
                                     <button className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mr-2" onClick={() => exportToPDF(4)}>Export to PDF</button>

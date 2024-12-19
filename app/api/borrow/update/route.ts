@@ -47,7 +47,7 @@ export async function PUT(req: Request) {
         if (data?.status == 0) {
             await prisma.borrow.update({
                 where: { id: id },
-                data: { status: 1 },
+                data: { status: 2 },
             });
             return NextResponse.json({ msg: 'update to "to waiting"', status: 200 });
         }

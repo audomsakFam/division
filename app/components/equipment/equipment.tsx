@@ -18,13 +18,14 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface ReqBorrowItem {
     setId?: number
     set?: Set
     itemName?: string
     value?: number
+    division: string
 }
 
 export interface Set {
@@ -38,6 +39,7 @@ export interface ItemSet {
 
 
 export default function Equipment({ onSelected }: { onSelected: (item: ReqBorrowItem[]) => void }) {
+    const route = useRouter()
     const [items, setItems] = useState<ResItemsGroup[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -159,16 +161,19 @@ export default function Equipment({ onSelected }: { onSelected: (item: ReqBorrow
         inputValues: Record<string, Record<string, number>>
     ): ReqBorrowItem[] => {
         const result: ReqBorrowItem[] = [];
-    
+
         Object.entries(inputValues).forEach(([divisionKey, items]) => {
-            // Extract setId from the divisionKey
+            // Extract division name from the divisionKey
             const [divisionName, setName, setIdStr] = divisionKey.split("-");
             const setId = setIdStr !== "null" ? parseInt(setIdStr, 10) : null;
-    
+
+            // Include division name in the result
+            const division = divisionName; // Division is now included
+
             if (setId !== null) {
                 // Group items into Item_set for a valid setId
                 const itemSet: ItemSet[] = [];
-    
+
                 Object.entries(items).forEach(([itemName, value]) => {
                     if (value !== 0) {
                         itemSet.push({
@@ -177,13 +182,14 @@ export default function Equipment({ onSelected }: { onSelected: (item: ReqBorrow
                         });
                     }
                 });
-    
+
                 if (itemSet.length > 0) {
                     result.push({
                         setId,
                         set: {
                             Item_set: itemSet,
                         },
+                        division, // Add division here
                     });
                 }
             } else {
@@ -193,22 +199,22 @@ export default function Equipment({ onSelected }: { onSelected: (item: ReqBorrow
                         result.push({
                             itemName: itemName.trim(),
                             value,
+                            division, // Add division here
                         });
                     }
                 });
             }
         });
-    
+
         return result;
     };
-    
+
+
 
 
 
     const toNextStep = () => {
-        console.log('input data-==-=-=-=-=-=>', transformInputValues(inputValues))
-        console.log('select data-==-=-=-=-=-=>', inputValues)
-        // onSelected()
+        onSelected(transformInputValues(inputValues));
     }
 
     return (
@@ -419,21 +425,20 @@ export default function Equipment({ onSelected }: { onSelected: (item: ReqBorrow
             <div className="mt-6 mb-6 flex justify-center space-x-4">
                 {/* <Link href="/pages/user/home"> */}
                 <button
-                    onClick={() => toNextStep()}
+                    onClick={() => route.push('/')}
                     type="button"
                     className="w-[100px] bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 transition duration-200"
                 >
                     ย้อนกลับ
                 </button>
                 {/* </Link> */}
-                <Link href="/pages/user/profile">
-                    <button
-                        type="button"
-                        className="w-[100px] bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200"
-                    >
-                        ถัดไป
-                    </button>
-                </Link>
+                <button
+                    onClick={() => toNextStep()}
+                    type="button"
+                    className="w-[100px] bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200"
+                >
+                    ถัดไป
+                </button>
             </div>
         </>
     )

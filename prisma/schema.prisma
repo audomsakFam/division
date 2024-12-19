@@ -83,7 +83,7 @@ model Borrow {
   id              Int             @id @default(autoincrement())
   project         String          @db.VarChar(100)
   name            String          @db.VarChar(100)
-  borrower_id     String?         @db.VarChar(100)
+  borrower_id     String?         @db.VarChar(100) 
   lastname        String          @db.VarChar(100)
   tel             String          @db.VarChar(11)
   other_tel       String?         @db.VarChar(11)
@@ -94,7 +94,7 @@ model Borrow {
   createAt        DateTime        @default(now())
   retureAt        DateTime        @default(now())
   serveAt         DateTime        @default(now())
-  type_borrow     String          @default("")
+  type_borrow     String          @default("") //staff student
   origanizationId Int?
   origanization   Origanization?  @relation(fields: [origanizationId], references: [id])
   Borrow_detail   Borrow_detail[]

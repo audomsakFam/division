@@ -112,7 +112,7 @@ export default function HomePage() {
         return statusTosave
     };
     const toUpdate = async (borrowId: number, items: { id: number; status: string }[]) => {
-        await axios.post(process.env.NEXT_PUBLIC_BASE_PATH+'/api/borrow/update', { id: borrowId, itemUpdates: items })
+        await axios.post(process.env.NEXT_PUBLIC_BASE_PATH + '/api/borrow/update', { id: borrowId, itemUpdates: items })
             .then((res) => {
                 console.log('test res--->', res)
                 setRefreshData(true)
@@ -173,7 +173,7 @@ export default function HomePage() {
                 Math.max(
                     ...chartData.series.flatMap((s: { data: number[] }) => s.data)
                 ) + 10
-            ), 
+            ),
             labels: {
                 formatter: function (value: number) {
                     return `${Math.round(value)} ครั้ง`; // เพิ่มหน่วย "ครั้ง" ที่ท้ายค่า Y
@@ -285,7 +285,7 @@ export default function HomePage() {
                                         <TableHead className="text-stone-950 border-r border-gray-300 text-center">สถานะ</TableHead>
                                         <TableHead className="text-stone-950 border-r border-gray-300 text-center">วันที่ส่งคำขอ</TableHead>
                                         <TableHead className="text-stone-950 border-r border-gray-300 text-center">วันที่ส่งมอบ</TableHead>
-                                        <TableHead className="text-stone-950 text-center">ดำเนินการ</TableHead>
+                                        <TableHead className="text-stone-950 text-center">ดำเนินการ (กดเมื่อดำเนินการแล้ว)</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -313,7 +313,7 @@ export default function HomePage() {
 
                                                                     onClick={(e) => { e.stopPropagation(); updateStatus(item.id); }}>
                                                                     {
-                                                                        item.status == 1 ? 'ยืนยันคำขอ' :
+                                                                        item.status == 0 ? 'กำลังประมวลผล' : item.status == 1 ? 'ยืนยันคำขอ' :
                                                                             item.status == 2 ? 'ยืนยันการส่งมอบ' :
                                                                                 ''
                                                                     }

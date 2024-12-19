@@ -30,28 +30,38 @@ export async function POST(req: Request) {
         const mentor_last = fData.get("mentor_last")?.toString();
         const project = fData.get("project")?.toString();
         const serveAt = fData.get("serveAt")?.toString();
-        const borrower_id = fData.get("borrower_id")?.toString();
+        const type_borrow = fData.get("type_borrow")?.toString();
         const retureAt = fData.get("retureAt")?.toString();
         const origanizationId = fData.get("origanizationId")?.toString();
         const borrowDetails = JSON.parse(fData.get("borrowDetails")?.toString() || "[]");
 
         const fileUpload = fData.get("image");
-        if (!fileUpload || !(fileUpload instanceof File)) {
-            return NextResponse.json({ error: "Image file is required", status: 400 });
+        const borrower_id = fData.get("borrower_id");
+        let filePath = '';
+        let filePath2 = '';
+        if (fileUpload && fileUpload instanceof File) {
+            const arrayBuffer = await fileUpload.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            const fileName = fileUpload.name;
+            filePath = `images/sign/${fileName}`;
+            await writeImageToPublic(fileName, buffer);
+        }
+        if (borrower_id && borrower_id instanceof File) {
+            const arrayBuffer = await borrower_id.arrayBuffer();
+            const buffer = Buffer.from(arrayBuffer);
+            const fileName = borrower_id.name;
+            filePath2 = `images/sign/${fileName}`;
+            await writeImageToPublic(fileName, buffer);
         }
 
-        const arrayBuffer = await fileUpload.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        const fileName = fileUpload.name;
-        const filePath = `images/sign/${fileName}`;
-        await writeImageToPublic(fileName, buffer);
+
 
         // ตรวจสอบข้อมูลที่จำเป็น
         if (!borrowDetails || borrowDetails.length === 0) {
             return NextResponse.json({ error: 'No borrow details provided' }, { status: 400 });
         }
 
-        if (!name || !lastname || !tel || !project || !serveAt || !retureAt || !origanizationId || !borrower_id) {
+        if (!name || !lastname || !tel || !project || !serveAt || !retureAt || !origanizationId) {
             return NextResponse.json({ error: 'Missing required fields', status: 400 });
         }
 
@@ -65,10 +75,11 @@ export async function POST(req: Request) {
                     other_tel: otherTel || '-',
                     mentor_last: mentor_last || '-',
                     mentor_name: mentor_name || '-',
-                    borrower_id: borrower_id,
+                    borrower_id: filePath2,
                     project: project,
                     serveAt: new Date(serveAt),
                     retureAt: new Date(retureAt),
+                    type_borrow: type_borrow,
                     origanizationId: Number(origanizationId),
                     img_sign: filePath
                 },
@@ -117,7 +128,7 @@ export async function POST(req: Request) {
                             });
                         }
                     }
-                } 
+                }
             }
 
             // ดึงข้อมูล Borrow พร้อม Borrow_detail
