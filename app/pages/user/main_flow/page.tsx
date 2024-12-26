@@ -17,7 +17,6 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import Link from 'next/link'
 import Equipment from '@/app/components/equipment/equipment'
 import Profile from '@/app/components/profile/profile'
 import DateComponent from '@/app/components/date/date'
@@ -144,7 +143,6 @@ export default function Summary() {
             personalData,
             dates: dates,
         };
-        finalData
         setStep(4);
         console.log('finalData--=-=-=-=-=-=-=-==-=>', finalData); // ส่งข้อมูลทั้งหมดที่กรอก
     };

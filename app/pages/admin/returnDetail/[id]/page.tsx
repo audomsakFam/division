@@ -12,7 +12,6 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
-import PaginationComponent from "@/app/components/pagination/pagination";
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
 // import * as XLSX from "xlsx";
@@ -83,9 +82,9 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
     }, [borrow, currentPage, itemsPerPage]); // อัปเดตเมื่อ borrow, currentPage, หรือ itemsPerPage เปลี่ยน
 
     // คำนวณ totalPages
-    const totalPages = useMemo(() => {
-        return borrow ? Math.ceil(borrow.Borrow_detail.length / itemsPerPage) : 0;
-    }, [borrow, itemsPerPage]);
+    // const totalPages = useMemo(() => {
+    //     return borrow ? Math.ceil(borrow.Borrow_detail.length / itemsPerPage) : 0;
+    // }, [borrow, itemsPerPage]);
 
     // รอ borrow โหลดก่อนแสดงผล
     if (!borrow) {
