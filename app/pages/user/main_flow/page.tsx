@@ -127,6 +127,7 @@ export default function Summary() {
 
     const handleItemSelect = (items: ReqBorrowItem[]) => {
         setSelectedItems(items);
+        console.log('handleItemSelect --=-=-=-=-=-=-=-==-=>', items); 
         setStep(2); // ไปยังขั้นตอนกรอกข้อมูลส่วนตัว
     };
 

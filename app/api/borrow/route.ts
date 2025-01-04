@@ -42,14 +42,14 @@ export async function POST(req: Request) {
         if (fileUpload && fileUpload instanceof File) {
             const arrayBuffer = await fileUpload.arrayBuffer();
             const buffer = Buffer.from(arrayBuffer);
-            const fileName = fileUpload.name;
+            const fileName = new Date().getTime().toLocaleString() + fileUpload.name;
             filePath = `images/sign/${fileName}`;
             await writeImageToPublic(fileName, buffer);
         }
         if (borrower_id && borrower_id instanceof File) {
             const arrayBuffer = await borrower_id.arrayBuffer();
             const buffer = Buffer.from(arrayBuffer);
-            const fileName = borrower_id.name;
+            const fileName = new Date().getTime().toLocaleString() + borrower_id.name;
             filePath2 = `images/sign/${fileName}`;
             await writeImageToPublic(fileName, buffer);
         }
@@ -64,7 +64,7 @@ export async function POST(req: Request) {
         if (!name || !lastname || !tel || !project || !serveAt || !retureAt || !origanizationId) {
             return NextResponse.json({ error: 'Missing required fields', status: 400 });
         }
-
+        console.log('detail-=-=-=-=>>>>>>>>>>>>>>>>>>>', borrowDetails.set);
         const result = await prisma.$transaction(async (tx) => {
             // 1. สร้าง Borrow
             const createdBorrow = await tx.borrow.create({
@@ -94,39 +94,52 @@ export async function POST(req: Request) {
                 if (detail.setId && detail.set?.Item_set) {
                     // เพิ่ม Borrow_detail สำหรับ `setId` และ `Item_set`
                     for (const itemSet of detail.set.Item_set) {
-                        const item = await prisma.items.findFirst({
-                            where: { name: itemSet.itemName },
+                        const items = await prisma.items.findMany({
+                            where: {
+                                name: itemSet.itemName,
+                                status: 'ปกติ'
+                            },
+                            take: itemSet.value, // ดึงรายการตามจำนวน value
                         });
 
-                        if (item) {
-                            // สร้าง borrow_detail ตามจำนวน value ที่กำหนด
-                            for (let i = 0; i < itemSet.value; i++) {
+                        if (items.length > 0) {
+                            // สร้าง borrow_detail สำหรับแต่ละ item
+                            for (const item of items) {
                                 await tx.borrow_detail.create({
                                     data: {
                                         borrowId: createdBorrow.id,
-                                        setId: detail.setId,
-                                        itemId: item.id,
+                                        itemId: item.id, // ใช้ item.id จาก items
                                     },
                                 });
                             }
+                        } else {
+                            console.error(`จำนวน items ไม่เพียงพอ: ต้องการ ${detail.value} แต่พบ ${items.length}`);
+                            throw new Error(`ไม่สามารถดำเนินการได้: จำนวน items ไม่เพียงพอ`);
                         }
                     }
                 } else if (detail.itemName) {
                     // เพิ่ม Borrow_detail สำหรับ `itemName` เดี่ยว
-                    const item = await prisma.items.findFirst({
-                        where: { name: detail.itemName },
+                    const items = await prisma.items.findMany({
+                        where: {
+                            name: detail.itemName,
+                            status: 'ปกติ'
+                        },
+                        take: detail.value, // ดึงรายการตามจำนวน value
                     });
 
-                    if (item) {
-                        // สร้าง borrow_detail ตามจำนวน value ที่กำหนด
-                        for (let i = 0; i < detail.value; i++) {
+                    if (items.length > 0) {
+                        // สร้าง borrow_detail สำหรับแต่ละ item
+                        for (const item of items) {
                             await tx.borrow_detail.create({
                                 data: {
                                     borrowId: createdBorrow.id,
-                                    itemId: item.id,
+                                    itemId: item.id, // ใช้ item.id จาก items
                                 },
                             });
                         }
+                    } else {
+                        console.error(`จำนวน items ไม่เพียงพอ: ต้องการ ${detail.value} แต่พบ ${items.length}`);
+                        throw new Error(`ไม่สามารถดำเนินการได้: จำนวน items ไม่เพียงพอ`);
                     }
                 }
             }
@@ -150,22 +163,28 @@ export async function POST(req: Request) {
 
 
         if (result) {
-            const itemIdsToUpdate = borrowDetails.flatMap((detail: any) => {
-                const itemIdsInSet = detail.set?.Item_set?.map((item: any) => item.itemId) || [];
-                return [detail.itemId, ...itemIdsInSet].filter((id) => id !== undefined); // กรอง undefined
-            });
-
-            if (itemIdsToUpdate.length > 0) {
-                await Promise.all(
-                    itemIdsToUpdate.map((itemId: any) =>
-                        prisma.items.update({
-                            where: { id: itemId },
-                            data: { status: 'ถูกยืม' },
+            try {
+                if (result.Borrow_detail.length > 0) {
+                    console.log("in if -=-==--=-=-=-=-=-==-=-=-=-=-=-\n", result.Borrow_detail);
+                    console.log("in if flatMap -=-==--=-=-=-=-=-==-=-=-=-=-=-\n", result.Borrow_detail.flatMap((detail) => detail.item?.id || []));
+                    await Promise.all(
+                        result.Borrow_detail.map(async (itemInResult: any) => {
+                            try {
+                                const updatedItem = await prisma.items.update({
+                                    where: { id: itemInResult.item.id },
+                                    data: { status: 'ถูกยืม' },
+                                });
+                                console.log('Updated item:', updatedItem);
+                            } catch (error) {
+                                console.error('Error updating item:', itemInResult.item, error);
+                            }
                         })
-                    )
-                );
-            } else {
-                console.error('No valid item IDs to update');
+                    );
+                } else {
+                    console.error('No valid item IDs to update');
+                }
+            } catch (error) {
+                console.error('Error in Promise.all:', error);
             }
 
             const groupedItems = result.Borrow_detail.reduce((acc: Record<string, any>, detail) => {

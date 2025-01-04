@@ -130,6 +130,7 @@ export default function Equipment({ onSelected }: { onSelected: (item: ReqBorrow
 
                 updatedValues[key][item.name] = !selectAllState[key] ? maxCount : 0;
             });
+            console.log("selected --=-===> ",updatedValues)
 
             return updatedValues;
         });
@@ -151,6 +152,7 @@ export default function Equipment({ onSelected }: { onSelected: (item: ReqBorrow
                     [itemName]: value, // Update the value if it's not 0
                 };
             }
+            console.log("selected one--=-===> ",updatedValues)
 
             return updatedValues;
         });
