@@ -134,6 +134,7 @@ export default function HomePage() {
                                             ยืมอุปกรณ์
                                         </button>
                                     </div>
+                                    <p className="text-white">___</p>
                                 </div>
                             )
                         }
