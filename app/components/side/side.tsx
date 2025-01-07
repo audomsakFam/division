@@ -7,7 +7,7 @@ import { signOut, useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CustomUserSession } from "../../interfaces/user";
-import { FaBars, FaBoxesPacking, FaBoxesStacked, FaHouse } from "react-icons/fa6";
+import { FaBars, FaBoxesPacking, FaBoxesStacked, FaHouse, FaWhmcs } from "react-icons/fa6";
 import Image from "next/image";
 import NotificationAlert from "../notificationAlter/notificationAlter";
 import { ClearBorrowCache, ClearItemCache } from "@/lib/servers/getItemWithCache";
@@ -157,6 +157,11 @@ export default function Side({ children }: SideProps) {
                                 <li>
                                     <Button onClick={() => router.push('/pages/admin/borrowReturn')} variant="ghost" className={`w-full justify-start mb-2 ${pageOn === 'borrowReturn' ? 'bg-accent text-accent-foreground' : ''}`}>
                                         <FaBoxesPacking className="mr-2" />รายการที่ส่งคืนแล้ว
+                                    </Button>
+                                </li>
+                                <li>
+                                    <Button onClick={() => router.push('/pages/admin/management')} variant="ghost" className={`w-full justify-start mb-2 ${pageOn === 'borrowReturn' ? 'bg-accent text-accent-foreground' : ''}`}>
+                                        <FaWhmcs  className="mr-2" />จักการข้อมูลเว็บไซต์
                                     </Button>
                                 </li>
                             </ul>
