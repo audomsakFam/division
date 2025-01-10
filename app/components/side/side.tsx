@@ -160,7 +160,7 @@ export default function Side({ children }: SideProps) {
                                     </Button>
                                 </li>
                                 <li>
-                                    <Button onClick={() => router.push('/pages/admin/management')} variant="ghost" className={`w-full justify-start mb-2 ${pageOn === 'borrowReturn' ? 'bg-accent text-accent-foreground' : ''}`}>
+                                    <Button onClick={() => router.push('/pages/admin/management')} variant="ghost" className={`w-full justify-start mb-2 ${pageOn === 'management' ? 'bg-accent text-accent-foreground' : ''}`}>
                                         <FaWhmcs  className="mr-2" />จักการข้อมูลเว็บไซต์
                                     </Button>
                                 </li>

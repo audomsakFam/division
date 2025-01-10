@@ -1,5 +1,6 @@
 'use client'
 import Side from "@/app/components/side/side";
+import { ResOri, ResOriData } from "@/app/interfaces/ori";
 import { PerviewData, ResPerview } from "@/app/interfaces/preview";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,10 +11,29 @@ import {
     CardHeader,
     CardTitle,
 } from "@/components/ui/card"
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "@/components/ui/table"
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label";
 import axios from "axios";
 import { useEffect, useState } from "react";
 import ReactPlayer from "react-player";
+import { PostfixData, ResPostfix } from "@/app/interfaces/postfix";
 export default function Management() {
     const [previewData, setPerviewData] = useState<PerviewData[]>([]);
     const [fileL, setFileL] = useState<File | null>(null);
@@ -21,7 +41,62 @@ export default function Management() {
     const [fileR, setFileR] = useState<File | null>(null);
     const [previewUrlR, setPreviewUrlR] = useState<string | null>(null);
     const [fileVideo, setFileVideo] = useState<File | null>(null);
+    const [ori, setOri] = useState<ResOriData[]>([]);
+    const [postfix, setPostfix] = useState<PostfixData[]>([]);
+    const [isOpenOri, setIsOpenOri] = useState(ori.map(() => false));
+    const [isOpenPost, setIsOpenPost] = useState(postfix.map(() => false));
 
+    const handleOpenChange = (index: any, open: any) => {
+        const newIsOpenOri = [...isOpenOri];
+        newIsOpenOri[index] = open;
+        setIsOpenOri(newIsOpenOri);
+    };
+
+    const handleOpenChangePost = (index: any, open: any) => {
+        const newIsOpenPost = [...isOpenPost];
+        newIsOpenPost[index] = open;
+        setIsOpenPost(newIsOpenPost);
+    };
+
+    const deletePost = async (id: number) => {
+        try {
+            const res = await axios.delete(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/postfix?id=${id}`);
+            if (res.status === 200) {
+                console.log(res.data);
+            }
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    const deleteOri = async (id: number) => {
+        try {
+            const res = await axios.delete(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/Origanization?id=${id}`);
+            if (res.status === 200) {
+                console.log(res.data);
+            }
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+
+    const fetchOri = async () => {
+        try {
+            const res = await axios.get<ResOri>(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/Origanization`);
+            setOri(res.data.data);
+        } catch (err) {
+            console.log('error ---> ', err);
+        }
+    }
+    const fetchPostfix = async () => {
+        try {
+            const res = await axios.get<ResPostfix>(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/postfix`);
+            setPostfix(res.data.data);
+        } catch (err) {
+            console.log('error ---> ', err);
+        }
+    }
 
     const fetchPerview = async () => {
         try {
@@ -119,14 +194,15 @@ export default function Management() {
     };
 
     useEffect(() => {
-
+        fetchOri();
         fetchPerview();
+        fetchPostfix();
     }, [])
     return (
         <Side>
-            <div className="flex justify-between flex-wrap">
 
-                <Card className="w-full sm:w-full lg:w-full xl:w-1/3 mr-2 mb-2">
+            <div className="flex justify-between flex-wrap">
+                <Card className="flex-grow m-2">
                     <CardHeader>
                         <CardTitle>แบนเนอร์</CardTitle>
                         <CardDescription>แบนเนอร์ที่ Home Page</CardDescription>
@@ -252,13 +328,13 @@ export default function Management() {
                         </div>
                     </CardFooter>
                 </Card>
-                <Card className="flex-grow">
+                <Card className="flex-grow m-2">
                     <CardHeader>
                         <CardTitle>วิดีโอ</CardTitle>
                         <CardDescription>วิดีโอที่ Home Page</CardDescription>
                     </CardHeader>
-                    <CardContent className="h-[460px] flex items-center justify-center">
-                        <div className="flex justify-around">
+                    <CardContent className="h-[450px] flex items-center justify-center w-full">
+                        <div className="w-full flex justify-around">
                             {
                                 previewData.map((item) => (
                                     <>
@@ -274,7 +350,7 @@ export default function Management() {
                             }
                         </div>
                     </CardContent>
-                    <CardFooter className="flex justify-end">
+                    <CardFooter className="flex justify-end ">
                         <div className="flex w-full ">
                             {fileVideo ? (
                                 <div className=" w-full flex flex-col justify-center items-center">
@@ -311,6 +387,125 @@ export default function Management() {
                         </div>
                     </CardFooter>
                 </Card>
+            </div>
+            <div className="flex justify-between flex-wrap">
+                <Card className="flex-grow m-2">
+                    <CardHeader>
+                        <CardTitle>องค์กร/หน่วยงาน</CardTitle>
+                    </CardHeader>
+                    <CardContent className="h-[460px] overflow-y-scroll">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="">
+                                    <TableHead className="w-[100px]">#</TableHead>
+                                    <TableHead>ชื่อ</TableHead>
+                                    <TableHead>สำหรับ</TableHead>
+                                    <TableHead>ดำเนินการ</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {
+                                    ori.map((v, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell>{i + 1}</TableCell>
+                                            <TableCell>{v.name}</TableCell>
+                                            <TableCell>{v.group == 0 ? "บุคลากร" : "นักศึกษา"}</TableCell>
+                                            <TableCell>
+                                                <Dialog open={isOpenOri[i]} onOpenChange={(open) => handleOpenChange(i, open)}>
+                                                    <DialogTrigger asChild>
+                                                        <Button className="bg-red-500 hover:bg-red-800" >ลบ</Button>
+                                                    </DialogTrigger>
+                                                    <DialogContent className="sm:max-w-md">
+                                                        <DialogHeader>
+                                                            <DialogTitle>ต้องการลบองค์กร/หน่วยงาน {v.name} จริงหรือไม่</DialogTitle>
+                                                            <DialogDescription>
+                                                                ข้อมูลที่ถูกลบจะไม่สามารถกู้คืนได้
+                                                            </DialogDescription>
+                                                        </DialogHeader>
+                                                        <DialogFooter className="sm:justify-start">
+                                                            <DialogClose asChild>
+                                                                <div className="flex gap-2">
+                                                                    <Button type="button" variant="destructive" onClick={()=> deleteOri(v.id)}>
+                                                                        ยืนยัน
+                                                                    </Button>
+                                                                    <Button type="button" variant="secondary">
+                                                                        ยกเลิก
+                                                                    </Button>
+                                                                </div>
+                                                            </DialogClose>
+                                                        </DialogFooter>
+                                                    </DialogContent>
+                                                </Dialog>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                }
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                    <CardFooter className="flex justify-end">
+
+                    </CardFooter>
+                </Card>
+                <Card className="flex-grow m-2">
+                    <CardHeader>
+                        <CardTitle>หน่วย/อุปกรณ์</CardTitle>
+                    </CardHeader>
+                    <CardContent className="h-[460px] overflow-y-scroll">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="">
+                                    <TableHead >#</TableHead>
+                                    <TableHead>หน่วย</TableHead>
+                                    <TableHead>ดำเนินการ</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {
+                                    postfix.map((v, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell>{i + 1}</TableCell>
+                                            <TableCell>{v.name}</TableCell>
+                                            <TableCell>
+                                                <Dialog open={isOpenPost[i]} onOpenChange={(open) => {
+                                                    handleOpenChangePost(i, open)
+                                                }}>
+                                                    <DialogTrigger asChild>
+                                                        <Button className="bg-red-500 hover:bg-red-800" >ลบ</Button>
+                                                    </DialogTrigger>
+                                                    <DialogContent className="sm:max-w-md">
+                                                        <DialogHeader>
+                                                            <DialogTitle>ต้องการลบหน่วย {v.name} จริงหรือไม่</DialogTitle>
+                                                            <DialogDescription>
+                                                                ข้อมูลที่ถูกลบจะไม่สามารถกู้คืนได้
+                                                            </DialogDescription>
+                                                        </DialogHeader>
+                                                        <DialogFooter className="sm:justify-start">
+                                                            <DialogClose asChild>
+                                                                <div className="flex gap-2">
+                                                                    <Button type="button" variant="destructive" onClick={()=> deletePost(v.id)}>
+                                                                        ยืนยัน
+                                                                    </Button>
+                                                                    <Button type="button" variant="secondary">
+                                                                        ยกเลิก
+                                                                    </Button>
+                                                                </div>
+                                                            </DialogClose>
+                                                        </DialogFooter>
+                                                    </DialogContent>
+                                                </Dialog>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                }
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                    <CardFooter className="flex justify-end">
+
+                    </CardFooter>
+                </Card>
+
             </div>
         </Side>
     );
