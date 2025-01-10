@@ -32,10 +32,6 @@ export async function POST(req: Request) {
     try {
         const { name } = await req.json();
 
-        if (!name) {
-            return NextResponse.json({ error: 'Missing required fields', status: 400 });
-        }
-
         const data = await prisma.postfix.create({
             data: {
                 name,

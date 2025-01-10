@@ -12,6 +12,16 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuLabel,
+    DropdownMenuRadioGroup,
+    DropdownMenuRadioItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Input } from "@/components/ui/input"
+import {
     Table,
     TableBody,
     TableCell,
@@ -45,7 +55,11 @@ export default function Management() {
     const [postfix, setPostfix] = useState<PostfixData[]>([]);
     const [isOpenOri, setIsOpenOri] = useState(ori.map(() => false));
     const [isOpenPost, setIsOpenPost] = useState(postfix.map(() => false));
-
+    const [isOpenPostCreate, setIsOpenPostCreate] = useState(false);
+    const [isOpenOriCreate, setIsOpenOriCreate] = useState(false);
+    const [postName, setPostName] = useState('');
+    const [oriName, setOriName] = useState('');
+    const [position, setPosition] = useState("")
     const handleOpenChange = (index: any, open: any) => {
         const newIsOpenOri = [...isOpenOri];
         newIsOpenOri[index] = open;
@@ -62,6 +76,7 @@ export default function Management() {
         try {
             const res = await axios.delete(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/postfix?id=${id}`);
             if (res.status === 200) {
+                fetchPostfix();
                 console.log(res.data);
             }
         } catch (error) {
@@ -73,6 +88,34 @@ export default function Management() {
         try {
             const res = await axios.delete(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/Origanization?id=${id}`);
             if (res.status === 200) {
+                fetchOri();
+                console.log(res.data);
+            }
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    const createPost = async () => {
+        try {
+            const res = await axios.post(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/postfix`, { name: postName });
+            if (res.status === 200) {
+                setPostName('');
+                fetchPostfix();
+                console.log(res.data);
+            }
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+    const createOri = async () => {
+        try {
+            const res = await axios.post(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/Origanization`, { name: oriName, group: Number(position) });
+            if (res.status === 200) {
+                setOriName('');
+                setPosition('');
+                fetchOri();
                 console.log(res.data);
             }
         } catch (error) {
@@ -391,7 +434,64 @@ export default function Management() {
             <div className="flex justify-between flex-wrap">
                 <Card className="flex-grow m-2">
                     <CardHeader>
-                        <CardTitle>องค์กร/หน่วยงาน</CardTitle>
+                        <div className="flex justify-between items-center">
+                            <CardTitle>องค์กร/หน่วยงาน</CardTitle>
+                            <Dialog open={isOpenOriCreate} onOpenChange={(open) => {
+                                setIsOpenOriCreate(open)
+                                setOriName("");
+                                setPosition("");
+                            }}>
+                                <DialogTrigger asChild>
+                                    <Button className="bg-blue-500 hover:bg-blue-800" onClick={() => { setOriName(""); setPosition("") }} >เพิ่มองค์กร/หน่วยงานใหม่</Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-md">
+                                    <DialogHeader>
+                                        <DialogTitle>เพิ่มองค์กร/หน่วยงานใหม่</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="flex items-center space-x-2">
+                                        <div className="grid flex-1 gap-2">
+                                            <Label htmlFor="namePost" className="sr-only">
+                                                ชื่อองค์กร/หน่วยงาน
+                                            </Label>
+                                            <Input
+                                                value={oriName}
+                                                onChange={(e) => setOriName(e.target.value)}
+                                                placeholder="ชื่อองค์กร/หน่วยงาน"
+                                                id="namePost"
+                                            />
+                                        </div>
+                                        <div className="grid flex-1 gap-2">
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="outline">{position == "" ? "เลือกประเภท" : (position == "0" ? "บุคลากร" : "นักศึกษา")}</Button>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent className="w-56">
+                                                    <DropdownMenuLabel>ประเภท</DropdownMenuLabel>
+                                                    <DropdownMenuSeparator />
+                                                    <DropdownMenuRadioGroup value={position} onValueChange={setPosition}>
+                                                        <DropdownMenuRadioItem value="0">บุคลากร</DropdownMenuRadioItem>
+                                                        <DropdownMenuRadioItem value="1">นักศึกษา</DropdownMenuRadioItem>
+                                                    </DropdownMenuRadioGroup>
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </div>
+                                    </div>
+                                    <DialogFooter className="sm:justify-start">
+                                        <DialogClose asChild>
+                                            <Button type="button" onClick={() => createOri()}
+                                                className={`bg-blue-500 hover:bg-blue-800 ${(oriName == "") || (position == "") ? "pointer-events-none opacity-50 cursor-not-allowed" : ""}`} >
+                                                ยืนยัน
+                                            </Button>
+                                        </DialogClose>
+                                        <DialogClose asChild>
+                                            <Button type="button" variant="secondary">
+                                                ยกเลิก
+                                            </Button>
+                                        </DialogClose>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                        </div>
                     </CardHeader>
                     <CardContent className="h-[460px] overflow-y-scroll">
                         <Table>
@@ -425,7 +525,7 @@ export default function Management() {
                                                         <DialogFooter className="sm:justify-start">
                                                             <DialogClose asChild>
                                                                 <div className="flex gap-2">
-                                                                    <Button type="button" variant="destructive" onClick={()=> deleteOri(v.id)}>
+                                                                    <Button type="button" variant="destructive" onClick={() => deleteOri(v.id)}>
                                                                         ยืนยัน
                                                                     </Button>
                                                                     <Button type="button" variant="secondary">
@@ -449,7 +549,49 @@ export default function Management() {
                 </Card>
                 <Card className="flex-grow m-2">
                     <CardHeader>
-                        <CardTitle>หน่วย/อุปกรณ์</CardTitle>
+                        <div className="flex justify-between items-center">
+                            <CardTitle>หน่วย/อุปกรณ์</CardTitle>
+
+                            <Dialog open={isOpenPostCreate} onOpenChange={(open) => {
+                                setIsOpenPostCreate(open)
+                                setPostName("");
+                            }}>
+                                <DialogTrigger asChild>
+                                    <Button className="bg-blue-500 hover:bg-blue-800" onClick={() => setPostName("")}>เพิ่มหน่วยอุปกรณ์ใหม่</Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-md">
+                                    <DialogHeader>
+                                        <DialogTitle>เพิ่มหน่วยอุปกรณ์ใหม่</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="flex items-center space-x-2">
+                                        <div className="grid flex-1 gap-2">
+                                            <Label htmlFor="namePost" className="sr-only">
+                                                ชื่อหน่วย
+                                            </Label>
+                                            <Input
+                                                value={postName}
+                                                onChange={(e) => setPostName(e.target.value)}
+                                                placeholder="ชื่อหน่วย"
+                                                id="namePost"
+                                            />
+                                        </div>
+                                    </div>
+                                    <DialogFooter className="sm:justify-start">
+                                        <DialogClose asChild>
+                                            <Button type="button" onClick={() => createPost()}
+                                                className={`bg-blue-500 hover:bg-blue-800 ${postName == "" ? "pointer-events-none opacity-50 cursor-not-allowed" : ""}`} >
+                                                ยืนยัน
+                                            </Button>
+                                        </DialogClose>
+                                        <DialogClose asChild>
+                                            <Button type="button" variant="secondary">
+                                                ยกเลิก
+                                            </Button>
+                                        </DialogClose>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                        </div>
                     </CardHeader>
                     <CardContent className="h-[460px] overflow-y-scroll">
                         <Table>
@@ -483,7 +625,7 @@ export default function Management() {
                                                         <DialogFooter className="sm:justify-start">
                                                             <DialogClose asChild>
                                                                 <div className="flex gap-2">
-                                                                    <Button type="button" variant="destructive" onClick={()=> deletePost(v.id)}>
+                                                                    <Button type="button" variant="destructive" onClick={() => deletePost(v.id)}>
                                                                         ยืนยัน
                                                                     </Button>
                                                                     <Button type="button" variant="secondary">

@@ -32,11 +32,7 @@ export async function POST(req: Request) {
     const url = new URL(req.url)
     try {
         const { name, group } = await req.json();
-
-        if (!name || !group) {
-            return NextResponse.json({ error: 'Missing required fields', status: 400 });
-        }
-
+        console.log("-=-=-=-=-=-=-=-=-=-=>req ", name, group)
         const data = await prisma.origanization.create({
             data: {
                 name,
