@@ -61,7 +61,7 @@ export const Form = () => {
                     type="password"
                 />
             </div>
-            {error && <Alert>{error}</Alert>}
+            {error && <Alert className='bg-red-500'>{error}</Alert>}
             <div className="w-full">
                 <Button className="flex items-center justify-center w-full bg-blue-900 hover:bg-blue-200 hover:text-stone-900" size="lg">
                     <EnterIcon className="mr-2" />Login

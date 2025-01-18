@@ -128,7 +128,7 @@ export default function Side({ children }: SideProps) {
                     </button>
                     <aside ref={sidebarRef} className={`fixed top-0 left-0 z-40 w-64 h-screen transition-transform bg-blue-950 text-slate-100 ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'
                         } lg:translate-x-0`} aria-label="Sidebar">
-                        <div className="flex justify-around w-full bg-blue-900 text-slate-100" onClick={() => router.push('/pages/admin/home')} >
+                        <div className="flex justify-around w-full bg-blue-900 text-slate-100" onClick={() => router.push('/pages/admin/profile')} >
                             <div className="flex w-full items-center mb-5 cursor-pointer m-5">
                                 <Avatar className="w-12 h-12 rounded-full overflow-hidden mb-2 mr-4">
                                     <AvatarImage className="w-full h-full object-cover" src={process.env.NEXT_PUBLIC_BASE_PATH + '/' + session.user.image} />

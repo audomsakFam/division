@@ -44,6 +44,8 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import ReactPlayer from "react-player";
 import { PostfixData, ResPostfix } from "@/app/interfaces/postfix";
+import { Set } from "@prisma/client";
+
 export default function Management() {
     const [previewData, setPerviewData] = useState<PerviewData[]>([]);
     const [fileL, setFileL] = useState<File | null>(null);
@@ -54,10 +56,14 @@ export default function Management() {
     const [ori, setOri] = useState<ResOriData[]>([]);
     const [postfix, setPostfix] = useState<PostfixData[]>([]);
     const [isOpenOri, setIsOpenOri] = useState(ori.map(() => false));
+    const [set, setSet] = useState<Set[]>([]);
     const [isOpenPost, setIsOpenPost] = useState(postfix.map(() => false));
+    const [isOpenSet, setIsOpenSet] = useState(set.map(() => false));
     const [isOpenPostCreate, setIsOpenPostCreate] = useState(false);
+    const [isOpenSetCreate, setIsOpenSetCreate] = useState(false);
     const [isOpenOriCreate, setIsOpenOriCreate] = useState(false);
     const [postName, setPostName] = useState('');
+    const [setName, setSetName] = useState('');
     const [oriName, setOriName] = useState('');
     const [position, setPosition] = useState("")
     const handleOpenChange = (index: any, open: any) => {
@@ -72,11 +78,28 @@ export default function Management() {
         setIsOpenPost(newIsOpenPost);
     };
 
+    const handleOpenChangeSet = (index: any, open: any) => {
+        const newIsOpenSet = [...isOpenSet];
+        newIsOpenSet[index] = open;
+        setIsOpenSet(newIsOpenSet);
+    };
+
     const deletePost = async (id: number) => {
         try {
             const res = await axios.delete(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/postfix?id=${id}`);
             if (res.status === 200) {
                 fetchPostfix();
+                console.log(res.data);
+            }
+        } catch (error) {
+            console.error(error)
+        }
+    }
+    const deleteSet = async (id: number) => {
+        try {
+            const res = await axios.delete(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/set?id=${id}`);
+            if (res.status === 200) {
+                getSet();
                 console.log(res.data);
             }
         } catch (error) {
@@ -96,12 +119,36 @@ export default function Management() {
         }
     }
 
+    const getSet = async () => {
+        try {
+            const data = await axios.get(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/set`);
+            if (data.status === 200) {
+                setSet(data.data.data);
+            } else {
+                throw new Error(data.data.message)
+            }
+        } catch (err) {
+            console.log(err)
+        }
+    }
     const createPost = async () => {
         try {
             const res = await axios.post(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/postfix`, { name: postName });
             if (res.status === 200) {
                 setPostName('');
                 fetchPostfix();
+                console.log(res.data);
+            }
+        } catch (error) {
+            console.error(error)
+        }
+    }
+    const createSet = async () => {
+        try {
+            const res = await axios.post(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/set`, { name: setName });
+            if (res.status === 200) {
+                setSetName('');
+                getSet();
                 console.log(res.data);
             }
         } catch (error) {
@@ -239,6 +286,7 @@ export default function Management() {
     useEffect(() => {
         fetchOri();
         fetchPerview();
+        getSet();
         fetchPostfix();
     }, [])
     return (
@@ -421,7 +469,6 @@ export default function Management() {
                                     <input
                                         id="fileInputV"
                                         type="file"
-                                        accept="image/*"
                                         onChange={handleFileVideo}
                                         className="hidden"
                                     />
@@ -649,6 +696,106 @@ export default function Management() {
                 </Card>
 
             </div>
+            <Card className="flex-grow m-2">
+                <CardHeader>
+                    <div className="flex justify-between items-center">
+                        <CardTitle>ชุดอุปกรณ์</CardTitle>
+
+                        <Dialog open={isOpenSetCreate} onOpenChange={(open) => {
+                            setIsOpenSetCreate(open)
+                            setSetName("");
+                        }}>
+                            <DialogTrigger asChild>
+                                <Button className="bg-blue-500 hover:bg-blue-800" onClick={() => setSetName("")}>เพิ่มชุดอุปกรณ์ใหม่</Button>
+                            </DialogTrigger>
+                            <DialogContent className="sm:max-w-md">
+                                <DialogHeader>
+                                    <DialogTitle>เพิ่มชุดอุปกรณ์ใหม่</DialogTitle>
+                                </DialogHeader>
+                                <div className="flex items-center space-x-2">
+                                    <div className="grid flex-1 gap-2">
+                                        <Label htmlFor="namePost" className="sr-only">
+                                            ชื่อชุดอุปกรณ์
+                                        </Label>
+                                        <Input
+                                            value={setName}
+                                            onChange={(e) => setSetName(e.target.value)}
+                                            placeholder="ชื่อชุดอุปกรณ์"
+                                            id="namePost"
+                                        />
+                                    </div>
+                                </div>
+                                <DialogFooter className="sm:justify-start">
+                                    <DialogClose asChild>
+                                        <Button type="button" onClick={() => createSet()}
+                                            className={`bg-blue-500 hover:bg-blue-800 ${setName == "" ? "pointer-events-none opacity-50 cursor-not-allowed" : ""}`} >
+                                            ยืนยัน
+                                        </Button>
+                                    </DialogClose>
+                                    <DialogClose asChild>
+                                        <Button type="button" variant="secondary">
+                                            ยกเลิก
+                                        </Button>
+                                    </DialogClose>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
+                    </div>
+                </CardHeader>
+                <CardContent className="overflow-y-scroll">
+                    <Table>
+                        <TableHeader>
+                            <TableRow className="">
+                                <TableHead >#</TableHead>
+                                <TableHead>ชุดอุปกรณ์</TableHead>
+                                <TableHead>ดำเนินการ</TableHead>
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {
+                                set.map((v, i) => (
+                                    <TableRow key={i}>
+                                        <TableCell>{i + 1}</TableCell>
+                                        <TableCell>{v.name}</TableCell>
+                                        <TableCell>
+                                            <Dialog open={isOpenSet[i]} onOpenChange={(open) => {
+                                                handleOpenChangeSet(i, open)
+                                            }}>
+                                                <DialogTrigger asChild>
+                                                    <Button className="bg-red-500 hover:bg-red-800" >ลบ</Button>
+                                                </DialogTrigger>
+                                                <DialogContent className="sm:max-w-md">
+                                                    <DialogHeader>
+                                                        <DialogTitle>ต้องการลบชุดอุปกรณ์ {v.name} จริงหรือไม่</DialogTitle>
+                                                        <DialogDescription>
+                                                            ข้อมูลที่ถูกลบจะไม่สามารถกู้คืนได้
+                                                        </DialogDescription>
+                                                    </DialogHeader>
+                                                    <DialogFooter className="sm:justify-start">
+                                                        <DialogClose asChild>
+                                                            <div className="flex gap-2">
+                                                                <Button type="button" variant="destructive" onClick={() => deleteSet(v.id)}>
+                                                                    ยืนยัน
+                                                                </Button>
+                                                                <Button type="button" variant="secondary">
+                                                                    ยกเลิก
+                                                                </Button>
+                                                            </div>
+                                                        </DialogClose>
+                                                    </DialogFooter>
+                                                </DialogContent>
+                                            </Dialog>
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            }
+                        </TableBody>
+                    </Table>
+                </CardContent>
+                <CardFooter className="flex justify-end">
+
+                </CardFooter>
+            </Card>
         </Side>
     );
 }

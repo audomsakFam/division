@@ -108,41 +108,39 @@ export default function HomePage() {
 
                             ))
                         }
-                        {
-                            item.type == 2 && (
-                                <div className="absolute flex justify-center items-center h-screen mt-2 ml-0 mr-2 pl-2 pr-2 flex-col top-1/3  z-[1002]">
-                                    <div className="flex flex-col items-center">
-                                        <div className="bg-blue-900 pt-3 pb-3 pl-2 pr-2 mb-4 shadow-md w-[100%]">
-                                            <h1 className="text-center text-lg sm:text-3xl font-bold text-white">
-                                                ยินดีต้อนรับเขาสู่ ระบบยืม - คืน <br /> วัสดุ - อุปกรณ์ กองพัฒนานักศึกษา
-                                            </h1>
-                                        </div>
+                        <div className="absolute flex justify-center items-center h-screen mt-2 ml-0 mr-2 pl-2 pr-2 flex-col top-1/3  z-[1002]">
+                            <div className="flex flex-col items-center">
+                                <div className="bg-blue-900 pt-3 pb-3 pl-2 pr-2 mb-4 shadow-md w-[100%]">
+                                    <h1 className="text-center text-lg sm:text-3xl font-bold text-white">
+                                        ยินดีต้อนรับเข้าสู่ ระบบยืม - คืน <br /> วัสดุ - อุปกรณ์ กองพัฒนานักศึกษา
+                                    </h1>
+                                </div>
+                                {
+                                    item.type == 2 && (
+
                                         <div className="w-full mb-4 flex items-center justify-center">
                                             <ReactPlayer url={`${process.env.NEXT_PUBLIC_BASE_PATH}/${item.name}`} controls={true} />
                                         </div>
-
-                                        <div className="mb-4 mt-10 text-center text-2xl font-bold text-gray-800 ">
-                                            <h1>ปฏิทนการยืม</h1>
-                                        </div>
-                                        <CalendarCom />
-                                    </div>
-                                    <div className="flex justify-center ">
-                                        <button
-                                            onClick={() => route.push("/pages/user/main_flow")}
-                                            className="w-32 px-4 py-2 mt-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75"
-                                        >
-                                            ยืมอุปกรณ์
-                                        </button>
-                                    </div>
-                                    <p className="text-white">___</p>
+                                    )
+                                }
+                                <div className="mb-4 mt-10 text-center text-2xl font-bold text-gray-800 ">
+                                    <h1>ปฏิทินการยืม</h1>
                                 </div>
-                            )
-                        }
+                                <CalendarCom />
+                            </div>
+                            <div className="flex justify-center ">
+                                <button
+                                    onClick={() => route.push("/pages/user/main_flow")}
+                                    className="w-32 px-4 py-2 mt-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75"
+                                >
+                                    ยืมอุปกรณ์
+                                </button>
+                            </div>
+                            <p className="text-white">___</p>
+                        </div>
                     </>
                 ))
             }
-
-
         </>
     );
 }

@@ -28,8 +28,8 @@ const authOption: AuthOptions = {
                     const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
 
                     if (isPasswordValid) {
-                        const { id, name, email, role, gender, image } = user;
-                        return { id: id.toString(), name, email, role, gender, image };
+                        const { id, name, lastname, email, role, gender, image, tel, username, password } = user;
+                        return { id: id.toString(), name, lastname, email, role, gender, image, tel, username, password };
                     } else {
                         throw new Error('Invalid username or password');
                     }
@@ -48,6 +48,11 @@ const authOption: AuthOptions = {
                 token.gender = session.gender;
                 token.image = session.image;
                 token.name = session.name;
+                token.lastname = session.lastname;
+                token.email = session.email;
+                token.username = session.username;
+                token.password = session.password;
+                token.tel = session.tel;
             }
 
             if (user) {
@@ -55,6 +60,12 @@ const authOption: AuthOptions = {
                 token.role = user.role;
                 token.gender = user.gender;
                 token.image = user.image;
+                token.name = user.name;
+                token.lastname = user.lastname;
+                token.email = user.email;
+                token.username = user.username;
+                token.password = user.password;
+                token.tel = user.tel;
             }
 
             return token;
@@ -66,6 +77,11 @@ const authOption: AuthOptions = {
                 session.user.gender = token.gender;
                 session.user.image = token.image;
                 session.user.name = token.name;
+                session.user.lastname = token.lastname;
+                session.user.email = token.email;
+                session.user.username = token.username;
+                session.user.password = token.password;
+                session.user.tel = token.tel;
             }
             return session;
         }

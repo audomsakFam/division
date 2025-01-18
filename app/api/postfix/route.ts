@@ -17,6 +17,29 @@ export async function DELETE(req: Request) {
         const { searchParams } = url;
         const id = searchParams.get('id') || '';
 
+        if (!id || isNaN(Number(id))) {
+            return NextResponse.json({ error: 'Invalid ID', status: 400 });
+        }
+        
+        const findItem = await prisma.items.findMany({
+            where: {
+                postfixId: Number(id)
+            }
+        })
+
+        if (findItem.length > 0) {
+            await Promise.all(findItem.map(async (item) => {
+                await prisma.items.update({
+                    where: {
+                        id: item.id
+                    },
+                    data: {
+                        postfixId: NaN
+                    }
+                })
+            }))
+        }
+
         const res = await prisma.postfix.delete({
             where: { id: Number(id) }
         })

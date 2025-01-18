@@ -7,6 +7,7 @@ interface CustomUser {
     email: string
     name: string
     image: string
+    lastname: string
     password?: string
     role: string
     gender: string

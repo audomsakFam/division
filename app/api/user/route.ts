@@ -2,6 +2,37 @@ import prisma from "@/lib/db"; // import Prisma client
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
 
+export async function PUT(req: Request) {
+    const url = new URL(req.url);
+    try {
+        const { id, name, lastname, tel, email, role, username, password } = await req.json();
+
+        if (!id || !name || !lastname || !tel || !email || !role || !username || !password) {
+            return NextResponse.json({ error: 'Missing required fields', status: 400 });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 9);
+
+        const user = await prisma.user.update({
+            where: {
+                id: id
+            },
+            data: {
+                email,
+                name,
+                lastname,
+                username,
+                password: hashedPassword,
+                tel,
+                role
+            }
+        })
+        return NextResponse.json({ res: user, status: 200 });
+    } catch (err) {
+        return NextResponse.json({ error: 'someting went worng at ' + url.href + err, status: 500 });
+    }
+}
+
 export async function POST(req: Request) {
     const url = new URL(req.url);
     try {
