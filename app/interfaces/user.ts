@@ -2,9 +2,11 @@ export interface CustomUserSession {
     user: CustomUser;
 }
 
-interface CustomUser {
+export interface CustomUser {
     id: number
     email: string
+    username: string
+    tel: string
     name: string
     image: string
     lastname: string

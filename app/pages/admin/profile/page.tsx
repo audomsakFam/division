@@ -20,7 +20,10 @@ export default function Profile() {
     const session = data as CustomUserSession | null;
     const [gender, setGender] = React.useState("")
     const [email, setEmail] = useState('')
+    const [lastname, setLastname] = useState('')
+    const [tel, setTel] = useState('')
     const [name, setName] = useState('')
+    const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
     const [newPassword, setNewPassword] = useState('')
     const [cPassword, setCPassword] = useState('')
@@ -34,9 +37,12 @@ export default function Profile() {
     const handleDialogClose = (isOpen: boolean, dialogId: number) => {
         if (!isOpen) {
             setName('');
+            setLastname('');
+            setTel('');
             setEmail('');
             setGender('');
             setPassword('');
+            setUsername('');
             setNewPassword('');
             setCPassword('');
             setChangeP(false);
@@ -46,8 +52,12 @@ export default function Profile() {
         }
         if (isOpen) {
             setName(session!.user.name);
+            setLastname(session!.user.lastname);
+            setTel(session!.user.tel);
+            setName(session!.user.name);
             setEmail(session!.user.email);
             setGender(session!.user.gender);
+            setUsername(session!.user.username);
             if (dialogId == 1) {
                 setShowDialogUpload(isOpen);
                 return
@@ -63,8 +73,8 @@ export default function Profile() {
     const uploadImg = async () => {
         try {
             const formData = new FormData();
-            formData.append("image", uploadImage!); 
-            if(session) formData.append("id", session.user.id.toString());
+            formData.append("image", uploadImage!);
+            if (session) formData.append("id", session.user.id.toString());
 
             const res = await axios.put(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/user/upload`, formData, {
                 headers: {
@@ -84,7 +94,7 @@ export default function Profile() {
         setUploadImage(file);
     };
     const submit = async (userId: number) => {
-        if (name == '' || email == '' || gender == '') {
+        if (name == '' || email == '' || gender == '' || tel == '' || lastname == '' || username == '') {
             return setShowAlert(true);
         }
         if (changeP && !newPassword && !password && !cPassword) {
@@ -93,10 +103,13 @@ export default function Profile() {
         if (changeP && newPassword && password && cPassword) {
             if (newPassword != cPassword) {
                 return setShowAlert(true);
+            } else if (password != session!.user.password) {
+                return setShowAlert(true);
+
             } else {
                 try {
-                    const res = await axios.put(`/api/user/${userId}`, {
-                        name, email, password, newPassword: newPassword, gender
+                    const res = await axios.put(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/user`, {
+                        id: userId, name: name, email: email, password: newPassword, gender: gender, tel: tel, lastname: lastname, username: username
                     })
                     console.log('res paa', res.data.user)
                     return await update(res.data.user);
@@ -107,8 +120,8 @@ export default function Profile() {
         }
 
         try {
-            const res = await axios.put(`/api/user/${userId}`, {
-                name, email, gender
+            const res = await axios.put(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/user`, {
+                id: userId, name: name, email: email, gender: gender, tel: tel, lastname: lastname
             })
             return await update(res.data.res);
         } catch (err) {
@@ -138,7 +151,7 @@ export default function Profile() {
                                             </DialogTrigger>
                                             <DialogContent className="sm:max-w-md bg-white ab absolute">
                                                 <DialogHeader>
-                                                    <DialogTitle>Change Profile Picture</DialogTitle>
+                                                    <DialogTitle>เปลี่ยนณุปโปรไฟล์</DialogTitle>
                                                 </DialogHeader>
                                                 <div className="flex justify-center">
                                                     <Label htmlFor="picture">
@@ -175,7 +188,7 @@ export default function Profile() {
                                                         <DialogHeader>
                                                             <DialogTitle>Warning</DialogTitle>
                                                             <DialogDescription>
-                                                                {cPassword == '' ? 'Please enter all data required.' : 'Invalid password or Confrim password.'}
+                                                                {cPassword == '' || newPassword == '' || password == '' && changeP == true ? 'กรุณากรอกรหัสผ่านให้ถูกต้อง' : 'กรุณากรอกข้อมูลให้ครบ'}
                                                             </DialogDescription>
                                                         </DialogHeader>
                                                         <DialogFooter className="sm:justify-start">
@@ -211,23 +224,49 @@ export default function Profile() {
                                 <CardFooter className="flex items-end justify-end">
                                     <Dialog open={showDialogEdit} onOpenChange={(isOpen) => handleDialogClose(isOpen, 2)}>
                                         <DialogTrigger asChild>
-                                            <Button variant={'secondary'} className="mr-2">
-                                                <FaEdit className="mr-2" />Edit
+                                            <Button variant={'secondary'} className="mr-2 bg-yellow-400">
+                                                <FaEdit className="mr-2" />แก้ไข
                                             </Button>
                                         </DialogTrigger>
                                         <DialogContent className="xl:max-w-2xl bg-white ab absolute">
                                             <DialogHeader>
-                                                <DialogTitle>Edit Profile</DialogTitle>
+                                                <DialogTitle>แก้ไข โปรไฟล์</DialogTitle>
                                             </DialogHeader>
                                             <div className="grid gap-4 py-4">
                                                 <div className="grid grid-cols-4 items-center gap-4">
                                                     <Label htmlFor="title" className="text-right">
-                                                        Name<sup className="text-red-500 ">*</sup>
+                                                        ชื่อ<sup className="text-red-500 ">*</sup>
                                                     </Label>
                                                     <Input
                                                         id="name"
                                                         value={name}
                                                         onChange={(e) => setName(e.target.value)}
+                                                        className="col-span-3"
+                                                        placeholder="Type your Title here."
+                                                        autoComplete="off"
+                                                    />
+                                                </div>
+                                                <div className="grid grid-cols-4 items-center gap-4">
+                                                    <Label htmlFor="title" className="text-right">
+                                                        นามสกุล<sup className="text-red-500 ">*</sup>
+                                                    </Label>
+                                                    <Input
+                                                        id="lastname"
+                                                        value={lastname}
+                                                        onChange={(e) => setLastname(e.target.value)}
+                                                        className="col-span-3"
+                                                        placeholder="Type your Title here."
+                                                        autoComplete="off"
+                                                    />
+                                                </div>
+                                                <div className="grid grid-cols-4 items-center gap-4">
+                                                    <Label htmlFor="title" className="text-right">
+                                                        เบอร์โทรศัพท์<sup className="text-red-500 ">*</sup>
+                                                    </Label>
+                                                    <Input
+                                                        id="tel"
+                                                        value={tel}
+                                                        onChange={(e) => setTel(e.target.value)}
                                                         className="col-span-3"
                                                         placeholder="Type your Title here."
                                                         autoComplete="off"
@@ -252,14 +291,14 @@ export default function Profile() {
                                                     <div className="flex items-center space-x-2">
                                                         <DropdownMenu>
                                                             <DropdownMenuTrigger asChild>
-                                                                <Button variant="outline" className="text-white">{gender == '' ? 'Gender' : gender}</Button>
+                                                                <Button variant="outline" >{gender == '' ? 'เพศ' : gender}</Button>
                                                             </DropdownMenuTrigger>
                                                             <DropdownMenuContent className="w-56">
-                                                                <DropdownMenuLabel>Gender</DropdownMenuLabel>
+                                                                <DropdownMenuLabel>เพศ</DropdownMenuLabel>
                                                                 <DropdownMenuSeparator />
                                                                 <DropdownMenuRadioGroup value={gender} onValueChange={setGender}>
-                                                                    <DropdownMenuRadioItem value="male">Male</DropdownMenuRadioItem>
-                                                                    <DropdownMenuRadioItem value="female">Female</DropdownMenuRadioItem>
+                                                                    <DropdownMenuRadioItem value="ชาย">ชาย</DropdownMenuRadioItem>
+                                                                    <DropdownMenuRadioItem value="หญิง">หญิง</DropdownMenuRadioItem>
                                                                 </DropdownMenuRadioGroup>
                                                             </DropdownMenuContent>
                                                         </DropdownMenu>
@@ -275,14 +314,29 @@ export default function Profile() {
                                                             className="border border-slate-100 checked:border-slate-100 focus:border-slate-100"
                                                         />
                                                         <Label htmlFor="published" className="text-left">
-                                                            Change Password
+                                                            เปลี่ยนรหัสผ่าน และ ชื่อผู้ใ้ช
                                                         </Label>
                                                     </div>
                                                 </div>
                                                 <div className={`flex flex-col  ${!changeP ? 'hidden' : ''}`}>
                                                     <div className="grid grid-cols-4 items-center gap-4 mb-2">
                                                         <Label htmlFor="content" className="text-right">
-                                                            Old Password<sup className="text-red-500 ">*</sup>
+                                                            ชื่อผู้ใช้<sup className="text-red-500 ">*</sup>
+                                                        </Label>
+                                                        <Input
+                                                            id="username"
+                                                            value={username}
+                                                            onChange={(e) => setUsername(e.target.value)}
+                                                            className="col-span-3"
+                                                            placeholder="Type your Old Password."
+                                                            type="text"
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div className={`flex flex-col  ${!changeP ? 'hidden' : ''}`}>
+                                                    <div className="grid grid-cols-4 items-center gap-4 mb-2">
+                                                        <Label htmlFor="content" className="text-right">
+                                                            รหัสผ่านเก่า<sup className="text-red-500 ">*</sup>
                                                         </Label>
                                                         <Input
                                                             id="oPassword"
@@ -295,7 +349,7 @@ export default function Profile() {
                                                     </div>
                                                     <div className="grid grid-cols-4 items-center gap-4 mb-2">
                                                         <Label htmlFor="content" className="text-right">
-                                                            New Password<sup className="text-red-500 ">*</sup>
+                                                            รหัสผ่านใหม่<sup className="text-red-500 ">*</sup>
                                                         </Label>
                                                         <Input
                                                             id="nPassword"
@@ -308,7 +362,7 @@ export default function Profile() {
                                                     </div>
                                                     <div className="grid grid-cols-4 items-center gap-4 mb-2">
                                                         <Label htmlFor="content" className="text-right">
-                                                            Confirm New<sup className="text-red-500 ">*</sup> Password
+                                                            กรอกรหัสผ่านใหม่อีกครั้ง<sup className="text-red-500 ">*</sup> Password
                                                         </Label>
                                                         <Input
                                                             id="cPassword"
@@ -326,10 +380,11 @@ export default function Profile() {
                                                     <Button
                                                         type="button"
                                                         onClick={() => submit(Number(session?.user.id))}
+                                                        className="bg-blue-500 text-white"
                                                         variant={'ghost'}
                                                     >
                                                         <FaFloppyDisk className="mr-2" />
-                                                        Save
+                                                        บันทึก
                                                     </Button>
                                                 </DialogClose>
                                             </DialogFooter>
@@ -342,7 +397,7 @@ export default function Profile() {
                                                     <DialogHeader>
                                                         <DialogTitle>Warning</DialogTitle>
                                                         <DialogDescription>
-                                                            {cPassword == '' ? 'Please enter all data required.' : 'Invalid password or Confrim password.'}
+                                                            {cPassword == '' || newPassword == '' || password == '' && changeP == true ? 'กรุณากรอกรหัสผ่านให้ถูกต้อง' : 'กรุณากรอกข้อมูลให้ครบ'}
                                                         </DialogDescription>
                                                     </DialogHeader>
                                                     <DialogFooter className="sm:justify-start">

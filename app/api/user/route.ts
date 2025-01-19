@@ -2,31 +2,45 @@ import prisma from "@/lib/db"; // import Prisma client
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
 
+interface UserData {
+    email: string;
+    name: string;
+    lastname: string;
+    username?: string;
+    tel: string;
+    password?: string;
+}
+
 export async function PUT(req: Request) {
     const url = new URL(req.url);
     try {
-        const { id, name, lastname, tel, email, role, username, password } = await req.json();
-
-        if (!id || !name || !lastname || !tel || !email || !role || !username || !password) {
+        const { id, name, lastname, tel, email, username, password } = await req.json();
+        let hashedPassword;
+        console.log("body req ---------\n", `id ${id}`, `name ${name}`, `lastname ${lastname}`, `tel ${tel}`, `email ${email}`, `username ${username}`, `password ${password}`)
+        if (!id || !name || !lastname || !tel || !email ) {
             return NextResponse.json({ error: 'Missing required fields', status: 400 });
         }
-
-        const hashedPassword = await bcrypt.hash(password, 9);
+        if (password) {
+            hashedPassword = await bcrypt.hash(password, 9);
+        }
+        const userData: UserData = {
+            email,
+            name,
+            lastname,
+            tel,
+        };
+        if(username) userData.username = username
+        // เพิ่ม password ใน `data` เฉพาะเมื่อมีค่า
+        if (hashedPassword) {
+            userData.password = hashedPassword;
+        }
 
         const user = await prisma.user.update({
             where: {
-                id: id
+                id: id,
             },
-            data: {
-                email,
-                name,
-                lastname,
-                username,
-                password: hashedPassword,
-                tel,
-                role
-            }
-        })
+            data: userData,
+        });
         return NextResponse.json({ res: user, status: 200 });
     } catch (err) {
         return NextResponse.json({ error: 'someting went worng at ' + url.href + err, status: 500 });
