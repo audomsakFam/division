@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { FaEdit } from "react-icons/fa";
 import { DialogHeader, DialogFooter, Dialog, DialogTrigger, DialogContent, DialogTitle, DialogClose, DialogDescription } from "@/components/ui/dialog";
 import { FaFloppyDisk } from "react-icons/fa6";
-import React, { useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuLabel, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -14,6 +14,9 @@ import { Label } from "@/components/ui/label";
 import axios, { AxiosResponse } from "axios";
 import { CustomUserSession } from "@/app/interfaces/user";
 import Side from "@/app/components/side/side";
+import { User } from "@prisma/client";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+
 
 export default function Profile() {
     const { data, status, update } = useSession();
@@ -33,6 +36,59 @@ export default function Profile() {
     const [showAlert, setShowAlert] = useState(false);
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const [uploadImage, setUploadImage] = useState<File | null>(null);
+    const [users, setUsers] = useState<User[]>([]);
+    const [isOpen, setIsOpen] = useState(users.map(() => false));
+    const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+    const [formData, setFormData] = useState({
+        name: "",
+        lastname: "",
+        email: "",
+        username: "",
+        password: "",
+        gender: "ชาย",
+        tel: "",
+        role: "user",
+    });
+    const isFormComplete = Object.values(formData).every((value) => value.trim() !== "");
+
+
+    const resetForm = () => {
+        setFormData({
+            name: "",
+            lastname: "",
+            email: "",
+            username: "",
+            password: "",
+            gender: "ชาย",
+            tel: "",
+            role: "user",
+        });
+    };
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+        const { name, value } = e.target;
+        setFormData((prev) => ({ ...prev, [name]: value }));
+    };
+
+    const handleAddUser = async () => {
+        try {
+            const res = await axios.post(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/user`, formData);
+            alert("เพิ่มผู้ใช้สำเร็จ!");
+            resetForm();
+            setIsAddUserOpen(false);
+            fetchUser();
+        } catch (error) {
+            console.error(error);
+            alert("เกิดข้อผิดพลาดในการเพิ่มผู้ใช้");
+        }
+    };
+
+
+    const handleOpenChangeSet = (index: any, open: any) => {
+        const newIsOpen = [...isOpen];
+        newIsOpen[index] = open;
+        setIsOpen(newIsOpen);
+    };
 
     const handleDialogClose = (isOpen: boolean, dialogId: number) => {
         if (!isOpen) {
@@ -70,6 +126,16 @@ export default function Profile() {
             }
         }
     };
+
+    const deleteUser = async (id: number) => {
+        try {
+            const res = await axios.delete(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/user?id=${id}`)
+            fetchUser();
+            console.log(res.data.res)
+        } catch (error) {
+
+        }
+    }
     const uploadImg = async () => {
         try {
             const formData = new FormData();
@@ -102,15 +168,20 @@ export default function Profile() {
         }
         if (changeP && newPassword && password && cPassword) {
             if (newPassword != cPassword) {
+                console.log('newPassword != cPassword')
                 return setShowAlert(true);
-            } else if (password != session!.user.password) {
-                return setShowAlert(true);
-
             } else {
                 try {
                     const res = await axios.put(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/user`, {
-                        id: userId, name: name, email: email, password: newPassword, gender: gender, tel: tel, lastname: lastname, username: username
+                        id: userId, name: name, email: email, password: newPassword, gender: gender,
+                        tel: tel, lastname: lastname, username: username, oldPassword: password
                     })
+                    if (res.data.status == 401) {
+                        return setShowAlert(true);
+                    }
+                    if (res.data.status == 200) {
+                        alert('อัปเดตสําเร็จ');
+                    }
                     console.log('res paa', res.data.user)
                     return await update(res.data.user);
                 } catch (err) {
@@ -128,6 +199,22 @@ export default function Profile() {
             return setShowAlert(true);
         }
     }
+
+    const fetchUser = async () => {
+        try {
+            const res = await axios.get(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/user`);
+            console.log('user aacount ---->', res.data.res);
+            setUsers(res.data.res);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    useEffect(() => {
+        if (session?.user.role == "admin") {
+            fetchUser();
+        }
+    }, [session])
 
     return (
         <Side>
@@ -417,7 +504,239 @@ export default function Profile() {
                     </div>
                 )
             }
+            {
+                session && session.user.role == "admin" && (
+                    <Card className="mt-4">
+                        <CardHeader className="space-y-1">
+                            <div className="flex items-center justify-start flex-wrap">
+                                <CardTitle className="mr-2">ผู้ใช้ทั้งหมด</CardTitle>
+                                <Dialog
+                                    open={isAddUserOpen}
+                                    onOpenChange={(open) => {
+                                        setIsAddUserOpen(open);
+                                        if (!open) resetForm();
+                                    }}
+                                >
+                                    <DialogTrigger asChild>
+                                        <Button
+                                            onClick={() => setIsAddUserOpen(true)}
+                                            className="bg-green-500 hover:bg-green-700 text-white px-4 py-2 rounded"
+                                        >
+                                            เพิ่มผู้ใช้
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-md rounded-lg p-6 shadow-lg bg-white space-y-6">
+                                        <DialogHeader>
+                                            <DialogTitle className="text-lg font-bold text-gray-800">
+                                                เพิ่มผู้ใช้ใหม่
+                                            </DialogTitle>
+                                        </DialogHeader>
+                                        <div className="space-y-4">
+                                            <div>
+                                                <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                                                    ชื่อ
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    id="name"
+                                                    name="name"
+                                                    placeholder="ชื่อ"
+                                                    className="input w-full border rounded px-4 py-2"
+                                                    value={formData.name}
+                                                    onChange={handleInputChange}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label htmlFor="lastname" className="block text-sm font-medium text-gray-700">
+                                                    นามสกุล
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    id="lastname"
+                                                    name="lastname"
+                                                    placeholder="นามสกุล"
+                                                    className="input w-full border rounded px-4 py-2"
+                                                    value={formData.lastname}
+                                                    onChange={handleInputChange}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                                                    อีเมล
+                                                </label>
+                                                <input
+                                                    type="email"
+                                                    id="email"
+                                                    name="email"
+                                                    placeholder="อีเมล"
+                                                    className="input w-full border rounded px-4 py-2"
+                                                    value={formData.email}
+                                                    onChange={handleInputChange}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+                                                    ชื่อผู้ใช้
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    id="username"
+                                                    name="username"
+                                                    placeholder="ชื่อผู้ใช้"
+                                                    className="input w-full border rounded px-4 py-2"
+                                                    value={formData.username}
+                                                    onChange={handleInputChange}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                                                    รหัสผ่าน
+                                                </label>
+                                                <input
+                                                    type="password"
+                                                    id="password"
+                                                    name="password"
+                                                    placeholder="รหัสผ่าน"
+                                                    className="input w-full border rounded px-4 py-2"
+                                                    value={formData.password}
+                                                    onChange={handleInputChange}
+                                                />
+                                            </div>
+                                            <div>
+                                                <label htmlFor="gender" className="block text-sm font-medium text-gray-700">
+                                                    เพศ
+                                                </label>
+                                                <select
+                                                    id="gender"
+                                                    name="gender"
+                                                    className="select w-full border rounded px-4 py-2"
+                                                    value={formData.gender}
+                                                    onChange={handleInputChange}
+                                                >
+                                                    <option value="ชาย">ชาย</option>
+                                                    <option value="หญิง">หญิง</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label htmlFor="tel" className="block text-sm font-medium text-gray-700">
+                                                    เบอร์โทรศัพท์
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    id="tel"
+                                                    name="tel"
+                                                    placeholder="เบอร์โทรศัพท์"
+                                                    className="input w-full border rounded px-4 py-2"
+                                                    value={formData.tel}
+                                                    onChange={(e) => {
+                                                        const value = e.target.value;
+                                                        if (/^\d{0,10}$/.test(value)) {
+                                                            setFormData({ ...formData, tel: value });
+                                                        }
+                                                    }}
+                                                    inputMode="numeric" // แนะนำให้ใช้งาน inputMode เพื่อแสดงแป้นพิมพ์ตัวเลขในมือถือ
+                                                />
+                                            </div>
+                                            <div>
+                                                <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+                                                    ตำแหน่ง
+                                                </label>
+                                                <select
+                                                    id="role"
+                                                    name="role"
+                                                    className="select w-full border rounded px-4 py-2"
+                                                    value={formData.role}
+                                                    onChange={handleInputChange}
+                                                >
+                                                    <option value="user">User</option>
+                                                    <option value="admin">Admin</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                        <DialogFooter className="flex justify-end space-x-4">
+                                            <Button
+                                                className={`bg-blue-500 hover:bg-blue-700 text-white px-4 py-2 rounded ${isFormComplete ? "" : "opacity-50 cursor-not-allowed"
+                                                    }`}
+                                                onClick={handleAddUser}
+                                                disabled={!isFormComplete} // ปิดการทำงานปุ่มถ้า form ไม่ครบ
+                                            >
+                                                ยืนยัน
+                                            </Button>
+                                            <Button
+                                                className="bg-gray-500 hover:bg-gray-700 text-white px-4 py-2 rounded"
+                                                onClick={() => { setIsAddUserOpen(false); resetForm(); }}
+                                            >
+                                                ยกเลิก
+                                            </Button>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
+                            </div>
+                        </CardHeader>
+                        <CardContent>
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>#</TableHead>
+                                        <TableHead>ชื่อ</TableHead>
+                                        <TableHead>นามสกุล</TableHead>
+                                        <TableHead>เบอร์โทรศัพท์</TableHead>
+                                        <TableHead>สถานะ</TableHead>
+                                        <TableHead>ดำเนินการ</TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {users.length > 0 ? (
+                                        users.map((user, i) => (
+                                            <TableRow key={user.id} className={`${user.id == session.user.id ? 'bg-blue-600 text-white hover:text-black' : ''}`}>
+                                                <TableCell className="font-medium">{i + 1}</TableCell>
+                                                <TableCell className="font-medium">{user.name}</TableCell>
+                                                <TableCell className="font-medium">{user.lastname}</TableCell>
+                                                <TableCell className="font-medium">{user.tel}</TableCell>
+                                                <TableCell className="font-medium">{user.role}</TableCell>
+                                                <TableCell className="font-medium">
+                                                    <Dialog open={isOpen[i]}
+                                                        onOpenChange={(open) => {
+                                                            handleOpenChangeSet(i, open)
+                                                        }}>
+                                                        <DialogTrigger asChild>
+                                                            <Button className={`${user.id == session.user.id ? 'pointer-events-none opacity-50 cursor-not-allowed' : 'bg-red-500 hover:bg-red-800'}`} >ลบ</Button>
+                                                        </DialogTrigger>
+                                                        <DialogContent className="sm:max-w-md">
+                                                            <DialogHeader>
+                                                                <DialogTitle>ต้องการลบผู้ใช้ {user.name} จริงหรือไม่</DialogTitle>
+                                                                <DialogDescription>
+                                                                    ข้อมูลที่ถูกลบจะไม่สามารถกู้คืนได้
+                                                                </DialogDescription>
+                                                            </DialogHeader>
+                                                            <DialogFooter className="sm:justify-start">
+                                                                <DialogClose asChild>
+                                                                    <div className="flex gap-2">
+                                                                        <Button type="button" variant="destructive" onClick={() => deleteUser(user.id)}>
+                                                                            ยืนยัน
+                                                                        </Button>
+                                                                        <Button type="button" variant="secondary">
+                                                                            ยกเลิก
+                                                                        </Button>
+                                                                    </div>
+                                                                </DialogClose>
+                                                            </DialogFooter>
+                                                        </DialogContent>
+                                                    </Dialog>
+                                                </TableCell>
+                                            </TableRow>
+                                        ))
+                                    ) : (
+                                        <TableRow >
+                                            <TableCell colSpan={3} className="h-24 text-center">ไม่มีข้อมูล</TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </CardContent>
+                    </Card>
+                )
+            }
         </Side>
-
     );
 }

@@ -14,10 +14,24 @@ interface UserData {
 export async function PUT(req: Request) {
     const url = new URL(req.url);
     try {
-        const { id, name, lastname, tel, email, username, password } = await req.json();
+        const { id, name, lastname, tel, email, username, password, oldPassword } = await req.json();
         let hashedPassword;
+        if(oldPassword) {
+            const user = await prisma.user.findUnique({
+                where: {
+                    id: Number(id),
+                },
+            });
+            if (!user) {
+                return NextResponse.json({ error: 'User not found', status: 404 });
+            }
+            const isPasswordValid = await bcrypt.compare(oldPassword, user.password);
+            if (!isPasswordValid) {
+                return NextResponse.json({ error: 'Invalid old password', status: 401 });
+            }
+        }
         console.log("body req ---------\n", `id ${id}`, `name ${name}`, `lastname ${lastname}`, `tel ${tel}`, `email ${email}`, `username ${username}`, `password ${password}`)
-        if (!id || !name || !lastname || !tel || !email ) {
+        if (!id || !name || !lastname || !tel || !email) {
             return NextResponse.json({ error: 'Missing required fields', status: 400 });
         }
         if (password) {
@@ -29,7 +43,7 @@ export async function PUT(req: Request) {
             lastname,
             tel,
         };
-        if(username) userData.username = username
+        if (username) userData.username = username
         // เพิ่ม password ใน `data` เฉพาะเมื่อมีค่า
         if (hashedPassword) {
             userData.password = hashedPassword;
@@ -75,3 +89,30 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'someting went worng at ' + url.href, status: 500 });
     }
 };
+
+export async function GET(req: Request) {
+    const url = new URL(req.url);
+    try {
+        const data = await prisma.user.findMany();
+        return NextResponse.json({ res: data, status: 200 });
+    } catch (error) {
+        return NextResponse.json({ error: 'someting went worng at ' + url.href, status: 500 });
+    }
+}
+
+export async function DELETE(req: Request) {
+    const url = new URL(req.url);
+    try {
+
+        const { searchParams } = url;
+        const id = searchParams.get('id') || '';
+        const data = await prisma.user.delete({
+            where: {
+                id: Number(id),
+            },
+        });
+        return NextResponse.json({ res: data, status: 200 });
+    } catch (error) {
+        return NextResponse.json({ error: 'someting went worng at ' + url.href, status: 500 });
+    }
+}
