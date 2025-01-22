@@ -15,8 +15,9 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { useEffect, useState } from "react";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import PaginationComponent from "../pagination/pagination";
+import axios from "axios";
 interface Props {
     isOpen: boolean;
     setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
@@ -40,6 +41,8 @@ const DialogSetComponent = ({
     const [filteredItems, setFilteredItems] = useState<ResItemsGroup[]>([]);
     const [nameFilter, setNameFilter] = useState('');
     const [divisionFilter, setDivisionFilter] = useState('');
+    const [setId, setSetId] = useState(0);
+    const [setItemName, setSetItemName] = useState<{ name: string }[]>([]);
 
     useEffect(() => {
         // Filter items based on the selected filters
@@ -63,6 +66,29 @@ const DialogSetComponent = ({
         setFilteredItems(filtered);
     }, [nameFilter, divisionFilter, items]);
 
+    useEffect(() => {
+        if (setSelect === 'เลือกชุด') return
+        setSetId(set.find((v) => v.name === setSelect)!.id);
+    }, [setSelect])
+
+    const addItemToSet = async (setId: number, itemName: { name: string }[]) => {
+        try {
+            const res = await axios.post(process.env.NEXT_PUBLIC_BASE_PATH + '/api/itemSet', { setId, itemName });
+            if (res.status === 200) {
+                alert("เพิ่มอุปกรณ์ลงในชุดสําเร็จ");
+                setIsOpen(false);
+                setSetItemName([]);
+                setSetId(0);
+                window.location.reload();
+            }
+        } catch (error) {
+            alert("เกิดข้อผิดพลาดในการเพิ่มอุปกรณ์ลงในชุด");
+            setIsOpen(false);
+            setSetItemName([]);
+            setSetId(0);
+            console.log(error);
+        }
+    }
 
     const itemsPerPage = 20;
     const startIdx = (currentPage - 1) * itemsPerPage;
@@ -76,7 +102,11 @@ const DialogSetComponent = ({
             open={isOpen}
             onOpenChange={(open) => {
                 setIsOpen(open);
-                if (!open) resetForm(); // เคลียร์ข้อมูลเมื่อ dialog ถูกปิด
+                if (!open) {
+                    resetForm();
+                    setSetItemName([]);
+                    setSetId(0);
+                } // เคลียร์ข้อมูลเมื่อ dialog ถูกปิด
             }}
         >
             <DialogTrigger asChild>
@@ -97,6 +127,7 @@ const DialogSetComponent = ({
                         <div className="items-start justify-start flex flex-col gap-2 mb-2 w-full">
                             <Label htmlFor="set" className="text-left font-black">
                                 เลือกชุดอุปกรณ์
+                                {/* {setItemName.length > 0 ? `(${setItemName.join(', ')})` : ''} */}
                             </Label>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -119,18 +150,19 @@ const DialogSetComponent = ({
                             </DropdownMenu>
                         </div>
                         <div className=" items-center gap-2 mb-2 w-full">
-                            <Label htmlFor="name" className="text-left font-black">
+                            <Label htmlFor="name" className={`text-left font-black ${setSelect === 'เลือกชุด' ? 'hidden' : ''}`}>
                                 เลือกอุปกรณ์
                             </Label>
                             <Dialog>
                                 <DialogTrigger asChild>
-                                    <Button variant="outline" className="w-full">
+
+                                    <Button variant="outline" className={`w-full ${setSelect === 'เลือกชุด' ? 'hidden' : ''}`}>
                                         {items.length == 0 ? 'ไม่มีอุปกรณ์' : 'เลือกอุปกรณ์'}
                                     </Button>
                                 </DialogTrigger>
                                 <DialogContent className="xl:max-w-2xl h-[80%] ">
                                     <Card className="h-full overflow-y-scroll">
-                                        <CardHeader> 
+                                        <CardHeader>
                                             <div className="flex gap-4 flex-wrap items-center ">
                                                 <input
                                                     type="text"
@@ -200,7 +232,29 @@ const DialogSetComponent = ({
                                                                 <TableCell className="border-r border-gray-300 text-center">{item.postfixName}</TableCell>
                                                                 <TableCell className="border-r border-gray-300 text-center">{item.divisionName}</TableCell>
                                                                 <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
-                                                                    <Button type="button" className="bg-green-600 hover:bg-green-900" onClick={(e) => e.stopPropagation()}>เพิ่ม</Button>
+                                                                    {setItemName.some((v) => v.name === item.name) ? (
+                                                                        <Button
+                                                                            type="button"
+                                                                            className="bg-red-600 hover:bg-red-900"
+                                                                            onClick={(e) => {
+                                                                                setSetItemName(setItemName.filter((v) => v.name !== item.name));
+                                                                                e.stopPropagation();
+                                                                            }}
+                                                                        >
+                                                                            ลบ
+                                                                        </Button>
+                                                                    ) : (
+                                                                        <Button
+                                                                            type="button"
+                                                                            className="bg-green-600 hover:bg-green-900"
+                                                                            onClick={(e) => {
+                                                                                setSetItemName([...setItemName, { name: item.name }]);
+                                                                                e.stopPropagation();
+                                                                            }}
+                                                                        >
+                                                                            เพิ่ม
+                                                                        </Button>
+                                                                    )}
                                                                 </TableCell>
                                                             </TableRow>
                                                         ))
@@ -230,21 +284,83 @@ const DialogSetComponent = ({
                                 </DialogContent>
                             </Dialog>
                         </div>
+                        {setItemName.length > 0 && (
+                            <div className=" items-center gap-2 mb-2 w-full">
+                                <Card className="h-full overflow-y-scroll">
+                                    <CardHeader>
+                                        <CardTitle>รายการอุปกรณ์ที่เลือก</CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="h-[300px] overflow-y-scroll">
+                                        <Table >
+                                            <TableHeader>
+                                                <TableRow className="border-b border-gray-800 ">
+                                                    <TableHead className="text-stone-950 border-r border-gray-300 text-center ">#</TableHead>
+                                                    <TableHead className="text-stone-950 border-r border-gray-300 text-center">ชื่ออุปกรณ์</TableHead>
+                                                    <TableHead className="text-stone-950 text-center">ดำเนินการ</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {setItemName.length > 0 ? (
+                                                    setItemName.map((item, index) => (
+                                                        <TableRow key={index} className="cursor-pointer border-b border-gray-300 ">
+                                                            <TableCell className="font-medium border-r border-gray-300 text-center">{index + 1 + startIdx}</TableCell>
 
+                                                            <TableCell className="border-r border-gray-300 text-start">{item.name}</TableCell>
+                                                            <TableCell className="border-r border-gray-300 text-center">
+                                                                <Button
+                                                                    type="button"
+                                                                    onClick={(e) => {
+                                                                        setSetItemName(setItemName.filter((v) => v !== item));
+                                                                        e.stopPropagation();
+                                                                    }}
+                                                                    className={`bg-red-600 hover:bg-red-900 ${setItemName.length > 0 ? '' : 'hidden'}`}
+                                                                >
+                                                                    ลบรายการนี้
+                                                                </Button>
+                                                            </TableCell>
+                                                        </TableRow>
+                                                    ))
+                                                ) : (
+                                                    <TableRow>
+                                                        <TableCell colSpan={7} className="text-center ">
+                                                            <p className="mt-5 text-2xl">
+                                                                ไม่พบข้อมูล
+                                                            </p>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                )}
+                                            </TableBody>
+                                        </Table>
+                                    </CardContent>
+                                    <CardFooter>
+                                        <Button
+                                            type="button"
+                                            onClick={(e) => {
+                                                setSetItemName([]);
+                                                e.stopPropagation();
+                                            }}
+                                            className={`bg-red-600 hover:bg-red-900 ${setItemName.length > 0 ? '' : 'hidden'}`}
+                                        >
+                                            ลบรายการที่เลือกทั้งหมด
+                                        </Button>
+                                    </CardFooter>
+                                </Card>
+                            </div>
+                        )}
                     </div>
                 </div>
                 <DialogFooter>
                     <DialogClose asChild>
-                        {/* <Button
+                        <Button
                             type="button"
                             onClick={(e) => {
-                                createItems();
+                                addItemToSet(setId, setItemName);
                                 e.stopPropagation();
                             }}
-                            className="bg-blue-900"
+                            className={`bg-blue-600 hover:bg-blue-900 ${setItemName.length > 0 ? '' : 'hidden'}`}
                         >
                             ยืนยัน
-                        </Button> */}
+                        </Button>
                     </DialogClose>
                 </DialogFooter>
             </DialogContent>

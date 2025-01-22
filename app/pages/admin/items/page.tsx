@@ -156,6 +156,21 @@ export default function Items() {
         }
     }
 
+    const removeFromSet = async (setName: string, itemName: string) =>{
+        try {
+            const res = await axios.delete(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/itemSet?itemName=${itemName}&setName=${setName}`);
+            if(res.status === 200){
+                ClearItemCache();
+                GetItemWithCache().then((res) => {
+                    setItems(res);
+                    setFilteredItems(res);  // Set the filtered items to the full list initially
+                });
+            }
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
     useEffect(() => {
         GetItemWithCache().then((res) => {
             setItems(res);
@@ -227,6 +242,13 @@ export default function Items() {
     const currentItems = filteredItems.slice(startIdx, endIdx);
 
     const totalPages = Math.ceil(filteredItems!.length / itemsPerPage);
+
+    const [isOpenRemoveSet, setIsOpenRemoveSet] = useState(currentItems.map(() => false));
+    const handleOpenChangeSet = (index: any, open: any) => {
+        const newIsOpenSet = [...isOpenRemoveSet];
+        newIsOpenSet[index] = open;
+        setIsOpenRemoveSet(newIsOpenSet);
+    };
 
     return (
         <Side>
@@ -537,10 +559,10 @@ export default function Items() {
                                             </TableCell>
                                             <TableCell className="border-r border-gray-300 text-center">{item.postfixName}</TableCell>
                                             <TableCell className="border-r border-gray-300 text-center">{item.divisionName}</TableCell>
-                                            <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
+                                            <TableCell className="text-center flex flex-col" onClick={(e) => e.stopPropagation()}>
                                                 <Dialog>
                                                     <DialogTrigger asChild>
-                                                        <Button variant={'destructive'}>
+                                                        <Button variant={'destructive'} className="mb-2">
                                                             <FaCircleMinus className="mr-2" /> ลบอุปกรณ์
                                                         </Button>
                                                     </DialogTrigger>
@@ -563,6 +585,37 @@ export default function Items() {
                                                         </DialogFooter>
                                                     </DialogContent>
                                                 </Dialog>
+                                                {setFilter != '' && (
+                                                    <Dialog
+                                                        open={isOpenRemoveSet[index]} onOpenChange={(open) => {
+                                                            handleOpenChangeSet(index, open)
+                                                        }}
+                                                    >
+                                                        <DialogTrigger asChild>
+                                                            <Button variant={'destructive'}>
+                                                                <FaCircleMinus className="mr-2" /> ลบอุปกรณ์ออกจากชุดอุปกรณ์นี้
+                                                            </Button>
+                                                        </DialogTrigger>
+                                                        <DialogContent className="sm:max-w-md" onClick={(e) => e.stopPropagation()}>
+                                                            <DialogHeader>
+                                                                <DialogTitle>{`${item.name} `} ต้องการลบอุปกรณ์นี้จากชุดอุปกรณ์ {setFilter} จริงหรือไม่</DialogTitle>
+                                                                <DialogDescription>
+                                                                    ข้อมูลที่ถูกลบจะไม่สามารถกู้คืนได้
+                                                                </DialogDescription>
+                                                            </DialogHeader>
+                                                            <DialogFooter>
+                                                                <div>
+                                                                    <DialogClose asChild>
+                                                                        <Button type="submit" className="bg-red-600 hover:bg-red-900 mr-2" onClick={(e) => { removeFromSet(setFilter,item.name); e.stopPropagation() }}>ยืนยัน</Button>
+                                                                    </DialogClose>
+                                                                    <DialogClose asChild>
+                                                                        <Button type="button" onClick={(e) => e.stopPropagation()}>ยกเลิก</Button>
+                                                                    </DialogClose>
+                                                                </div>
+                                                            </DialogFooter>
+                                                        </DialogContent>
+                                                    </Dialog>
+                                                )}
                                             </TableCell>
                                         </TableRow>
                                     ))
