@@ -35,8 +35,8 @@ export async function POST(req: Request) {
         console.log("-=-=-=-=-=-=-=-=-=-=>req ", name, group)
         const data = await prisma.origanization.create({
             data: {
-                name,
-                group
+                name: name,
+                group: group
             }
         })
 

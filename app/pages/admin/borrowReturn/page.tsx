@@ -10,13 +10,25 @@ import {
     TableHeader,
     TableRow,
 } from "@/components/ui/table"
+import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
 import { Card, CardContent, CardHeader, CardFooter } from '@/components/ui/card';
 import Side from "@/app/components/side/side";
 import { Button } from "@/components/ui/button";
 import { useRefresh } from "@/app/context/refreshProvider";
-import { GetBorrowWithCache } from "@/lib/servers/getItemWithCache";
+import { ClearBorrowCache, GetBorrowWithCache } from "@/lib/servers/getItemWithCache";
 import PaginationComponent from "@/app/components/pagination/pagination";
 import { useRouter } from "next/navigation";
+import { FaCircleMinus } from "react-icons/fa6";
+import axios from "axios";
 
 const itemsPerPage = 10;
 
@@ -41,6 +53,22 @@ export default function BorrowReturn() {
                 .sort((a, b) => new Date(a.createAt).getTime() - new Date(b.createAt).getTime())
         ));
     }, [refreshData]);
+
+    const deleteBorrow = async (id: number) => {
+        try {
+            const res = await axios.delete(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/borrow?id=${id}`)
+            if (res.data.status == 200) {
+                alert('ลบข้อมูลสำเร็จ')
+                ClearBorrowCache();
+                GetBorrowWithCache().then((res) => setBorrow(
+                    res.filter((v) => v.status == 4)
+                        .sort((a, b) => new Date(a.createAt).getTime() - new Date(b.createAt).getTime())
+                ))
+            }
+        } catch (error) {
+            console.log(error)
+        }
+    }
 
     const startIdx = (currentPage - 1) * itemsPerPage;
     const endIdx = startIdx + itemsPerPage;
@@ -69,14 +97,38 @@ export default function BorrowReturn() {
                         <TableBody>
                             {currentItems.length > 0 ? (
                                 currentItems.map((item, index) => (
-                                    <TableRow onClick={() => router.push(`/pages/admin/returnDetail/${item.id}`)}  key={index} className="cursor-pointer border-b border-gray-300 ">
+                                    <TableRow onClick={() => router.push(`/pages/admin/returnDetail/${item.id}`)} key={index} className="cursor-pointer border-b border-gray-300 ">
                                         <TableCell className="font-medium border-r border-gray-300 text-center">{index + 1}</TableCell>
                                         <TableCell className="border-r border-gray-300 text-start">{item.project}</TableCell>
                                         <TableCell className="border-r border-gray-300 text-start">{item.name + ' ' + item.lastname}</TableCell>
                                         <TableCell className="border-r border-gray-300 text-center">{item.createAt.split('T')[0]}</TableCell>
                                         <TableCell className="border-r border-gray-300 text-center">{item.retureAt.split('T')[0]}</TableCell>
-                                        <TableCell className="text-center ">
-                                            <Button className="bg-blue-900">test</Button>
+                                        <TableCell className="text-center " onClick={(e) => e.stopPropagation()}>
+                                            <Dialog>
+                                                <DialogTrigger asChild>
+                                                    <Button variant={'destructive'} className=" mb-2" onClick={(e) => e.stopPropagation()}>
+                                                        <FaCircleMinus className="mr-2" /> ลบอุปกรณ์
+                                                    </Button>
+                                                </DialogTrigger>
+                                                <DialogContent className="sm:max-w-md" onClick={(e) => e.stopPropagation()}>
+                                                    <DialogHeader>
+                                                        <DialogTitle>{`${item.name} `} ต้องการลบอุปกรณ์นี้จริงหรือไม่</DialogTitle>
+                                                        <DialogDescription>
+                                                            ข้อมูลที่ถูกลบจะไม่สามารถกู้คืนได้
+                                                        </DialogDescription>
+                                                    </DialogHeader>
+                                                    <DialogFooter>
+                                                        <div>
+                                                            <DialogClose asChild>
+                                                                <Button type="submit" className="bg-red-600 hover:bg-red-900 mr-2" onClick={(e) => { deleteBorrow(item.id); e.stopPropagation() }}>ยืนยัน</Button>
+                                                            </DialogClose>
+                                                            <DialogClose asChild>
+                                                                <Button type="button" onClick={(e) => e.stopPropagation()}>ยกเลิก</Button>
+                                                            </DialogClose>
+                                                        </div>
+                                                    </DialogFooter>
+                                                </DialogContent>
+                                            </Dialog>
                                         </TableCell>
                                     </TableRow>
                                 ))

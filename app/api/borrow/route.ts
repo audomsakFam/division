@@ -356,3 +356,32 @@ export async function GET(req: Request) {
         return NextResponse.json({ error: 'someting went worng at ' + url.href + e, status: 500 });
     }
 }
+
+export async function DELETE(req: Request) {
+    const url = new URL(req.url);
+    try {
+        const { searchParams } = url;
+        const id = Number(searchParams.get('id'));
+        const findBorrowDetail = await prisma.borrow_detail.findMany({
+            where: {
+                borrowId: id
+            }
+        })
+
+        if (findBorrowDetail.length > 0) {
+            const idDetail = findBorrowDetail.map((v) => v.id);
+            await prisma.borrow_detail.deleteMany({
+                where: {
+                    id: { in: idDetail } // ใช้ `in` เพื่อลบหลายรายการ
+                }
+            });
+        }
+        await prisma.borrow.delete({
+            where: { id: id }
+        })
+
+        return NextResponse.json({ msg: "delete success", status: 200 })
+    } catch (err) {
+        return NextResponse.json({ error: 'someting went worng at ' + url.href + err, status: 500 });
+    }
+}
