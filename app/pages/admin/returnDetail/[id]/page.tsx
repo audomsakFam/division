@@ -99,6 +99,7 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
                             <div className="flex justify-between p-4">
                                 <div>
                                     <h3 className="text-xl font-semibold">รายละเอียดการยืมของ: {borrow?.project}</h3>
+                                    <h3 className="text-xl font-semibold">จำนวนผู้เข้าร่วมโดยประมาณ: {borrow?.participate} คน</h3>
                                     <div className="flex flex-col">
                                         <h3 className="text-xl font-semibold mr-2">ผู้ยืม: {borrow?.name + ' ' + borrow?.lastname}</h3>
                                         <h3 className="text-xl font-semibold">องค์กร: {borrow?.origanization.name}</h3>

@@ -221,7 +221,7 @@ export default function HomePage() {
                     <div className="flex flex-col w-full">
                         <Card className="w-full mb-2 ">
                             <CardHeader>
-                                <h3 className="text-xl font-semibold">ความถี่การยืมของแต่ละแผนก</h3>
+                                <h3 className="text-xl font-semibold">ความถี่การยืมของแต่ละฝ่าย</h3>
                                 <div className='mb-[1rem] flex items-center'>
                                     <label htmlFor="year" className='mr-2'>เลือกปี: </label>
                                     <div className='relative w-1/6 text-center'>
@@ -444,7 +444,7 @@ export default function HomePage() {
                                                                     </DialogHeader>
                                                                     <DialogFooter>
                                                                         <DialogClose asChild>
-                                                                            <Button type="button" onClick={(e) => { e.stopPropagation(); deleteBorrow(item.id) }} className='bg-blue-900'>ยืนยัน</Button>
+                                                                            <Button type="button" onClick={(e) => { e.stopPropagation(); deleteBorrow(item.id) }} className='bg-red-900'>ยืนยัน</Button>
                                                                         </DialogClose>
                                                                     </DialogFooter>
                                                                 </DialogContent>

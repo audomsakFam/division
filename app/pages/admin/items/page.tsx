@@ -559,10 +559,10 @@ export default function Items() {
                                             </TableCell>
                                             <TableCell className="border-r border-gray-300 text-center">{item.postfixName}</TableCell>
                                             <TableCell className="border-r border-gray-300 text-center">{item.divisionName}</TableCell>
-                                            <TableCell className="text-center flex flex-col" onClick={(e) => e.stopPropagation()}>
+                                            <TableCell className={`text-center ${setFilter !='' ? 'flex flex-col': ''}`} onClick={(e) => e.stopPropagation()}>
                                                 <Dialog>
                                                     <DialogTrigger asChild>
-                                                        <Button variant={'destructive'} className="mb-2">
+                                                        <Button variant={'destructive'} className=" mb-2">
                                                             <FaCircleMinus className="mr-2" /> ลบอุปกรณ์
                                                         </Button>
                                                     </DialogTrigger>

@@ -25,7 +25,7 @@ export default function DateComponent({ onNext, onBack }: any) {
     }));
   };
   const isFormValid = () => {
-    return formData.serveAt && formData.retureAt && formData.project;
+    return formData.serveAt && formData.retureAt && formData.project && formData.participate;
   };
 
   const summit = () => {
@@ -98,6 +98,20 @@ export default function DateComponent({ onNext, onBack }: any) {
                 name="project"
                 placeholder="ระบุ โครงการ/กิจกรรม ที่ท่านนำวัสดุอุปกรณ์ของกองพัฒนาศึกษาไปใช้..."
                 value={formData.project || ""}
+                onChange={handleChange}
+                required
+                className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor="participate" className="block text-gray-700 font-medium mb-2">จำนวนผู้เข้าร่วมโดยประมาณ:</label>
+              <input
+                id="participate"
+                type='number'
+                name="participate"
+                placeholder="ระบุ จำนวนผู้เข้าร่วม โครงการ/กิจกรรม โดยประมาณ..."
+                value={formData.participate || ""}
                 onChange={handleChange}
                 required
                 className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"

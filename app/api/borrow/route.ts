@@ -29,6 +29,7 @@ export async function POST(req: Request) {
         const mentor_name = fData.get("mentor_name")?.toString();
         const mentor_last = fData.get("mentor_last")?.toString();
         const project = fData.get("project")?.toString();
+        const participate = fData.get("participate")?.toString();
         const serveAt = fData.get("serveAt")?.toString();
         const type_borrow = fData.get("type_borrow")?.toString();
         const retureAt = fData.get("retureAt")?.toString();
@@ -77,6 +78,7 @@ export async function POST(req: Request) {
                     mentor_name: mentor_name || '-',
                     borrower_id: filePath2,
                     project: project,
+                    participate: Number(participate),
                     serveAt: new Date(serveAt),
                     retureAt: new Date(retureAt),
                     type_borrow: type_borrow,
@@ -291,7 +293,7 @@ export async function POST(req: Request) {
                 to: 'fam841209@gmail.com', // Receiver email
                 cc: ["famqqblood@gmail.com"],
                 subject: `แจ้งการยืมอุปกรณ์ ${result.project}`,
-                text: `โครงการ: ${result.project}\nชื่อ: ${result.name + ' ' + result.lastname}\nเบอร์โทร: ${result.tel}\nจากหน่วยงาน: ${result.origanization?.name}
+                text: `โครงการ: ${result.project} \nจำนวนผู้เข้าร่วม: ${participate} คน\nชื่อ: ${result.name + ' ' + result.lastname}\nเบอร์โทร: ${result.tel}\nจากหน่วยงาน: ${result.origanization?.name}
                 \n\t\t\tอุปกรณ์\n\n${itemSummary}
                 `,
             });

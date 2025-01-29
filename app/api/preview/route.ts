@@ -5,7 +5,8 @@ import fs from 'fs';
 
 
 async function removeFileFromPublic(fileName: string) {
-    const filePath = path.join(process.cwd(), 'public', fileName);
+    // const filePath = path.join(process.cwd(), 'public', fileName);// dev
+    const filePath = path.join(process.cwd(), 'public', 'images', fileName);// product
     try {
         if (fs.existsSync(filePath)) {
             fs.unlinkSync(filePath);
@@ -21,7 +22,8 @@ async function removeFileFromPublic(fileName: string) {
 
 
 async function writeImageToPublic(fileName: string, imageBuffer: Buffer) {
-    const filePath = path.join(process.cwd(), 'public', 'images', fileName);
+    // const filePath = path.join(process.cwd(), 'public', 'images', fileName);// dev
+    const filePath = path.join(process.cwd(), 'public', 'images', fileName);// product
     try {
         fs.writeFileSync(filePath, imageBuffer);
         console.log('File written successfully');
@@ -55,7 +57,7 @@ export async function POST(req: Request) {
             if (type == 1) {
                 const typeImageR = find.filter(v => v.type === 1);
 
-                if (typeImageR.length > 0 ) {
+                if (typeImageR.length > 0) {
                     console.log('remove 2.2')
                     for (const v of typeImageR) {
                         await removeFileFromPublic(v.name);

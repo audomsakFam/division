@@ -1,6 +1,6 @@
 'use client'
 import { ResItemsGroup } from "@/app/interfaces/item";
-import { GetItemWithCache } from "@/lib/servers/getItemWithCache";
+import { ClearItemCache, GetItemWithCache } from "@/lib/servers/getItemWithCache";
 import { useState, useEffect } from "react";
 
 import {
@@ -57,6 +57,7 @@ export default function Equipment({ onSelected }: { onSelected: (item: ReqBorrow
     };
 
     useEffect(() => {
+        ClearItemCache();
         GetItemWithCache().then((res) => { setItems(res); setLoading(false) });
     }, [])
 

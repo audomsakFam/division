@@ -95,6 +95,7 @@ model Borrow {
   retureAt        DateTime        @default(now())
   serveAt         DateTime        @default(now())
   type_borrow     String          @default("") //staff student
+  participate     Int             @default(0)
   origanizationId Int?
   origanization   Origanization?  @relation(fields: [origanizationId], references: [id])
   Borrow_detail   Borrow_detail[]

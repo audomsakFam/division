@@ -23,6 +23,9 @@ import DateComponent from '@/app/components/date/date'
 import { ResOri, ResOriData } from '@/app/interfaces/ori'
 import axios from 'axios'
 import { useRouter } from 'next/navigation'
+import { jsPDF } from "jspdf";
+import autoTable from "jspdf-autotable";
+import { thsarabun } from '@/public/fonts/thsarabun'
 interface ReqBorrowItem {
     setId?: number
     set?: Set
@@ -49,6 +52,7 @@ export default function Summary() {
     const [set, setSet] = useState<any[]>([]);
     const router = useRouter();
 
+
     const getSet = async () => {
         try {
             const data = await axios.get(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/set`);
@@ -72,6 +76,7 @@ export default function Summary() {
             formData.append("mentor_name", personalData.mentor_name || "");
             formData.append("mentor_last", personalData.mentor_last || "");
             formData.append("project", dates.project || "");
+            formData.append("participate", dates.participate || "");
             formData.append("tel", personalData.tel || "");
             formData.append("otherTel", personalData.otherTel || "");
             formData.append("serveAt", dates.serveAt || "");
@@ -111,6 +116,44 @@ export default function Summary() {
         }
     }
 
+    const exportToPDF = () => {
+        const pdf = new jsPDF("p", "mm", "a4");
+    
+        // เพิ่มฟอนต์ภาษาไทย
+        pdf.addFileToVFS("THSarabunNew.ttf", thsarabun);
+        pdf.addFont("THSarabunNew.ttf", "THSarabunNew", "normal");
+        pdf.setFont("THSarabunNew");
+    
+        pdf.setFontSize(16);
+        pdf.text(`ใบสรุปรายการ ${dates.project}`, 10, 10);
+        pdf.text(`ผู้เข้าร่วมโดยประมาณ: ${dates.participate} คน`, 10, 30);
+        
+        pdf.setFontSize(12);
+        pdf.text(`ชื่อ-นามสกุล: ${personalData.name} ${personalData.lastname}`, 10, 20);
+        pdf.text(`เบอร์โทรศัพท์: ${personalData.tel}`, 10, 30);
+    
+        if (!selectedItems || selectedItems.length === 0) {
+            console.error("ไม่มีข้อมูลรายการอุปกรณ์");
+            return;
+        }
+    
+        const tableData = selectedItems.map((v, i) => [
+            String(i + 1),
+            String(v.itemName || "ไม่มีชื่อ"),
+            String(v.value || "0"),
+            String(v.division || "ไม่ระบุ")
+        ]);
+    
+        autoTable(pdf, {
+            startY: 40,
+            head: [["ลำดับ", "อุปกรณ์", "จำนวน", "จากฝ่าย"]],
+            body: tableData,
+            styles: { font: "THSarabunNew" } // บังคับใช้ฟอนต์
+        });
+        pdf.save(`Borrow_Detail_${dates.project}_${personalData?.name + ' ' + personalData?.lastname}.pdf`);
+    };
+
+
     useEffect(() => {
         const fetchOri = async () => {
             try {
@@ -127,7 +170,7 @@ export default function Summary() {
 
     const handleItemSelect = (items: ReqBorrowItem[]) => {
         setSelectedItems(items);
-        console.log('handleItemSelect --=-=-=-=-=-=-=-==-=>', items); 
+        console.log('handleItemSelect --=-=-=-=-=-=-=-==-=>', items);
         setStep(2); // ไปยังขั้นตอนกรอกข้อมูลส่วนตัว
     };
 
@@ -168,90 +211,91 @@ export default function Summary() {
                 step == 4 && (
                     <div className='flex justify-center items-center h-100vh mt-8 mb-8'>
                         <Card className='w-[1000px] ml-2 mr-2 pl-0 pr-0'>
-                            <CardHeader>
-                                <CardTitle className='text-xl'>ใบสรุปรายการ {dates.project}</CardTitle>
-                            </CardHeader>
-                            <CardContent className='pl-2 pr-2'>
-                                <div className='mb-5'>
-                                    {
-                                        personalData.type_borrow == 'staff' ? (
-                                            <ul>
-                                                <li><strong>สถานะ : </strong>{personalData.type_borrow}</li>
-                                                <li><strong>ชื่อ-นามสกุล : </strong>{personalData.name + ' ' + personalData.lastname}</li>
-                                                <li><strong>เบอร์โทรศัพท์มือถือ : </strong>{personalData.tel}</li>
-                                                <li><strong>เบอร์โทรสำนักงาน : </strong>{personalData.otherTel}</li>
-                                                <li><strong>คณะ/หน่วยงาน : </strong>{ori.find(ori => ori.id == personalData.origanizationId)?.name}</li>
-                                            </ul>
-                                        ) : (
-                                            <ul>
-                                               <li><strong>สถานะ : </strong>{personalData.type_borrow}</li>
-                                                <li><strong>ชื่อ-นามสกุล : </strong>{personalData.name + ' ' + personalData.lastname}</li>
-                                                <li><strong>เบอร์โทรศัพท์มือถือ : </strong>{personalData.tel}</li>
-                                                <li><strong>ชื่อ-นามสกุล-อาจารย์ที่ปรึกษา : </strong>{personalData.mentor_name + ' ' + personalData.mentor_last}</li>
-                                                <li><strong>เบอร์โทร-อาจารย์ที่ปรึกษา : </strong>{personalData.otherTel}</li>
-                                                <li><strong>คณะ/หน่วยงาน : </strong>{ori.find(ori => ori.id == personalData.origanizationId)?.name}</li>
-                                            </ul>
-                                        )
-                                    }
-                                </div>
-                                <Card className='w-full mb-5'>
-                                    <CardHeader className='text-xl font-semibold m-0 p-3'>
-                                        รายการวัสดุ - อุปกรณ์
-                                    </CardHeader>
-                                    <Table>
-                                        <TableHeader>
-                                            <TableRow>
-                                                <TableHead className="w-[5%] text-center">ลำดับ</TableHead>
-                                                <TableHead className="w-[45%] text-left">อุปกรณ์</TableHead>
-                                                <TableHead className="w-[10%] text-center">จำนวน</TableHead>
-                                                <TableHead className="w-[40%]text-left">จากฝ่าย</TableHead>
-                                            </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                            {selectedItems && (
-                                                selectedItems.map((v, i) => (
-                                                    v.setId ? (
-                                                        <>
-                                                            {i === 0 || selectedItems[i - 1].setId !== v.setId ? (
-                                                                <TableRow key={`header-${v.setId}`}>
-                                                                    <TableCell colSpan={5} className="font-medium text-center bg-gray-200">
-                                                                        {set.find((v2) => v2.id === v.setId)?.name}
-                                                                    </TableCell>
-                                                                </TableRow>
-                                                            ) : null}
-                                                            {
-                                                                v.set?.Item_set.map((v2, i2) => (
-                                                                    <TableRow key={i}>
-                                                                        <TableCell className="font-medium text-center">{i2 + 1}</TableCell>
-                                                                        <TableCell className='text-left'>{v2.itemName}</TableCell>
-                                                                        <TableCell className='text-center'>{v2.value}</TableCell>
-                                                                        <TableCell className="text-left">{v.division}</TableCell>
+                            <span id="pdf-content">
+                                <CardHeader>
+                                    <CardTitle className='text-xl'>ใบสรุปรายการ {dates.project}</CardTitle>
+                                </CardHeader>
+                                <CardContent className='pl-2 pr-2'>
+                                    <div className='mb-5'>
+                                        {
+                                            personalData.type_borrow == 'staff' ? (
+                                                <ul>
+                                                    <li><strong>สถานะ : </strong>{personalData.type_borrow}</li>
+                                                    <li><strong>ชื่อ-นามสกุล : </strong>{personalData.name + ' ' + personalData.lastname}</li>
+                                                    <li><strong>เบอร์โทรศัพท์มือถือ : </strong>{personalData.tel}</li>
+                                                    <li><strong>เบอร์โทรสำนักงาน : </strong>{personalData.otherTel}</li>
+                                                    <li><strong>คณะ/หน่วยงาน : </strong>{ori.find(ori => ori.id == personalData.origanizationId)?.name}</li>
+                                                </ul>
+                                            ) : (
+                                                <ul>
+                                                    <li><strong>สถานะ : </strong>{personalData.type_borrow}</li>
+                                                    <li><strong>ชื่อ-นามสกุล : </strong>{personalData.name + ' ' + personalData.lastname}</li>
+                                                    <li><strong>เบอร์โทรศัพท์มือถือ : </strong>{personalData.tel}</li>
+                                                    <li><strong>ชื่อ-นามสกุล-อาจารย์ที่ปรึกษา : </strong>{personalData.mentor_name + ' ' + personalData.mentor_last}</li>
+                                                    <li><strong>เบอร์โทร-อาจารย์ที่ปรึกษา : </strong>{personalData.otherTel}</li>
+                                                    <li><strong>คณะ/หน่วยงาน : </strong>{ori.find(ori => ori.id == personalData.origanizationId)?.name}</li>
+                                                </ul>
+                                            )
+                                        }
+                                    </div>
+                                    <Card className='w-full mb-5'>
+                                        <CardHeader className='text-xl font-semibold m-0 p-3'>
+                                            รายการวัสดุ - อุปกรณ์
+                                        </CardHeader>
+                                        <Table>
+                                            <TableHeader>
+                                                <TableRow>
+                                                    <TableHead className="w-[5%] text-center">ลำดับ</TableHead>
+                                                    <TableHead className="w-[45%] text-left">อุปกรณ์</TableHead>
+                                                    <TableHead className="w-[10%] text-center">จำนวน</TableHead>
+                                                    <TableHead className="w-[40%]text-left">จากฝ่าย</TableHead>
+                                                </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                                {selectedItems && (
+                                                    selectedItems.map((v, i) => (
+                                                        v.setId ? (
+                                                            <>
+                                                                {i === 0 || selectedItems[i - 1].setId !== v.setId ? (
+                                                                    <TableRow key={`header-${v.setId}`}>
+                                                                        <TableCell colSpan={5} className="font-medium text-center bg-gray-200">
+                                                                            {set.find((v2) => v2.id === v.setId)?.name}
+                                                                        </TableCell>
                                                                     </TableRow>
-                                                                ))
-                                                            }
-                                                        </>
-                                                    ) : (
-                                                        <>
-                                                            {/* <TableRow key={i}>
+                                                                ) : null}
+                                                                {
+                                                                    v.set?.Item_set.map((v2, i2) => (
+                                                                        <TableRow key={i}>
+                                                                            <TableCell className="font-medium text-center">{i2 + 1}</TableCell>
+                                                                            <TableCell className='text-left'>{v2.itemName}</TableCell>
+                                                                            <TableCell className='text-center'>{v2.value}</TableCell>
+                                                                            <TableCell className="text-left">{v.division}</TableCell>
+                                                                        </TableRow>
+                                                                    ))
+                                                                }
+                                                            </>
+                                                        ) : (
+                                                            <>
+                                                                {/* <TableRow key={i}>
                                                                 <TableCell colSpan={4} className="font-medium text-center bg-gray-200">
                                                                     ไม่อยู่ในกลุ่มอุปกรณ์
                                                                 </TableCell>
                                                             </TableRow> */}
-                                                            <TableRow key={`no-set-${i}`}>
-                                                                <TableCell className="font-medium text-center">{i + 1}</TableCell>
-                                                                <TableCell className='text-left'>{v.itemName}</TableCell>
-                                                                <TableCell className='text-center'>{v.value}</TableCell>
-                                                                <TableCell className="text-left">{v.division}</TableCell>
-                                                            </TableRow>
-                                                        </>
-                                                    )
-                                                ))
-                                            )}
-                                        </TableBody>
-
-                                    </Table>
-                                </Card>
-                            </CardContent>
+                                                                <TableRow key={`no-set-${i}`}>
+                                                                    <TableCell className="font-medium text-center">{i + 1}</TableCell>
+                                                                    <TableCell className='text-left'>{v.itemName}</TableCell>
+                                                                    <TableCell className='text-center'>{v.value}</TableCell>
+                                                                    <TableCell className="text-left">{v.division}</TableCell>
+                                                                </TableRow>
+                                                            </>
+                                                        )
+                                                    ))
+                                                )}
+                                            </TableBody>
+                                        </Table>
+                                    </Card>
+                                </CardContent>
+                            </span>
                             <div className="mt-6 mb-6 flex justify-center space-x-4">
                                 <button
                                     onClick={() => setStep(step - 1)}
@@ -261,7 +305,7 @@ export default function Summary() {
                                     ย้อนกลับ
                                 </button>
                                 <button
-                                    onClick={() => {sendBorrow(); router.push('/');}}
+                                    onClick={() => { sendBorrow(); exportToPDF(); router.push('/'); }}
                                     type="button"
                                     className="w-[100px] bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200"
                                 >
@@ -269,10 +313,10 @@ export default function Summary() {
                                 </button>
                             </div>
                         </Card>
-
                     </div>
                 )
             }
         </>
     )
 }
+

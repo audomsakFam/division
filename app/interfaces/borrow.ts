@@ -8,6 +8,7 @@ export interface ResBorrow {
 export interface ResBorrowData {
   id: number
   project: string
+  participate: string
   name: string
   lastname: string
   tel: string
