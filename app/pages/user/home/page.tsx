@@ -66,7 +66,7 @@ export default function HomePage() {
                             (item.type == 0 && (
                                 <div id="bannerL" className="fixed flex justify-start w-1/2 left-0 top-1/4 ml-10 z-[1000]">
                                     <img
-                                        src={`${process.env.NEXT_PUBLIC_BASE_PATH + '/' + item.name}`}
+                                        src={'http://localhost:9000/images/' + item.name}
                                         className="h-[500px] object-cover"
                                         alt=""
                                     />
@@ -89,7 +89,7 @@ export default function HomePage() {
                             (item.type == 1 && (
                                 <div id="bannerR" className="fixed flex justify-end w-1/2 right-0 top-1/4 mr-10 z-[1000]">
                                     <img
-                                        src={`${process.env.NEXT_PUBLIC_BASE_PATH + '/' + item.name}`}
+                                        src={'http://localhost:9000/images/' + item.name}
                                         className="h-[500px] object-cover"
                                         alt=""
                                     />
@@ -120,7 +120,7 @@ export default function HomePage() {
                                         </div>
 
                                         <div className="w-full mb-4 flex items-center justify-center">
-                                            <ReactPlayer url={`${process.env.NEXT_PUBLIC_BASE_PATH}/${item.name}`} controls={true} />
+                                            <ReactPlayer url={'http://localhost:9000/images/' + item.name} controls={true} />
                                         </div>
 
                                         <div className="mb-4 mt-10 text-center text-2xl font-bold text-gray-800 ">

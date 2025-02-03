@@ -131,7 +131,7 @@ export default function Equipment({ onSelected }: { onSelected: (item: ReqBorrow
 
                 updatedValues[key][item.name] = !selectAllState[key] ? maxCount : 0;
             });
-            console.log("selected --=-===> ",updatedValues)
+            console.log("selected --=-===> ", updatedValues)
 
             return updatedValues;
         });
@@ -153,7 +153,7 @@ export default function Equipment({ onSelected }: { onSelected: (item: ReqBorrow
                     [itemName]: value, // Update the value if it's not 0
                 };
             }
-            console.log("selected one--=-===> ",updatedValues)
+            console.log("selected one--=-===> ", updatedValues)
 
             return updatedValues;
         });
@@ -325,15 +325,15 @@ export default function Equipment({ onSelected }: { onSelected: (item: ReqBorrow
                                                                     <TableCell className="pt-0 pb-0 pl-0 pr-0 text-stone-950 border-r border-gray-400 text-center">
                                                                         <div className="relative flex justify-center items-center">
                                                                             <img
-                                                                                src={process.env.NEXT_PUBLIC_BASE_PATH + '/' + item.img}
+                                                                                src={'http://localhost:9000/images/items/' + item.img}
                                                                                 alt={item.name}
                                                                                 onClick={() =>
                                                                                     handleImageClick(
-                                                                                        process.env.NEXT_PUBLIC_BASE_PATH + '/' + item.img
+                                                                                        'http://localhost:9000/images/items/' + item.img
                                                                                     )
                                                                                 }
                                                                                 className={`h-12 w-auto object-cover transition-transform duration-300 ease-in-out cursor-pointer ${expandedImage ===
-                                                                                    process.env.NEXT_PUBLIC_BASE_PATH + '/' + item.img
+                                                                                    'http://localhost:9000/images/items/' + item.img
                                                                                     ? 'scale-[3] z-50 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'
                                                                                     : ''
                                                                                     }`}

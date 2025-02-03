@@ -305,7 +305,7 @@ export default function Summary() {
                                     ย้อนกลับ
                                 </button>
                                 <button
-                                    onClick={() => { sendBorrow(); exportToPDF(); router.push('/'); }}
+                                    onClick={() => { sendBorrow();exportToPDF();router.push('/'); }} //   
                                     type="button"
                                     className="w-[100px] bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200"
                                 >

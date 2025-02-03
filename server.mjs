@@ -93,6 +93,9 @@ app.get('/api/noti', async (req, res) => {
   });
 });
 
+app.use("/images", express.static(path.join(__dirname, "public/images")));
+
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
+

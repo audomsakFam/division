@@ -28,9 +28,6 @@ export async function PUT(req: Request) {
         const findUser = await prisma.user.findFirst({
             where: {
                 id: Number(id),
-                image: {
-                    startsWith: 'images/profile',
-                },
             },
             select: {
                 image: true
@@ -38,7 +35,7 @@ export async function PUT(req: Request) {
         });
 
         if (findUser) {
-            const filePath = path.join(process.cwd(), 'public', findUser.image);
+            const filePath = path.join(process.cwd(), 'public', 'images', 'profile', findUser.image);
             try {
                 fs.unlinkSync(filePath);
                 console.log('Image deleted successfully');
@@ -58,7 +55,7 @@ export async function PUT(req: Request) {
         const buffer = Buffer.from(arrayBuffer);
         const fileName = fileUpload.name;
         await writeImageToPublic(fileName, buffer);
-        const filePath = `images/profile/${fileName}`; // เส้นทางสำหรับเก็บไฟล์
+        const filePath = `${fileName}`; // เส้นทางสำหรับเก็บไฟล์
 
         const data = await prisma.user.update({
             where: { id: Number(id) },

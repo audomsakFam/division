@@ -221,7 +221,7 @@ export default function HomePage() {
                     <div className="flex flex-col w-full">
                         <Card className="w-full mb-2 ">
                             <CardHeader>
-                                <h3 className="text-xl font-semibold">ความถี่การยืมของแต่ละฝ่าย</h3>
+                                <h3 className="text-xl font-semibold">ความถี่การยืมของแต่ละฝ่ายต่ออุปกรณ์</h3>
                                 <div className='mb-[1rem] flex items-center'>
                                     <label htmlFor="year" className='mr-2'>เลือกปี: </label>
                                     <div className='relative w-1/6 text-center'>

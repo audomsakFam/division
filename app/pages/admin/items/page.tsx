@@ -156,10 +156,10 @@ export default function Items() {
         }
     }
 
-    const removeFromSet = async (setName: string, itemName: string) =>{
+    const removeFromSet = async (setName: string, itemName: string) => {
         try {
             const res = await axios.delete(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/itemSet?itemName=${itemName}&setName=${setName}`);
-            if(res.status === 200){
+            if (res.status === 200) {
                 ClearItemCache();
                 GetItemWithCache().then((res) => {
                     setItems(res);
@@ -175,6 +175,7 @@ export default function Items() {
         GetItemWithCache().then((res) => {
             setItems(res);
             setFilteredItems(res);  // Set the filtered items to the full list initially
+            console.log('res data item -=-=-=-=-=-=-> ', res)
         });
         getDivision();
         getSet();
@@ -420,7 +421,7 @@ export default function Items() {
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
                                                 </div>
-                                                <div className="items-start justify-start flex flex-col gap-2 mb-2 w-full">
+                                                {/* <div className="items-start justify-start flex flex-col gap-2 mb-2 w-full">
                                                     <Label htmlFor="division" className="text-left font-black">
                                                         เลือกชุดอุปกรณ์ หรือ ปล่อยว่างหากไม่อยู่ในชุดอุปกรณ์ใดๆ
                                                     </Label>
@@ -441,7 +442,7 @@ export default function Items() {
                                                             </DropdownMenuRadioGroup>
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
-                                                </div>
+                                                </div> */}
                                             </div>
                                         </div>
                                         <DialogFooter>
@@ -502,7 +503,7 @@ export default function Items() {
                                                     {/* กล่องแสดงภาพหลัก */}
                                                     <div className="flex  justify-center items-center overflow-hidden">
                                                         <img
-                                                            src={process.env.NEXT_PUBLIC_BASE_PATH + '/' + item.img}
+                                                            src={'http://localhost:9000/images/items/' + item.img}
                                                             width={90}
                                                             height={90}
                                                             alt="item image"
@@ -516,7 +517,7 @@ export default function Items() {
                                                     `}
                                                     >
                                                         <img
-                                                            src={process.env.NEXT_PUBLIC_BASE_PATH + '/' + item.img}
+                                                            src={'http://localhost:9000/images/items/' + item.img}
                                                             alt="Zoomed image"
                                                             className="transform w-full absolute"
                                                         />
@@ -559,7 +560,7 @@ export default function Items() {
                                             </TableCell>
                                             <TableCell className="border-r border-gray-300 text-center">{item.postfixName}</TableCell>
                                             <TableCell className="border-r border-gray-300 text-center">{item.divisionName}</TableCell>
-                                            <TableCell className={`text-center ${setFilter !='' ? 'flex flex-col': ''}`} onClick={(e) => e.stopPropagation()}>
+                                            <TableCell className={`text-center ${setFilter != '' ? 'flex flex-col' : ''}`} onClick={(e) => e.stopPropagation()}>
                                                 <Dialog>
                                                     <DialogTrigger asChild>
                                                         <Button variant={'destructive'} className=" mb-2">
@@ -606,7 +607,7 @@ export default function Items() {
                                                             <DialogFooter>
                                                                 <div>
                                                                     <DialogClose asChild>
-                                                                        <Button type="submit" className="bg-red-600 hover:bg-red-900 mr-2" onClick={(e) => { removeFromSet(setFilter,item.name); e.stopPropagation() }}>ยืนยัน</Button>
+                                                                        <Button type="submit" className="bg-red-600 hover:bg-red-900 mr-2" onClick={(e) => { removeFromSet(setFilter, item.name); e.stopPropagation() }}>ยืนยัน</Button>
                                                                     </DialogClose>
                                                                     <DialogClose asChild>
                                                                         <Button type="button" onClick={(e) => e.stopPropagation()}>ยกเลิก</Button>

@@ -14,6 +14,9 @@ import {
 } from "@/components/ui/table"
 import { jsPDF } from "jspdf";
 import html2canvas from "html2canvas";
+import autoTable from "jspdf-autotable";
+import { thsarabun } from "@/public/fonts/thsarabun";
+
 // import * as XLSX from "xlsx";
 
 const itemsPerPage = 200;
@@ -24,45 +27,58 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
 
     useEffect(() => {
         console.log('id--->', id);
-        GetBorrowWithCache().then((res) => setBorrow(res.find((v) => v.id == id)!));
+        GetBorrowWithCache().then((res) => {
+            console.log('data borrow cache -> ', res);
+            setBorrow(res.find((v) => v.id == id)!)
+            console.log('borrow set --->', res.find((v) => v.id == id)!);
+        });
     }, [id])
-
-    // const exportToExcel = (data: BorrowDetail[]) => {
-    //     const worksheetData = data?.map((item) => {
-    //         return {
-    //             "ชื่ออุปกรณ์ / ชุดอุปกรณ์": item.item.name,
-    //             "จำนวน": item.quantity + " " + item.item.postfix.name,
-    //             "สถานะ": item.item.status,
-    //             "ฝ่ายที่รับผิดชอบ": item.item.division.name,
-    //         };
-    //     });
-    //     // สร้าง Worksheet
-    //     const ws = XLSX.utils.json_to_sheet(worksheetData);
-    //     // สร้าง Workbook
-    //     const wb = XLSX.utils.book_new();
-    //     XLSX.utils.book_append_sheet(wb, ws, "Borrow Detail");
-    //     // ดาวน์โหลดไฟล์ Excel
-    //     XLSX.writeFile(wb, `Borrow_Detail_${borrow?.project}_${borrow?.name + ' ' + borrow?.lastname}.xlsx`);
-    // };
     const exportToPDF = async (scale: number = 4) => {
         const element = document.getElementById("pdf-content");
+        console.log('wl--=-=-=->',element)
         if (element) {
-            // ใช้ html2canvas พร้อมกับตัวเลือก scale
+
             const canvas = await html2canvas(element, { scale });
             const imgData = canvas.toDataURL("image/png");
 
             const pdf = new jsPDF("p", "mm", "a4");
+            pdf.addFileToVFS("THSarabunNew.ttf", thsarabun);
+            pdf.addFont("THSarabunNew.ttf", "THSarabunNew", "normal");
+            pdf.setFont("THSarabunNew");
 
+            // pdf.setFontSize(22);
             const imgWidth = 210; // A4 width in mm
             const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
+            // เพิ่มภาพในหน้าแรก
             pdf.addImage(imgData, "PNG", 0, 0, imgWidth, imgHeight);
+
+            // ตรวจสอบว่า borrow มีค่าอยู่หรือไม่
+            if (borrow) {
+                // เพิ่มตารางด้วย autoTable
+                autoTable(pdf, {
+                    styles: { font: "THSarabunNew" , fontSize: 18 },
+                    head: [['#', 'ชื่ออุปกรณ์', 'จำนวน', 'สถานะปัจจุบัน', 'ฝ่ายที่รับผิดชอบ']],
+                    body: currentItems.length > 0 ? currentItems.map((item, index) => [
+                        index + 1,
+                        item.item.name,
+                        `${item.quantity} ${item.item.postfix.name}`,
+                        borrow.status === 4 ? item.item_status :
+                            borrow.status === 1 || borrow.status === 0 ? "รอการยืนยัน" : item.item.status,
+                        item.item.division.name
+                    ]) : [["ไม่มีข้อมูล", "", "", "", ""]],
+                    startY: imgHeight + 10, // ตำแหน่งเริ่มต้นของตาราง
+                    theme: 'striped', // ใช้ธีมแบบ striped
+                    columnStyles: { 0: { halign: 'center' }, 1: { halign: 'left' }, 2: { halign: 'center' }, 3: { halign: 'center' }, 4: { halign: 'center' } }, // ตั้งค่าการจัดเรียงในคอลัมน์
+                });
+            } else {
+                console.warn("borrow is undefined.");
+            }
+
+            // ดาวน์โหลดไฟล์ PDF
             pdf.save(`Borrow_Detail_${borrow?.project}_${borrow?.name + ' ' + borrow?.lastname}.pdf`);
         }
     };
-
-
-
     const currentItems = useMemo(() => {
         if (!borrow) return []; // รอ borrow พร้อมก่อน
 
@@ -81,12 +97,6 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
         return mergedItems.slice(startIdx, endIdx);
     }, [borrow, currentPage, itemsPerPage]); // อัปเดตเมื่อ borrow, currentPage, หรือ itemsPerPage เปลี่ยน
 
-    // คำนวณ totalPages
-    // const totalPages = useMemo(() => {
-    //     return borrow ? Math.ceil(borrow.Borrow_detail.length / itemsPerPage) : 0;
-    // }, [borrow, itemsPerPage]);
-
-    // รอ borrow โหลดก่อนแสดงผล
     if (!borrow) {
         return <div>Loading...</div>;
     }
@@ -94,8 +104,8 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
         <Side>
             <>
                 <Card className="w-full p-2">
-                    <span id="pdf-content">
-                        <CardHeader >
+                    <span>
+                        <CardHeader id="pdf-content">
                             <div className="flex justify-between p-4">
                                 <div>
                                     <h3 className="text-xl font-semibold">รายละเอียดการยืมของ: {borrow?.project}</h3>
@@ -112,7 +122,8 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
                                                     {/* กล่องแสดงภาพหลัก */}
                                                     <div className="flex justify-start items-center overflow-hidden">
                                                         <img
-                                                            src={process.env.NEXT_PUBLIC_BASE_PATH + "/" + borrow.img_sign}
+                                                            src={'http://localhost:9000/images/sign/' + borrow.img_sign}
+                                                            crossOrigin="anonymous"
                                                             width={200}
                                                             height={200}
                                                             alt="item image"
@@ -122,7 +133,8 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
                                                     {/* กล่องสำหรับแสดงภาพซูม */}
                                                     <div className={`absolute w-1/2 hidden group-hover:flex justify-center items-center transform z-1000`}>
                                                         <img
-                                                            src={process.env.NEXT_PUBLIC_BASE_PATH + "/" + borrow.img_sign}
+                                                            src={'http://localhost:9000/images/sign/' + borrow.img_sign}
+                                                            crossOrigin="anonymous"
                                                             alt="Zoomed image"
                                                             className="transform w-full absolute w-[400px] "
                                                         />
@@ -132,7 +144,8 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
                                                     {/* กล่องแสดงภาพหลัก */}
                                                     <div className="flex justify-start items-center overflow-hidden">
                                                         <img
-                                                            src={process.env.NEXT_PUBLIC_BASE_PATH + "/" + borrow.borrower_id}
+                                                            src={'http://localhost:9000/images/sign/' + borrow.borrower_id}
+                                                            crossOrigin="anonymous"
                                                             width={200}
                                                             height={200}
                                                             alt="item image"
@@ -142,7 +155,7 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
                                                     {/* กล่องสำหรับแสดงภาพซูม */}
                                                     <div className={`absolute w-1/2  hidden group-hover:flex justify-center items-center transform z-1000`}>
                                                         <img
-                                                            src={process.env.NEXT_PUBLIC_BASE_PATH + "/" + borrow.borrower_id}
+                                                            src={'http://localhost:9000/images/sign/' + borrow.borrower_id}
                                                             alt="Zoomed image"
                                                             className="transform w-full absolute w-[400px] "
                                                         />
@@ -206,19 +219,21 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
                                                             {/* กล่องแสดงภาพหลัก */}
                                                             <div className="flex justify-center items-center overflow-hidden">
                                                                 <img
-                                                                    src={process.env.NEXT_PUBLIC_BASE_PATH + "/" + item.item.img!}
+                                                                    src={'http://localhost:9000/images/items/' + item.item.img!}
                                                                     width={90}
                                                                     height={90}
                                                                     alt="item image"
                                                                     className="transform transition-all duration-300"
+                                                                    crossOrigin="anonymous"
                                                                 />
                                                             </div>
                                                             {/* กล่องสำหรับแสดงภาพซูม */}
                                                             <div className={`absolute w-1/5 hidden group-hover:flex justify-center items-center right-1/2 transform z-100`}>
                                                                 <img
-                                                                    src={process.env.NEXT_PUBLIC_BASE_PATH + "/" + item.item.img!}
+                                                                    src={'http://localhost:9000/images/items/' + item.item.img!}
                                                                     alt="Zoomed image"
                                                                     className="transform w-full absolute"
+                                                                    crossOrigin="anonymous"
                                                                 />
                                                             </div>
                                                         </div>

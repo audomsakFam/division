@@ -63,7 +63,7 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
 
     const cloneItem = async (itemId: number, cloneCount: number) => {
         try {
-            const res = await axios.post(process.env.NEXT_PUBLIC_BASE_PATH+'/api/items', { itemId, cloneCount });
+            const res = await axios.post(process.env.NEXT_PUBLIC_BASE_PATH + '/api/items', { itemId, cloneCount });
             console.log(res);
             ClearItemCache()
             window.location.reload();
@@ -85,7 +85,7 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
 
     const updateAll = async () => {
         try {
-            const res = await axios.post(process.env.NEXT_PUBLIC_BASE_PATH+'/api/items/update', { name: name, newName: newName, division: position, status: itemsNum });
+            const res = await axios.post(process.env.NEXT_PUBLIC_BASE_PATH + '/api/items/update', { name: name, newName: newName, division: position, status: itemsNum });
             if (res.status === 200) {
                 const currentUrl = new URL(window.location.href);
                 currentUrl.pathname = `${currentUrl.pathname.replace(params.name, '')}/${newName}`;
@@ -164,7 +164,7 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
     }
 
     const getDivision = async () => {
-        await axios.get<ResDivision>(process.env.NEXT_PUBLIC_BASE_PATH+'/api/division')
+        await axios.get<ResDivision>(process.env.NEXT_PUBLIC_BASE_PATH + '/api/division')
             .then((res) => {
                 setDivision(res.data.data);
             }).catch((err) => console.error(err))
@@ -192,7 +192,8 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
                         itemDetail && (
                             <div className="flex justify-between items-start overflow-hidden w-full">
                                 <img
-                                    src={process.env.NEXT_PUBLIC_BASE_PATH + '/' + itemDetail?.img}
+                                    // src={process.env.NEXT_PUBLIC_BASE_PATH + '/' + itemDetail?.img}
+                                    src={'http://localhost:9000/images/items/' + itemDetail?.img}
                                     alt="item image"
                                     className="w-1/3 mr-4"
                                 />
@@ -498,7 +499,7 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
                     </Dialog>
                 </CardFooter>
             </Card>
-            
+
 
         </Side>
     );

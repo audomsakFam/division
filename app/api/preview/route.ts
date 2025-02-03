@@ -108,9 +108,16 @@ export async function POST(req: Request) {
 export async function GET(req: Request) {
     const url = new URL(req.url);
     try {
-        const res = await prisma.imgAndVideoPreview.findMany({})
-        return NextResponse.json({ res: res, status: 200 });
+        const res = await prisma.imgAndVideoPreview.findMany({});
+
+        // ตัด path ออก เหลือแค่ชื่อไฟล์และนามสกุล
+        const modifiedRes = res.map((item: any) => ({
+            ...item,
+            name: item.name.split('/').pop() // ดึงแค่ชื่อไฟล์
+        }));
+
+        return NextResponse.json({ res: modifiedRes, status: 200 });
     } catch (err) {
-        return NextResponse.json({ error: 'someting went worng at ' + url.href + err, status: 500 });
+        return NextResponse.json({ error: 'something went wrong at ' + url.href + err, status: 500 });
     }
 }

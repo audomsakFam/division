@@ -107,7 +107,7 @@ export default function BorrowReturn() {
                                             <Dialog>
                                                 <DialogTrigger asChild>
                                                     <Button variant={'destructive'} className=" mb-2" onClick={(e) => e.stopPropagation()}>
-                                                        <FaCircleMinus className="mr-2" /> ลบอุปกรณ์
+                                                        <FaCircleMinus className="mr-2" /> ลบรายการนี้
                                                     </Button>
                                                 </DialogTrigger>
                                                 <DialogContent className="sm:max-w-md" onClick={(e) => e.stopPropagation()}>

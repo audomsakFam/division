@@ -315,7 +315,7 @@ export default function Management() {
                                                 ) : (
                                                     <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-md">
                                                         <img
-                                                            src={`${process.env.NEXT_PUBLIC_BASE_PATH}/${item.name}`}
+                                                            src={'http://localhost:9000/images/' + item.name}
                                                             className="w-full h-full object-cover rounded-md"
                                                             alt="Preview"
                                                         />
@@ -327,7 +327,7 @@ export default function Management() {
                                     {item.type == 1 && (
                                         <div className="flex w-1/2 flex-col h-full mr-2">
                                             <Label>แบนเนอร์ ขวา</Label>
-                                            <div className="w-full h-full relative overflow-y-auto">
+                                            <div className="w-full h-full relative overflow-y-auto"> 
                                                 {previewUrlR ? (
                                                     <img
                                                         src={previewUrlR}
@@ -337,7 +337,7 @@ export default function Management() {
                                                 ) : (
                                                     <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-md">
                                                         <img
-                                                            src={`${process.env.NEXT_PUBLIC_BASE_PATH}/${item.name}`}
+                                                            src={'http://localhost:9000/images/' + item.name}
                                                             className="w-full h-full object-cover rounded-md"
                                                             alt="Preview"
                                                         />
@@ -432,7 +432,8 @@ export default function Management() {
                                         {
                                             item.type == 2 && (
                                                 <div className="w-full mb-4 flex items-center justify-center">
-                                                    <ReactPlayer url={`${process.env.NEXT_PUBLIC_BASE_PATH}/${item.name}`} width="100%" controls={true} />
+                                                    <ReactPlayer url={'http://localhost:9000/images/' + item.name} width={'100%'} controls={true} />
+
                                                 </div>
                                             )
                                         }

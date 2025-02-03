@@ -54,10 +54,7 @@ export async function POST(req: Request) {
             filePath2 = `images/sign/${fileName}`;
             await writeImageToPublic(fileName, buffer);
         }
-
-
-
-        // ตรวจสอบข้อมูลที่จำเป็น
+       
         if (!borrowDetails || borrowDetails.length === 0) {
             return NextResponse.json({ error: 'No borrow details provided' }, { status: 400 });
         }
@@ -65,7 +62,10 @@ export async function POST(req: Request) {
         if (!name || !lastname || !tel || !project || !serveAt || !retureAt || !origanizationId) {
             return NextResponse.json({ error: 'Missing required fields', status: 400 });
         }
-        console.log('detail-=-=-=-=>>>>>>>>>>>>>>>>>>>', borrowDetails.set);
+        // borrowDetails.forEach((detail: any, index: any) => {
+        //     console.log(`Detail ${index}:`, detail);
+        //     console.log(`SetId: ${detail.setId}, Set:`, detail.set);
+        // });
         const result = await prisma.$transaction(async (tx) => {
             // 1. สร้าง Borrow
             const createdBorrow = await tx.borrow.create({
@@ -92,9 +92,12 @@ export async function POST(req: Request) {
 
             // 2. สร้าง Borrow_detail
             for (const detail of borrowDetails) {
+                // console.log("Processing detail:", detail);
 
-                if (detail.setId && detail.set?.Item_set) {
-                    // เพิ่ม Borrow_detail สำหรับ `setId` และ `Item_set`
+                if (detail.setId && detail.set?.Item_set?.length > 0) {
+                    // ✅ กรณีเป็นเซ็ตของรายการ
+                    console.log("Processing setId:", detail.setId, "with items:", detail.set.Item_set);
+
                     for (const itemSet of detail.set.Item_set) {
                         const items = await prisma.items.findMany({
                             where: {
@@ -104,23 +107,26 @@ export async function POST(req: Request) {
                             take: itemSet.value, // ดึงรายการตามจำนวน value
                         });
 
-                        if (items.length > 0) {
-                            // สร้าง borrow_detail สำหรับแต่ละ item
+                        if (items.length >= itemSet.value) {
+                            // ✅ ถ้ามี items เพียงพอ ให้เพิ่ม borrow_detail
                             for (const item of items) {
                                 await tx.borrow_detail.create({
                                     data: {
                                         borrowId: createdBorrow.id,
                                         itemId: item.id, // ใช้ item.id จาก items
+                                        setId: detail.setId // เพิ่ม setId เพื่ออ้างอิง
                                     },
                                 });
                             }
                         } else {
-                            console.error(`จำนวน items ไม่เพียงพอ: ต้องการ ${detail.value} แต่พบ ${items.length}`);
+                            console.error(`จำนวน items ไม่เพียงพอ: ต้องการ ${itemSet.value} แต่พบ ${items.length}`);
                             throw new Error(`ไม่สามารถดำเนินการได้: จำนวน items ไม่เพียงพอ`);
                         }
                     }
-                } else if (detail.itemName) {
-                    // เพิ่ม Borrow_detail สำหรับ `itemName` เดี่ยว
+                } else if (detail.itemName && detail.value) {
+                    // ✅ กรณีเป็นรายการเดี่ยว
+                    console.log("Processing single item:", detail.itemName, "with quantity:", detail.value);
+
                     const items = await prisma.items.findMany({
                         where: {
                             name: detail.itemName,
@@ -129,13 +135,13 @@ export async function POST(req: Request) {
                         take: detail.value, // ดึงรายการตามจำนวน value
                     });
 
-                    if (items.length > 0) {
-                        // สร้าง borrow_detail สำหรับแต่ละ item
+                    if (items.length >= detail.value) {
+                        // ✅ ถ้ามี items เพียงพอ ให้เพิ่ม borrow_detail
                         for (const item of items) {
                             await tx.borrow_detail.create({
                                 data: {
                                     borrowId: createdBorrow.id,
-                                    itemId: item.id, // ใช้ item.id จาก items
+                                    itemId: item.id,
                                 },
                             });
                         }
@@ -143,6 +149,8 @@ export async function POST(req: Request) {
                         console.error(`จำนวน items ไม่เพียงพอ: ต้องการ ${detail.value} แต่พบ ${items.length}`);
                         throw new Error(`ไม่สามารถดำเนินการได้: จำนวน items ไม่เพียงพอ`);
                     }
+                } else {
+                    console.warn("Invalid borrow detail:", detail);
                 }
             }
 
@@ -162,8 +170,7 @@ export async function POST(req: Request) {
 
             return borrowWithDetails;
         });
-
-
+        console.log("result", result);
         if (result) {
             try {
                 if (result.Borrow_detail.length > 0) {
@@ -334,18 +341,29 @@ export async function GET(req: Request) {
                     }
                 }
             }
-        })
+        });
 
+        // ฟังก์ชันช่วยตัด path ให้เหลือแค่ชื่อไฟล์
+        const getFileName = (filePath: string | null) =>
+            filePath ? path.basename(filePath) : '';
 
-        // ปรับข้อมูลเพื่อกรอง Item_set ให้ตรงกับข้อมูล Borrow_detail
+        // ปรับข้อมูลให้ตัด path ของรูปภาพทั้งหมด
         data.forEach((borrow: any) => {
+            borrow.img_sign = getFileName(borrow.img_sign);
+            borrow.borrower_id = getFileName(borrow.borrower_id);
+
             if (borrow.Borrow_detail) {
                 borrow.Borrow_detail.forEach((detail: any) => {
+                    if (detail.item) {
+                        detail.item.img = getFileName(detail.item.img);
+                    }
+
                     if (detail.set && detail.set.Item_set) {
-                        // กรอง Item_set ให้มีเฉพาะ item ที่เกี่ยวข้องกับ Borrow_detail นี้
-                        detail.set.Item_set = detail.set.Item_set.filter((itemSet: any) =>
-                            detail.itemId === itemSet.itemId
-                        );
+                        detail.set.Item_set.forEach((itemSet: any) => {
+                            if (itemSet.item) {
+                                itemSet.item.img = getFileName(itemSet.item.img);
+                            }
+                        });
                     }
                 });
             }
