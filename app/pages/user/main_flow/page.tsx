@@ -9,6 +9,16 @@ import {
     CardTitle,
 } from "@/components/ui/card"
 import {
+    Dialog,
+    DialogClose,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
+import {
     Table,
     TableBody,
     // TableCaption,
@@ -26,6 +36,7 @@ import { useRouter } from 'next/navigation'
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { thsarabun } from '@/public/fonts/thsarabun'
+import { Button } from '@/components/ui/button'
 interface ReqBorrowItem {
     setId?: number
     set?: Set
@@ -118,32 +129,47 @@ export default function Summary() {
 
     const exportToPDF = () => {
         const pdf = new jsPDF("p", "mm", "a4");
-    
+
         // เพิ่มฟอนต์ภาษาไทย
         pdf.addFileToVFS("THSarabunNew.ttf", thsarabun);
         pdf.addFont("THSarabunNew.ttf", "THSarabunNew", "normal");
         pdf.setFont("THSarabunNew");
-    
+
         pdf.setFontSize(16);
         pdf.text(`ใบสรุปรายการ ${dates.project}`, 10, 10);
-        pdf.text(`ผู้เข้าร่วมโดยประมาณ: ${dates.participate} คน`, 10, 30);
-        
+        // pdf.text(`ผู้เข้าร่วมโดยประมาณ: ${dates.participate} คน`, 10, 30);
+
         pdf.setFontSize(12);
         pdf.text(`ชื่อ-นามสกุล: ${personalData.name} ${personalData.lastname}`, 10, 20);
         pdf.text(`เบอร์โทรศัพท์: ${personalData.tel}`, 10, 30);
-    
+
         if (!selectedItems || selectedItems.length === 0) {
             console.error("ไม่มีข้อมูลรายการอุปกรณ์");
             return;
         }
-    
-        const tableData = selectedItems.map((v, i) => [
-            String(i + 1),
-            String(v.itemName || "ไม่มีชื่อ"),
-            String(v.value || "0"),
-            String(v.division || "ไม่ระบุ")
-        ]);
-    
+
+        const tableData = selectedItems.flatMap((item, i) => {
+            if ("set" in item && item.set?.Item_set) {
+                // กรณีเป็นชุดของอุปกรณ์ (set)
+                return item.set.Item_set.map((subItem) => [
+                    String(i + 1),
+                    String(subItem.itemName || "ไม่มีชื่อ"),
+                    String(subItem.value || "0"),
+                    String(item.division || "ไม่ระบุ"),
+                ]);
+            } else {
+                // กรณีเป็นอุปกรณ์เดี่ยว
+                return [[
+                    String(i + 1),
+                    String(item.itemName || "ไม่มีชื่อ"),
+                    String(item.value || "0"),
+                    String(item.division || "ไม่ระบุ"),
+                ]];
+            }
+        });
+
+        console.log('selectedItems---- >', selectedItems);
+        console.log('tableData ------->', tableData);
         autoTable(pdf, {
             startY: 40,
             head: [["ลำดับ", "อุปกรณ์", "จำนวน", "จากฝ่าย"]],
@@ -214,6 +240,8 @@ export default function Summary() {
                             <span id="pdf-content">
                                 <CardHeader>
                                     <CardTitle className='text-xl'>ใบสรุปรายการ {dates.project}</CardTitle>
+                                    <h3 className="text-xl font-semibold">จำนวนผู้เข้าร่วมโดยประมาณ: {dates?.participate} คน</h3>
+
                                 </CardHeader>
                                 <CardContent className='pl-2 pr-2'>
                                     <div className='mb-5'>
@@ -304,13 +332,25 @@ export default function Summary() {
                                 >
                                     ย้อนกลับ
                                 </button>
-                                <button
-                                    onClick={() => { sendBorrow();exportToPDF();router.push('/'); }} //   
-                                    type="button"
-                                    className="w-[100px] bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200"
-                                >
-                                    ยืนยัน
-                                </button>
+                                <Dialog>
+                                    <DialogTrigger asChild>
+                                        <Button className="w-[100px] bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200" onClick={(e) => e.stopPropagation()}>
+                                            ยืนยัน
+                                        </Button>
+                                    </DialogTrigger>
+                                    <DialogContent className="sm:max-w-md" onClick={(e) => e.stopPropagation()}>
+                                        <DialogHeader>
+                                            <DialogTitle>ยืมเสร็จสิ้น</DialogTitle>
+                                        </DialogHeader>
+                                        <DialogFooter>
+                                            <div>
+                                                <DialogClose asChild>
+                                                    <Button type="submit" className="bg-blue-600 hover:bg-blue-900 mr-2" onClick={() => { sendBorrow(); exportToPDF(); router.push('/'); }}>ยืนยัน</Button>
+                                                </DialogClose>
+                                            </div>
+                                        </DialogFooter>
+                                    </DialogContent>
+                                </Dialog>
                             </div>
                         </Card>
                     </div>

@@ -34,7 +34,8 @@ export async function PUT(req: Request) {
             }
         });
 
-        if (findUser) {
+
+        if (findUser && findUser.image != 'male.png' && findUser.image != 'female.png') {
             const filePath = path.join(process.cwd(), 'public', 'images', 'profile', findUser.image);
             try {
                 fs.unlinkSync(filePath);
@@ -53,17 +54,17 @@ export async function PUT(req: Request) {
 
         const arrayBuffer = await fileUpload.arrayBuffer();
         const buffer = Buffer.from(arrayBuffer);
-        const fileName = fileUpload.name;
+        const fileName = `${new Date().getTime().toLocaleString()}-${fileUpload.name}`;
         await writeImageToPublic(fileName, buffer);
-        const filePath = `${fileName}`; // เส้นทางสำหรับเก็บไฟล์
+        console.log('fileName---> ', fileName)
 
         const data = await prisma.user.update({
             where: { id: Number(id) },
-            data: { image: filePath },
+            data: { image: fileName },
         });
 
         return NextResponse.json({ msg: "Image successfully uploaded", res: data, status: 200 });
     } catch (err) {
         return NextResponse.json({ error: 'someting went worng at ' + url.href + err, status: 500 });
     }
-} 
+}

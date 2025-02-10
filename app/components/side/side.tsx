@@ -5,7 +5,7 @@ import { Avatar, AvatarImage } from "@radix-ui/react-avatar";
 import { ExitIcon } from "@radix-ui/react-icons";
 import { signOut, useSession } from "next-auth/react";
 import { usePathname, useRouter } from "next/navigation";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { use, useCallback, useEffect, useRef, useState } from "react";
 import { CustomUserSession } from "../../interfaces/user";
 import { FaBars, FaBoxesPacking, FaBoxesStacked, FaHouse, FaWhmcs } from "react-icons/fa6";
 import Image from "next/image";
@@ -59,13 +59,25 @@ export default function Side({ children }: SideProps) {
             console.log('SSE connection opened.');
         };
 
+        // eventSource.onmessage = (event) => {
+        //     const data = JSON.parse(event.data);
+        //     setNotifications(data.message);
+        //     setBorrowId(data.borrowId);
+        //     setBorrowStatus(data.status);
+        // };
         eventSource.onmessage = (event) => {
             const data = JSON.parse(event.data);
-            setNotifications(data.message);
-            setBorrowId(data.borrowId);
-            setBorrowStatus(data.status);
-        };
 
+            if (data.type && data.type === 'ping') {
+                console.log('Received ping from server. Sending pong...');
+                fetch('http://localhost:9000/api/ping', { method: 'POST', body: 'pong' });
+            } else { //if (data.type === 'notification')
+                // const data = JSON.parse(event.data);
+                setNotifications(data.message);
+                setBorrowId(data.borrowId);
+                setBorrowStatus(data.status);
+            }
+        };
         eventSource.onerror = (event) => {
             console.error('SSE Error:', event);
             eventSource.close();
@@ -111,6 +123,8 @@ export default function Side({ children }: SideProps) {
         const pathSegments = pathname.split('/').filter(Boolean).pop();
         setPageOn(pathSegments!);
         console.log("paht ==>", pathSegments)
+        console.log(session?.user.image)
+
         if (status == 'unauthenticated') router.push('/pages/admin/login');
     }, [router, status])
 
@@ -131,7 +145,7 @@ export default function Side({ children }: SideProps) {
                         <div className="flex justify-around w-full bg-blue-900 text-slate-100" onClick={() => router.push('/pages/admin/profile')} >
                             <div className="flex w-full items-center mb-5 cursor-pointer m-5">
                                 <Avatar className="w-12 h-12 rounded-full overflow-hidden mb-2 mr-4">
-                                    <AvatarImage className="w-full h-full object-cover" src={process.env.NEXT_PUBLIC_BASE_PATH + '/' + session.user.image} />
+                                    <AvatarImage className="w-full h-full object-cover" src={'http://localhost:9000/images/profile/' + session.user.image} />
                                 </Avatar>
                                 <h1><b>{session.user.name}</b></h1>
                             </div>
@@ -161,7 +175,7 @@ export default function Side({ children }: SideProps) {
                                 </li>
                                 <li>
                                     <Button onClick={() => router.push('/pages/admin/management')} variant="ghost" className={`w-full justify-start mb-2 ${pageOn === 'management' ? 'bg-accent text-accent-foreground' : ''}`}>
-                                        <FaWhmcs  className="mr-2" />จักการข้อมูลเว็บไซต์
+                                        <FaWhmcs className="mr-2" />จักการข้อมูลเว็บไซต์
                                     </Button>
                                 </li>
                             </ul>

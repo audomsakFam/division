@@ -10,13 +10,14 @@ const NotificationAlert = ({ borrowId, msg, status, onUpdate }: { borrowId: numb
     const [message, setMessage] = useState("");
 
     useEffect(() => {
-        ClearBorrowCache();
-        ClearItemCache();
+
         const timer = setTimeout(async () => {
+            ClearBorrowCache();
+            ClearItemCache();
             setMessage(`${msg}`);
             setShowAlert(true);
-            if (status == 0 || status == 1 ) {
-                await axios.put(process.env.NEXT_PUBLIC_BASE_PATH+'/api/borrow/update', { id: borrowId })
+            if (status == 0 || status == 1) {
+                await axios.put(process.env.NEXT_PUBLIC_BASE_PATH + '/api/borrow/update', { id: borrowId })
                     .then((response) => {
                         if (response.status === 200) {
                             console.log('Borrow status updated successfully');

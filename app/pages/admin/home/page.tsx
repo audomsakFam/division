@@ -176,7 +176,7 @@ export default function HomePage() {
             ),
             labels: {
                 formatter: function (value: number) {
-                    return `${Math.round(value)} ครั้ง`; // เพิ่มหน่วย "ครั้ง" ที่ท้ายค่า Y
+                    return `${Math.round(value)} อุปกรณ์`; // เพิ่มหน่วย "ครั้ง" ที่ท้ายค่า Y
                 },
             }
         },
@@ -366,52 +366,55 @@ export default function HomePage() {
                                                                                 <Label htmlFor="items" className="text-left font-black">
                                                                                     อุปกรณ์ที่ยืม
                                                                                 </Label>
-                                                                                {item.Borrow_detail &&
-                                                                                    item.Borrow_detail.map((v) => (
-                                                                                        <span key={v.item.id} className="flex items-center gap-4">
-                                                                                            <Input
-                                                                                                id="items"
-                                                                                                defaultValue={v.item.name}
-                                                                                                className="text-stone-950 w-1/2 pointer-events-none border-0 bg-transparent"
-                                                                                            />
-                                                                                            <div className="flex items-center gap-2">
-                                                                                                <label className="flex items-center gap-1">
-                                                                                                    <input
-                                                                                                        type="radio"
-                                                                                                        name={`status-${v.item.id}`}
-                                                                                                        value="ปกติ"
-                                                                                                        checked={statusTosave.some((v2) => v2.id === v.item.id && v2.status === "ปกติ")}
-                                                                                                        onChange={(e) => handleStatusChange(v.item.id, "ปกติ", e.target.checked)}
-                                                                                                        className="cursor-pointer"
-                                                                                                    />
-                                                                                                    ปกติ
-                                                                                                </label>
-                                                                                                <label className="flex items-center gap-1">
-                                                                                                    <input
-                                                                                                        type="radio"
-                                                                                                        name={`status-${v.item.id}`}
-                                                                                                        value="ชำรุด"
-                                                                                                        checked={statusTosave.some((v2) => v2.id === v.item.id && v2.status === "ชำรุด")}
-                                                                                                        onChange={(e) => handleStatusChange(v.item.id, "ชำรุด", e.target.checked)}
-                                                                                                        className="cursor-pointer"
-                                                                                                    />
-                                                                                                    ชำรุด
-                                                                                                </label>
-                                                                                                <label className="flex items-center gap-1">
-                                                                                                    <input
-                                                                                                        type="radio"
-                                                                                                        name={`status-${v.item.id}`}
-                                                                                                        value="หาย"
-                                                                                                        checked={statusTosave.some((v2) => v2.id === v.item.id && v2.status === "หาย")}
-                                                                                                        onChange={(e) => handleStatusChange(v.item.id, "หาย", e.target.checked)}
-                                                                                                        className="cursor-pointer"
-                                                                                                    />
-                                                                                                    หาย
-                                                                                                </label>
-                                                                                            </div>
-                                                                                        </span>
-                                                                                    ))}
+                                                                                <div className="max-h-64 overflow-y-auto space-y-2">
+                                                                                    {item.Borrow_detail &&
+                                                                                        item.Borrow_detail.map((v) => (
+                                                                                            <span key={v.item.id} className="flex items-center gap-4">
+                                                                                                <Input
+                                                                                                    id="items"
+                                                                                                    defaultValue={v.item.name}
+                                                                                                    className="text-stone-950 w-1/2 pointer-events-none border-0 bg-transparent"
+                                                                                                />
+                                                                                                <div className="flex items-center gap-2">
+                                                                                                    <label className="flex items-center gap-1">
+                                                                                                        <input
+                                                                                                            type="radio"
+                                                                                                            name={`status-${v.item.id}`}
+                                                                                                            value="ปกติ"
+                                                                                                            checked={statusTosave.some((v2) => v2.id === v.item.id && v2.status === "ปกติ")}
+                                                                                                            onChange={(e) => handleStatusChange(v.item.id, "ปกติ", e.target.checked)}
+                                                                                                            className="cursor-pointer"
+                                                                                                        />
+                                                                                                        ปกติ
+                                                                                                    </label>
+                                                                                                    <label className="flex items-center gap-1">
+                                                                                                        <input
+                                                                                                            type="radio"
+                                                                                                            name={`status-${v.item.id}`}
+                                                                                                            value="ชำรุด"
+                                                                                                            checked={statusTosave.some((v2) => v2.id === v.item.id && v2.status === "ชำรุด")}
+                                                                                                            onChange={(e) => handleStatusChange(v.item.id, "ชำรุด", e.target.checked)}
+                                                                                                            className="cursor-pointer"
+                                                                                                        />
+                                                                                                        ชำรุด
+                                                                                                    </label>
+                                                                                                    <label className="flex items-center gap-1">
+                                                                                                        <input
+                                                                                                            type="radio"
+                                                                                                            name={`status-${v.item.id}`}
+                                                                                                            value="หาย"
+                                                                                                            checked={statusTosave.some((v2) => v2.id === v.item.id && v2.status === "หาย")}
+                                                                                                            onChange={(e) => handleStatusChange(v.item.id, "หาย", e.target.checked)}
+                                                                                                            className="cursor-pointer"
+                                                                                                        />
+                                                                                                        หาย
+                                                                                                    </label>
+                                                                                                </div>
+                                                                                            </span>
+                                                                                        ))}
+                                                                                </div>
                                                                             </div>
+
                                                                         </div>
                                                                         <DialogFooter>
                                                                             <DialogClose asChild>

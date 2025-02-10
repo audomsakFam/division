@@ -12,7 +12,7 @@ import { EnterIcon } from "@radix-ui/react-icons"
 export const Form = () => {
     const router = useRouter()
     const searchParams = useSearchParams()
-    const callbackUrl = searchParams.get('callbackUrl') || process.env.NEXT_PUBLIC_BASE_PATH + '/pages/admin/home'
+    // const callbackUrl = searchParams.get('callbackUrl') || process.env.NEXT_PUBLIC_BASE_PATH + '/pages/admin/home'
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
@@ -31,7 +31,7 @@ export const Form = () => {
                 setError(result.error);
                 return false
             } else {
-                router.push(callbackUrl);
+                router.push(process.env.NEXT_PUBLIC_BASE_PATH + '/pages/admin/home');
             }
         } catch (err) { console.log('error from user login ====>>>> ', err, ' <<<<====') }
     }

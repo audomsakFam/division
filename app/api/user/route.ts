@@ -1,7 +1,8 @@
 import prisma from "@/lib/db"; // import Prisma client
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcrypt';
-
+import path from "path";
+import fs from 'fs';
 interface UserData {
     email: string;
     name: string;
@@ -16,7 +17,7 @@ export async function PUT(req: Request) {
     try {
         const { id, name, lastname, tel, email, username, password, oldPassword } = await req.json();
         let hashedPassword;
-        if(oldPassword) {
+        if (oldPassword) {
             const user = await prisma.user.findUnique({
                 where: {
                     id: Number(id),
@@ -68,7 +69,7 @@ export async function POST(req: Request) {
         if (!name || !lastname || !username || !password || !gender || !tel) {
             return NextResponse.json({ error: 'Missing required fields', status: 400 });
         }
-        const image = gender == 'ชาย' ? 'images/male.png' : 'images/female.png'
+        const image = gender == 'ชาย' ? 'male.png' : 'female.png'
         const hashedPassword = await bcrypt.hash(password, 9);
         const user = await prisma.user.create({
             data: {
@@ -111,6 +112,10 @@ export async function DELETE(req: Request) {
                 id: Number(id),
             },
         });
+        if (data && data.image != 'male.png' && data.image != 'female.png') {
+            const filePath = path.join(process.cwd(), 'public', 'images', 'profile', data.image);
+            fs.unlinkSync(filePath);
+        }
         return NextResponse.json({ res: data, status: 200 });
     } catch (error) {
         return NextResponse.json({ error: 'someting went worng at ' + url.href, status: 500 });
