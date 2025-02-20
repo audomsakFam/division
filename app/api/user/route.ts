@@ -7,6 +7,7 @@ interface UserData {
     email: string;
     name: string;
     lastname: string;
+    gender: string;
     username?: string;
     tel: string;
     password?: string;
@@ -15,7 +16,7 @@ interface UserData {
 export async function PUT(req: Request) {
     const url = new URL(req.url);
     try {
-        const { id, name, lastname, tel, email, username, password, oldPassword } = await req.json();
+        const { id, name, lastname, tel, gender,email, username, password, oldPassword } = await req.json();
         let hashedPassword;
         if (oldPassword) {
             const user = await prisma.user.findUnique({
@@ -42,10 +43,12 @@ export async function PUT(req: Request) {
             email,
             name,
             lastname,
+            gender,
             tel,
         };
+
         if (username) userData.username = username
-        // เพิ่ม password ใน `data` เฉพาะเมื่อมีค่า
+        
         if (hashedPassword) {
             userData.password = hashedPassword;
         }

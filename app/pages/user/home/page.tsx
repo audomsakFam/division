@@ -110,24 +110,22 @@ export default function HomePage() {
                         }
                         {
                             item.type == 2 && (
-
                                 <div className="absolute flex justify-center items-center h-screen mt-2 ml-0 mr-2 pl-2 pr-2 flex-col top-1/3  z-[1002]">
                                     <div className="flex flex-col items-center">
-                                        <div className="bg-blue-900 pt-3 pb-3 pl-2 pr-2 mb-4 shadow-md w-[100%]">
+                                        <div className="bg-blue-900 mb-5 p-4">
                                             <h1 className="text-center text-lg sm:text-3xl font-bold text-white">
-                                                ยินดีต้อนรับเข้าสู่ ระบบยืม - คืน <br /> วัสดุ - อุปกรณ์ กองพัฒนานักศึกษา
+                                                ยินดีต้อนรับเข้าสู่ ระบบยืม-คืน <br /> วัสดุและครุภัณฑ์ กองพัฒนานักศึกษา
                                             </h1>
                                         </div>
-
                                         <div className="w-full mb-4 flex items-center justify-center">
                                             <ReactPlayer url={'http://localhost:9000/images/' + item.name} controls={true} />
                                         </div>
-
                                         <div className="mb-4 mt-10 text-center text-2xl font-bold text-gray-800 ">
                                             <h1>ปฏิทินการยืม</h1>
                                         </div>
                                         <CalendarCom />
                                     </div>
+
                                     <div className="flex justify-center ">
                                         <button
                                             onClick={() => route.push("/pages/user/main_flow")}
@@ -136,10 +134,12 @@ export default function HomePage() {
                                             ยืมอุปกรณ์
                                         </button>
                                     </div>
+
                                     <div className="w-full bg-blue-900 h-20 flex justify-center items-center flex-col text-white bottom-0 fixed">
-                                        <p>พัฒนาระบบโดย: ฝ่ายบริการศูนย์ข้อมูลและสารสนเทศ สำนักวิทยาบริการและเทคโนโลยีสารสนเทศ มทร.ธัญบุรี</p>
-                                        <p>ผู้พัฒนาระบบ: ปิยนุช เจียงแจ่มจิต เบอร์โทรศัพท์: 02-549-3085 email: piyanoot_j@rmutt.ac.th</p>
+                                        <p>พัฒนาระบบโดย: กองพัฒนานักศึกษา มหาวิทยาลัยเทคโนโลยีราชมงคลธัญบุรี</p>
+                                        <p>ผู้พัฒนาระบบ: นายอุดมศักดิ์ วัชระวรากรณ์, นายเกียรติภูมิ โภคา นักศึกษาคณะวิศวกรรมศาสตร์ สาขาวิศวกรรมคอมพิวเตอร์</p>
                                     </div>
+
                                 </div>
                             )
                         }

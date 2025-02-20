@@ -45,7 +45,7 @@ export default function Profile() {
         email: "",
         username: "",
         password: "",
-        gender: "ชาย",
+        gender: "",
         tel: "",
         role: "user",
     });
@@ -59,7 +59,7 @@ export default function Profile() {
             email: "",
             username: "",
             password: "",
-            gender: "ชาย",
+            gender: "",
             tel: "",
             role: "user",
         });
@@ -401,7 +401,7 @@ export default function Profile() {
                                                             className="border border-slate-100 checked:border-slate-100 focus:border-slate-100"
                                                         />
                                                         <Label htmlFor="published" className="text-left">
-                                                            เปลี่ยนรหัสผ่าน และ ชื่อผู้ใ้ช
+                                                            เปลี่ยนรหัสผ่าน และ ชื่อผู้ใช้
                                                         </Label>
                                                     </div>
                                                 </div>
