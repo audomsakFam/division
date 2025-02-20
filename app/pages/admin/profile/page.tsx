@@ -232,7 +232,7 @@ export default function Profile() {
                                             <DialogTrigger asChild className="flex w-full justify-center items-center mb-5">
                                                 <Avatar className=" w-full h-full overflow-hidden mr-2 cursor-pointer">
                                                     <AvatarImage className="rounded-full object-cover w-[350px] h-[350px]"
-                                                        src={'http://localhost:9000/images/profile/' + session.user.image}
+                                                        src={'/images/profile/' + session.user.image}
                                                     />
                                                 </Avatar>
                                             </DialogTrigger>
@@ -243,7 +243,7 @@ export default function Profile() {
                                                 <div className="flex justify-center">
                                                     <Label htmlFor="picture">
                                                         <Avatar className="w-full h-full  overflow-hidden mr-2 cursor-pointer">
-                                                            <AvatarImage className="rounded-full object-cover  w-[350px] h-[350px]" src={previewImage || 'http://localhost:9000/images/profile/' + session.user.image} />
+                                                            <AvatarImage className="rounded-full object-cover  w-[350px] h-[350px]" src={previewImage || '/images/profile/' + session.user.image} />
                                                         </Avatar>
                                                     </Label>
                                                     <Input

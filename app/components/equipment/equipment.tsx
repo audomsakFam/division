@@ -325,15 +325,15 @@ export default function Equipment({ onSelected }: { onSelected: (item: ReqBorrow
                                                                     <TableCell className="pt-0 pb-0 pl-0 pr-0 text-stone-950 border-r border-gray-400 text-center">
                                                                         <div className="relative flex justify-center items-center">
                                                                             <img
-                                                                                src={'http://localhost:9000/images/items/' + item.img}
+                                                                                src={'/images/items/' + item.img}
                                                                                 alt={item.name}
                                                                                 onClick={() =>
                                                                                     handleImageClick(
-                                                                                        'http://localhost:9000/images/items/' + item.img
+                                                                                        '/images/items/' + item.img
                                                                                     )
                                                                                 }
                                                                                 className={`h-12 w-auto object-cover transition-transform duration-300 ease-in-out cursor-pointer ${expandedImage ===
-                                                                                    'http://localhost:9000/images/items/' + item.img
+                                                                                    '/images/items/' + item.img
                                                                                     ? 'scale-[3] z-50 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'
                                                                                     : ''
                                                                                     }`}

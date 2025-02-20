@@ -207,7 +207,7 @@ const DialogSetComponent = ({
                                                                         {/* กล่องแสดงภาพหลัก */}
                                                                         <div className="flex  justify-center items-center overflow-hidden">
                                                                             <img
-                                                                                src={'http://localhost:9000/images/items/' + item.img}
+                                                                                src={'/images/items/' + item.img}
                                                                                 width={90}
                                                                                 height={90}
                                                                                 alt="item image"
@@ -221,7 +221,7 @@ const DialogSetComponent = ({
                                                     `}
                                                                         >
                                                                             <img
-                                                                                src={'http://localhost:9000/images/items/' + item.img}
+                                                                                src={'/images/items/' + item.img}
                                                                                 alt="Zoomed image"
                                                                                 className="transform w-full absolute"
                                                                             />

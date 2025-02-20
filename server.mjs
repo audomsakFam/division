@@ -14,6 +14,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'], // กำหนดวิธีการที่อนุญาต
   allowedHeaders: ['Content-Type', 'Accept'], // กำหนด headers ที่อนุญาต
 }));
+
 const sendNotification = async (
   writer,
   message,
@@ -126,6 +127,11 @@ app.get('/api/noti', async (req, res) => {
 });
 
 app.use("/images", express.static(path.join(__dirname, "public/images")));
+
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  next();
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

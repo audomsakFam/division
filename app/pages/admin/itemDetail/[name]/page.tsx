@@ -193,7 +193,7 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
                             <div className="flex justify-between items-start overflow-hidden w-full">
                                 <img
                                     // src={process.env.NEXT_PUBLIC_BASE_PATH + '/' + itemDetail?.img}
-                                    src={'http://localhost:9000/images/items/' + itemDetail?.img}
+                                    src={'/images/items/' + itemDetail?.img}
                                     alt="item image"
                                     className="w-1/3 mr-4"
                                 />
