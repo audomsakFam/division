@@ -47,7 +47,7 @@ export default function Side({ children }: SideProps) {
         }
         ClearItemCache();
         ClearBorrowCache();
-        signOut({ callbackUrl: process.env.NEXT_PUBLIC_BASE_PATH + '/pages/admin/login' });
+        signOut({ callbackUrl:'/pages/admin/login' });
     };
 
 

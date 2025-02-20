@@ -73,7 +73,7 @@ const DialogSetComponent = ({
 
     const addItemToSet = async (setId: number, itemName: { name: string }[]) => {
         try {
-            const res = await axios.post(process.env.NEXT_PUBLIC_BASE_PATH + '/api/itemSet', { setId, itemName });
+            const res = await axios.post('/api/itemSet', { setId, itemName });
             if (res.status === 200) {
                 alert("เพิ่มอุปกรณ์ลงในชุดสําเร็จ");
                 setIsOpen(false);

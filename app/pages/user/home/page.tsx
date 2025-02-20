@@ -13,7 +13,7 @@ export default function HomePage() {
 
         const fetchPerview = async () => {
             try {
-                const res = await axios.get<ResPerview>(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/preview`);
+                const res = await axios.get<ResPerview>(`/api/preview`);
                 setPerviewData(res.data.res);
             } catch (error) {
                 console.log(error);
@@ -131,18 +131,22 @@ export default function HomePage() {
                                     <div className="flex justify-center ">
                                         <button
                                             onClick={() => route.push("/pages/user/main_flow")}
-                                            className="w-32 px-4 py-2 mt-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75"
+                                            className="mb-40  w-32 px-4 py-2 mt-4 bg-blue-500 text-white font-semibold rounded-lg shadow-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-opacity-75"
                                         >
                                             ยืมอุปกรณ์
                                         </button>
                                     </div>
-                                    <p className="text-white">___</p>
+                                    <div className="w-full bg-blue-900 h-20 flex justify-center items-center flex-col text-white bottom-0 fixed">
+                                        <p>พัฒนาระบบโดย: ฝ่ายบริการศูนย์ข้อมูลและสารสนเทศ สำนักวิทยาบริการและเทคโนโลยีสารสนเทศ มทร.ธัญบุรี</p>
+                                        <p>ผู้พัฒนาระบบ: ปิยนุช เจียงแจ่มจิต เบอร์โทรศัพท์: 02-549-3085 email: piyanoot_j@rmutt.ac.th</p>
+                                    </div>
                                 </div>
                             )
                         }
                     </>
                 ))
             }
+
         </>
     );
 }

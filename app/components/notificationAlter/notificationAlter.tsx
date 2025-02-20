@@ -17,7 +17,7 @@ const NotificationAlert = ({ borrowId, msg, status, onUpdate }: { borrowId: numb
             setMessage(`${msg}`);
             setShowAlert(true);
             if (status == 0 || status == 1) {
-                await axios.put(process.env.NEXT_PUBLIC_BASE_PATH + '/api/borrow/update', { id: borrowId })
+                await axios.put('/api/borrow/update', { id: borrowId })
                     .then((response) => {
                         if (response.status === 200) {
                             console.log('Borrow status updated successfully');

@@ -79,7 +79,7 @@ export default function Items() {
 
     const getSet = async () => {
         try {
-            const data = await axios.get(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/set`);
+            const data = await axios.get(`/api/set`);
             if (data.status === 200) {
                 setSet(data.data.data);
             } else {
@@ -91,14 +91,14 @@ export default function Items() {
     }
 
     const getDivision = async () => {
-        await axios.get<ResDivision>(process.env.NEXT_PUBLIC_BASE_PATH + '/api/division')
+        await axios.get<ResDivision>('/api/division')
             .then((res) => {
                 setDivision(res.data.data);
             }).catch((err) => console.error(err))
     }
 
     const getPostfix = async () => {
-        await axios.get<ResPostfix>(process.env.NEXT_PUBLIC_BASE_PATH + '/api/postfix')
+        await axios.get<ResPostfix>('/api/postfix')
             .then((res) => {
                 setPostfix(res.data.data);
             }).catch((err) => console.error(err))
@@ -126,7 +126,7 @@ export default function Items() {
             fData.append("postfix", postfixSelect);
             fData.append("count", clone.toString());
 
-            const res = await axios.post(process.env.NEXT_PUBLIC_BASE_PATH + '/api/items/newItem', fData, {
+            const res = await axios.post('/api/items/newItem', fData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 },
@@ -144,7 +144,7 @@ export default function Items() {
 
     const deleteItem = async (name: string, imgName: string) => {
         try {
-            const res = await axios.delete(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/items/deleteMany?name=${name}&imgName=${imgName}`);
+            const res = await axios.delete(`/api/items/deleteMany?name=${name}&imgName=${imgName}`);
             console.log(res);
             ClearItemCache();
             GetItemWithCache().then((res) => {
@@ -158,7 +158,7 @@ export default function Items() {
 
     const removeFromSet = async (setName: string, itemName: string) => {
         try {
-            const res = await axios.delete(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/itemSet?itemName=${itemName}&setName=${setName}`);
+            const res = await axios.delete(`/api/itemSet?itemName=${itemName}&setName=${setName}`);
             if (res.status === 200) {
                 ClearItemCache();
                 GetItemWithCache().then((res) => {
@@ -421,28 +421,6 @@ export default function Items() {
                                                         </DropdownMenuContent>
                                                     </DropdownMenu>
                                                 </div>
-                                                {/* <div className="items-start justify-start flex flex-col gap-2 mb-2 w-full">
-                                                    <Label htmlFor="division" className="text-left font-black">
-                                                        เลือกชุดอุปกรณ์ หรือ ปล่อยว่างหากไม่อยู่ในชุดอุปกรณ์ใดๆ
-                                                    </Label>
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button variant="outline">{setSelect}</Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent className="w-56 h-96 overflow-y-scroll">
-                                                            <DropdownMenuLabel>หน่วย</DropdownMenuLabel>
-                                                            <DropdownMenuSeparator />
-                                                            <DropdownMenuRadioGroup value={setSelect} onValueChange={setSetSelect}>
-                                                                <DropdownMenuRadioItem value={""}>ไม่อยู่ในชุด</DropdownMenuRadioItem>
-                                                                {
-                                                                    set.map((v, i) => (
-                                                                        <DropdownMenuRadioItem key={i} value={v.name}>{v.name}</DropdownMenuRadioItem>
-                                                                    ))
-                                                                }
-                                                            </DropdownMenuRadioGroup>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
-                                                </div> */}
                                             </div>
                                         </div>
                                         <DialogFooter>

@@ -14,7 +14,6 @@ export async function GET(req: Request) {
             include: {
                 division: true,
                 postfix: true,
-                qr: true
             }
         });
 

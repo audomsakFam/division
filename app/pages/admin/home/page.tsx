@@ -100,7 +100,7 @@ export default function HomePage() {
 
     const deleteBorrow = async (id: number) => {
         try {
-            await axios.delete(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/borrow/${id}`);
+            await axios.delete(`/api/borrow/${id}`);
             setRefreshData(true);
         } catch (err) {
             console.error(err);
@@ -112,7 +112,7 @@ export default function HomePage() {
         return statusTosave
     };
     const toUpdate = async (borrowId: number, items: { id: number; status: string }[]) => {
-        await axios.post(process.env.NEXT_PUBLIC_BASE_PATH + '/api/borrow/update', { id: borrowId, itemUpdates: items })
+        await axios.post('/api/borrow/update', { id: borrowId, itemUpdates: items })
             .then((res) => {
                 console.log('test res--->', res)
                 setRefreshData(true)
@@ -120,7 +120,7 @@ export default function HomePage() {
             ).catch((err) => console.error(err))
     }
     const fetchData = async (selectedYear: number) => {
-        const res = await axios.get<ResChart>(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/chart?year=${selectedYear}`)
+        const res = await axios.get<ResChart>(`/api/chart?year=${selectedYear}`)
         setLoading(true);
         setChartData(res.data);
         setTimeout(() => {
@@ -152,7 +152,7 @@ export default function HomePage() {
     }, [refreshData]);
 
     const updateStatus = async (id: number) => {
-        await axios.put(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/borrow/update`, { id })
+        await axios.put(`/api/borrow/update`, { id })
             .then(() => {
                 ClearBorrowCache();
                 setRefreshData(true);

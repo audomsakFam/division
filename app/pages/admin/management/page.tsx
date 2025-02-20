@@ -86,7 +86,7 @@ export default function Management() {
 
     const deletePost = async (id: number) => {
         try {
-            const res = await axios.delete(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/postfix?id=${id}`);
+            const res = await axios.delete(`/api/postfix?id=${id}`);
             if (res.status === 200) {
                 fetchPostfix();
                 console.log(res.data);
@@ -97,7 +97,7 @@ export default function Management() {
     }
     const deleteSet = async (id: number) => {
         try {
-            const res = await axios.delete(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/set?id=${id}`);
+            const res = await axios.delete(`/api/set?id=${id}`);
             if (res.status === 200) {
                 getSet();
                 console.log(res.data);
@@ -109,7 +109,7 @@ export default function Management() {
 
     const deleteOri = async (id: number) => {
         try {
-            const res = await axios.delete(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/Origanization?id=${id}`);
+            const res = await axios.delete(`/api/Origanization?id=${id}`);
             if (res.status === 200) {
                 fetchOri();
                 console.log(res.data);
@@ -121,7 +121,7 @@ export default function Management() {
 
     const getSet = async () => {
         try {
-            const data = await axios.get(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/set`);
+            const data = await axios.get(`/api/set`);
             if (data.status === 200) {
                 setSet(data.data.data);
             } else {
@@ -133,7 +133,7 @@ export default function Management() {
     }
     const createPost = async () => {
         try {
-            const res = await axios.post(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/postfix`, { name: postName });
+            const res = await axios.post(`/api/postfix`, { name: postName });
             if (res.status === 200) {
                 setPostName('');
                 fetchPostfix();
@@ -145,7 +145,7 @@ export default function Management() {
     }
     const createSet = async () => {
         try {
-            const res = await axios.post(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/set`, { name: setName });
+            const res = await axios.post(`/api/set`, { name: setName });
             if (res.status === 200) {
                 setSetName('');
                 getSet();
@@ -158,7 +158,7 @@ export default function Management() {
 
     const createOri = async () => {
         try {
-            const res = await axios.post(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/Origanization`, { name: oriName, group: Number(position) });
+            const res = await axios.post(`/api/Origanization`, { name: oriName, group: Number(position) });
             if (res.status === 200) {
                 setOriName('');
                 setPosition('');
@@ -173,7 +173,7 @@ export default function Management() {
 
     const fetchOri = async () => {
         try {
-            const res = await axios.get<ResOri>(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/Origanization`);
+            const res = await axios.get<ResOri>(`/api/Origanization`);
             setOri(res.data.data);
         } catch (err) {
             console.log('error ---> ', err);
@@ -181,7 +181,7 @@ export default function Management() {
     }
     const fetchPostfix = async () => {
         try {
-            const res = await axios.get<ResPostfix>(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/postfix`);
+            const res = await axios.get<ResPostfix>(`/api/postfix`);
             setPostfix(res.data.data);
         } catch (err) {
             console.log('error ---> ', err);
@@ -190,7 +190,7 @@ export default function Management() {
 
     const fetchPerview = async () => {
         try {
-            const res = await axios.get<ResPerview>(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/preview`);
+            const res = await axios.get<ResPerview>(`/api/preview`);
             setPerviewData(res.data.res);
         } catch (error) {
             console.log(error);
@@ -256,7 +256,7 @@ export default function Management() {
             formData.append("file", file);
             formData.append("type", String(type));
 
-            const response = await axios.post(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/preview`, formData, {
+            const response = await axios.post(`/api/preview`, formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 },

@@ -35,8 +35,6 @@ model Items {
   status        String?         @default("ปกติ") @db.VarChar(20) // ปกติ ชำรุด หาย ถูกยืม 
   createAt      DateTime        @default(now())
   updateAt      DateTime        @updatedAt
-  qrId          Int?            @unique
-  qr            Qr?             @relation("ItemQr", fields: [qrId], references: [id])
   divisionId    Int
   division      Division        @relation(fields: [divisionId], references: [id])
   postfixId     Int
@@ -45,29 +43,10 @@ model Items {
   Borrow_detail Borrow_detail[]
 }
 
-model Qr {
-  id        Int         @id @default(autoincrement())
-  code      String      @db.VarChar(500)
-  Items     Items?      @relation("ItemQr")
-  Qr_detail Qr_detail[]
-  createAt  DateTime    @default(now())
-  updateAt  DateTime    @updatedAt
-}
-
-model Qr_detail {
-  id       Int      @id @default(autoincrement())
-  name     String   @db.VarChar(100)
-  detail   String   @db.VarChar(1000)
-  qrId     Int
-  qr       Qr       @relation(fields: [qrId], references: [id])
-  createAt DateTime @default(now())
-  updateAt DateTime @updatedAt
-}
-
 model Division {
   id       Int      @id @default(autoincrement())
   name     String   @db.VarChar(100)
-  email    String   @db.VarChar(100)
+  // email    String   @db.VarChar(100)
   createAt DateTime @default(now())
   updateAt DateTime @updatedAt
   Items    Items[]

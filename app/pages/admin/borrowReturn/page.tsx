@@ -56,7 +56,7 @@ export default function BorrowReturn() {
 
     const deleteBorrow = async (id: number) => {
         try {
-            const res = await axios.delete(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/borrow?id=${id}`)
+            const res = await axios.delete(`/api/borrow?id=${id}`)
             if (res.data.status == 200) {
                 alert('ลบข้อมูลสำเร็จ')
                 ClearBorrowCache();

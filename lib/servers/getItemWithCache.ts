@@ -15,7 +15,7 @@ export const GetItemWithCache = async (): Promise<ResItemsGroup[]> => {
   console.log('Fetching new items data');
   try {
     console.log("hello")
-    const response = await axios.get<ResItemsGroup[]>(process.env.NEXT_PUBLIC_BASE_PATH + '/api/items');
+    const response = await axios.get<ResItemsGroup[]>('/api/items');
     const fetchItems = response.data.map(item => ({
       ...item,
       img: item.img ? path.basename(item.img) : "" // ดึงแค่ชื่อไฟล์
@@ -41,7 +41,7 @@ export const GetBorrowWithCache = async (): Promise<ResBorrowData[]> => {
 
   console.log('Fetching new borrows data');
   try {
-    const res = await axios.get<ResBorrow>(process.env.NEXT_PUBLIC_BASE_PATH + '/api/borrow');
+    const res = await axios.get<ResBorrow>('/api/borrow');
     const fetchBorrows = res.data.data;
 
     cache.set('borrows', fetchBorrows);

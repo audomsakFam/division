@@ -13,7 +13,7 @@ const Profile = ({ onNext, onBack }: any) => {
   useEffect(() => {
     const fetchOri = async () => {
       try {
-        const res = await axios.get<ResOri>('/division-borrow/api/Origanization');
+        const res = await axios.get<ResOri>('/api/Origanization');
         setOri(res.data.data);
       } catch (err) {
         console.error('err get ori --->', err);
@@ -257,7 +257,7 @@ const Profile = ({ onNext, onBack }: any) => {
                 <div className="mb-4">
                   <label htmlFor="image" className="block text-gray-700 font-medium mb-2">10. ลายเซ็นรับรองจากอาจารย์:</label>
                   <p className='text-red-500'>ตัวอย่าง :</p>
-                  <img src={process.env.NEXT_PUBLIC_BASE_PATH + "/images/การรับรองการยืมของ.jpg"} alt="signature" className="w-[100%]" />
+                  <img src={"/images/การรับรองการยืมของ.jpg"} alt="signature" className="w-[100%]" />
                   <input
                     type="file"
                     id="image"

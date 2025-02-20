@@ -66,7 +66,7 @@ export default function Summary() {
 
     const getSet = async () => {
         try {
-            const data = await axios.get(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/set`);
+            const data = await axios.get(`/api/set`);
             if (data.status === 200) {
                 setSet(data.data.data);
             } else {
@@ -111,7 +111,7 @@ export default function Summary() {
                 console.log(`${key}:`, value instanceof File ? value.name : value);
             }
             const res = await axios.post(
-                `${process.env.NEXT_PUBLIC_BASE_PATH}/api/borrow`,
+                `/api/borrow`,
                 formData, // ส่ง formData โดยตรง
                 {
                     headers: {
@@ -183,7 +183,7 @@ export default function Summary() {
     useEffect(() => {
         const fetchOri = async () => {
             try {
-                const res = await axios.get<ResOri>('/division-borrow/api/Origanization');
+                const res = await axios.get<ResOri>('/api/Origanization');
                 setOri(res.data.data);
             } catch (err) {
                 console.error('err get ori --->', err);
@@ -356,6 +356,7 @@ export default function Summary() {
                     </div>
                 )
             }
+
         </>
     )
 }

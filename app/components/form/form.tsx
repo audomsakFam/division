@@ -31,7 +31,7 @@ export const Form = () => {
                 setError(result.error);
                 return false
             } else {
-                router.push(process.env.NEXT_PUBLIC_BASE_PATH + '/pages/admin/home');
+                router.push('/pages/admin/home');
             }
         } catch (err) { console.log('error from user login ====>>>> ', err, ' <<<<====') }
     }

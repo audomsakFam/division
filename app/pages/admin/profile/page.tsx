@@ -72,7 +72,7 @@ export default function Profile() {
 
     const handleAddUser = async () => {
         try {
-            const res = await axios.post(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/user`, formData);
+            const res = await axios.post(`/api/user`, formData);
             alert("เพิ่มผู้ใช้สำเร็จ!");
             resetForm();
             setIsAddUserOpen(false);
@@ -129,7 +129,7 @@ export default function Profile() {
 
     const deleteUser = async (id: number) => {
         try {
-            const res = await axios.delete(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/user?id=${id}`)
+            const res = await axios.delete(`/api/user?id=${id}`)
             fetchUser();
             console.log(res.data.res)
         } catch (error) {
@@ -142,7 +142,7 @@ export default function Profile() {
             formData.append("image", uploadImage!);
             if (session) formData.append("id", session.user.id.toString());
 
-            const res = await axios.put(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/user/upload`, formData, {
+            const res = await axios.put(`/api/user/upload`, formData, {
                 headers: {
                     "Content-Type": "multipart/form-data",
                 },
@@ -172,7 +172,7 @@ export default function Profile() {
                 return setShowAlert(true);
             } else {
                 try {
-                    const res = await axios.put(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/user`, {
+                    const res = await axios.put(`/api/user`, {
                         id: userId, name: name, email: email, password: newPassword, gender: gender,
                         tel: tel, lastname: lastname, username: username, oldPassword: password
                     })
@@ -191,7 +191,7 @@ export default function Profile() {
         }
 
         try {
-            const res = await axios.put(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/user`, {
+            const res = await axios.put(`/api/user`, {
                 id: userId, name: name, email: email, gender: gender, tel: tel, lastname: lastname
             })
             return await update(res.data.res);
@@ -202,7 +202,7 @@ export default function Profile() {
 
     const fetchUser = async () => {
         try {
-            const res = await axios.get(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/user`);
+            const res = await axios.get(`/api/user`);
             console.log('user aacount ---->', res.data.res);
             setUsers(res.data.res);
         } catch (err) {
