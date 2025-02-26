@@ -13,7 +13,7 @@ export default function HomePage() {
         if (navigator.userAgent.includes("Mobile")) {
             document.querySelector("meta[name=viewport]")?.setAttribute(
                 "content",
-                "width=1024, initial-scale=" + window.innerWidth / 1024
+                "width=840, initial-scale=" + window.innerWidth / 1024
             );
         }
     }, []);
