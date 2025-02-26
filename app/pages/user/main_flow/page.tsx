@@ -37,6 +37,8 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { thsarabun } from '@/public/fonts/thsarabun'
 import { Button } from '@/components/ui/button'
+import html2canvas from 'html2canvas'
+import { saveAs } from "file-saver";
 interface ReqBorrowItem {
     setId?: number
     set?: Set
@@ -127,56 +129,73 @@ export default function Summary() {
         }
     }
 
-    const exportToPDF = () => {
-        const pdf = new jsPDF("p", "mm", "a4");
+    // const exportToPDF = () => {
+    //     const pdf = new jsPDF("p", "mm", "a4");
 
-        // เพิ่มฟอนต์ภาษาไทย
-        pdf.addFileToVFS("THSarabunNew.ttf", thsarabun);
-        pdf.addFont("THSarabunNew.ttf", "THSarabunNew", "normal");
-        pdf.setFont("THSarabunNew");
+    //     // เพิ่มฟอนต์ภาษาไทย
+    //     pdf.addFileToVFS("THSarabunNew.ttf", thsarabun);
+    //     pdf.addFont("THSarabunNew.ttf", "THSarabunNew", "normal");
+    //     pdf.setFont("THSarabunNew");
 
-        pdf.setFontSize(16);
-        pdf.text(`ใบสรุปรายการ ${dates.project}`, 10, 10);
-        // pdf.text(`ผู้เข้าร่วมโดยประมาณ: ${dates.participate} คน`, 10, 30);
+    //     pdf.setFontSize(16);
+    //     pdf.text(`ใบสรุปรายการ ${dates.project}`, 10, 10);
+    //     // pdf.text(`ผู้เข้าร่วมโดยประมาณ: ${dates.participate} คน`, 10, 30);
 
-        pdf.setFontSize(12);
-        pdf.text(`ชื่อ-นามสกุล: ${personalData.name} ${personalData.lastname}`, 10, 20);
-        pdf.text(`เบอร์โทรศัพท์: ${personalData.tel}`, 10, 30);
+    //     pdf.setFontSize(12);
+    //     pdf.text(`ชื่อ-นามสกุล: ${personalData.name} ${personalData.lastname}`, 10, 20);
+    //     pdf.text(`เบอร์โทรศัพท์: ${personalData.tel}`, 10, 30);
 
-        if (!selectedItems || selectedItems.length === 0) {
-            console.error("ไม่มีข้อมูลรายการอุปกรณ์");
+    //     if (!selectedItems || selectedItems.length === 0) {
+    //         console.error("ไม่มีข้อมูลรายการอุปกรณ์");
+    //         return;
+    //     }
+
+    //     const tableData = selectedItems.flatMap((item, i) => {
+    //         if ("set" in item && item.set?.Item_set) {
+    //             // กรณีเป็นชุดของอุปกรณ์ (set)
+    //             return item.set.Item_set.map((subItem) => [
+    //                 String(i + 1),
+    //                 String(subItem.itemName || "ไม่มีชื่อ"),
+    //                 String(subItem.value || "0"),
+    //                 String(item.division || "ไม่ระบุ"),
+    //             ]);
+    //         } else {
+    //             // กรณีเป็นอุปกรณ์เดี่ยว
+    //             return [[
+    //                 String(i + 1),
+    //                 String(item.itemName || "ไม่มีชื่อ"),
+    //                 String(item.value || "0"),
+    //                 String(item.division || "ไม่ระบุ"),
+    //             ]];
+    //         }
+    //     });
+
+    //     console.log('selectedItems---- >', selectedItems);
+    //     console.log('tableData ------->', tableData);
+    //     autoTable(pdf, {
+    //         startY: 40,
+    //         head: [["ลำดับ", "อุปกรณ์", "จำนวน", "จากฝ่าย"]],
+    //         body: tableData,
+    //         styles: { font: "THSarabunNew" } // บังคับใช้ฟอนต์
+    //     });
+    //     pdf.save(`Borrow_Detail_${dates.project}_${personalData?.name + ' ' + personalData?.lastname}.pdf`);
+    // };
+
+    const exportToPNG = async () => {
+        const element = document.getElementById("export-area"); // ให้ div มี id="export-area"
+    
+        if (!element) {
+            console.error("ไม่พบองค์ประกอบที่ต้องการแปลงเป็นรูปภาพ");
             return;
         }
-
-        const tableData = selectedItems.flatMap((item, i) => {
-            if ("set" in item && item.set?.Item_set) {
-                // กรณีเป็นชุดของอุปกรณ์ (set)
-                return item.set.Item_set.map((subItem) => [
-                    String(i + 1),
-                    String(subItem.itemName || "ไม่มีชื่อ"),
-                    String(subItem.value || "0"),
-                    String(item.division || "ไม่ระบุ"),
-                ]);
-            } else {
-                // กรณีเป็นอุปกรณ์เดี่ยว
-                return [[
-                    String(i + 1),
-                    String(item.itemName || "ไม่มีชื่อ"),
-                    String(item.value || "0"),
-                    String(item.division || "ไม่ระบุ"),
-                ]];
-            }
-        });
-
-        console.log('selectedItems---- >', selectedItems);
-        console.log('tableData ------->', tableData);
-        autoTable(pdf, {
-            startY: 40,
-            head: [["ลำดับ", "อุปกรณ์", "จำนวน", "จากฝ่าย"]],
-            body: tableData,
-            styles: { font: "THSarabunNew" } // บังคับใช้ฟอนต์
-        });
-        pdf.save(`Borrow_Detail_${dates.project}_${personalData?.name + ' ' + personalData?.lastname}.pdf`);
+    
+        try {
+            const canvas = await html2canvas(element, { scale: 2 }); // Scale 2 เพื่อความคมชัด
+            const image = canvas.toDataURL("image/png"); // แปลงเป็น Base64
+            saveAs(image, `Borrow_Detail_${dates.project}_${personalData?.name + ' ' + personalData?.lastname}.png`); // บันทึกเป็นไฟล์
+        } catch (error) {
+            console.error("เกิดข้อผิดพลาดในการสร้างภาพ PNG:", error);
+        }
     };
 
 
@@ -237,7 +256,7 @@ export default function Summary() {
                 step == 4 && (
                     <div className='flex justify-center items-center h-100vh mt-8 mb-8'>
                         <Card className='w-[1000px] ml-2 mr-2 pl-0 pr-0'>
-                            <span id="pdf-content">
+                            <span id='export-area'>
                                 <CardHeader>
                                     <CardTitle className='text-xl'>ใบสรุปรายการ {dates.project}</CardTitle>
                                     <h3 className="text-xl font-semibold">จำนวนผู้เข้าร่วมโดยประมาณ: {dates?.participate} คน</h3>
@@ -266,7 +285,7 @@ export default function Summary() {
                                             )
                                         }
                                     </div>
-                                    <Card className='w-full mb-5'>
+                                    <Card className='w-full mb-5' >
                                         <CardHeader className='text-xl font-semibold m-0 p-3'>
                                             รายการวัสดุ - อุปกรณ์
                                         </CardHeader>
@@ -345,7 +364,7 @@ export default function Summary() {
                                         <DialogFooter>
                                             <div>
                                                 <DialogClose asChild>
-                                                    <Button type="submit" className="bg-blue-600 hover:bg-blue-900 mr-2" onClick={() => { sendBorrow(); exportToPDF(); router.push('/'); }}>ยืนยัน</Button>
+                                                    <Button type="submit" className="bg-blue-600 hover:bg-blue-900 mr-2" onClick={() => { sendBorrow(); exportToPNG(); router.push('/'); }}>ยืนยัน</Button>
                                                 </DialogClose>
                                             </div>
                                         </DialogFooter>

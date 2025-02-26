@@ -10,6 +10,14 @@ export default function HomePage() {
     const route = useRouter()
     const [previewData, setPerviewData] = useState<PerviewData[]>([]);
     useEffect(() => {
+        if (navigator.userAgent.includes("Mobile")) {
+            document.querySelector("meta[name=viewport]")?.setAttribute(
+                "content",
+                "width=1024, initial-scale=" + window.innerWidth / 1024
+            );
+        }
+    }, []);
+    useEffect(() => {
 
         const fetchPerview = async () => {
             try {
@@ -66,7 +74,7 @@ export default function HomePage() {
                             (item.type == 0 && (
                                 <div id="bannerL" className="fixed flex justify-start w-1/2 left-0 top-1/4 ml-10 z-[1000]">
                                     <img
-                                        src={'/images/' + item.name}
+                                        src={'http://192.168.138.81:9000/images' + '/' + item.name}
                                         className="h-[500px] object-cover"
                                         alt=""
                                     />
@@ -89,7 +97,7 @@ export default function HomePage() {
                             (item.type == 1 && (
                                 <div id="bannerR" className="fixed flex justify-end w-1/2 right-0 top-1/4 mr-10 z-[1000]">
                                     <img
-                                        src={'/images/' + item.name}
+                                        src={'http://192.168.138.81:9000/images' + '/' + item.name}
                                         className="h-[500px] object-cover"
                                         alt=""
                                     />
@@ -118,7 +126,7 @@ export default function HomePage() {
                                             </h1>
                                         </div>
                                         <div className="w-full mb-4 flex items-center justify-center">
-                                            <ReactPlayer url={'/images/' + item.name} controls={true} />
+                                            <ReactPlayer url={'http://192.168.138.81:9000/images' + '/' + item.name} controls={true} />
                                         </div>
                                         <div className="mb-4 mt-10 text-center text-2xl font-bold text-gray-800 ">
                                             <h1>ปฏิทินการยืม</h1>

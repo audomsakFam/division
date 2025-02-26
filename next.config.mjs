@@ -2,22 +2,14 @@
 const nextConfig = {
     staticPageGenerationTimeout: 120,
     // basePath: process.env.NEXT_PUBLIC_BASE_PATH,
-    async rewrites() {
-        return [
-            {
-                source: '/images/:path*',
-                destination: 'http://localhost:9000/:path*',
-            },
-            // {
-            //     source: '/api/noti',
-            //     destination: 'http://localhost:9000/api/noti*',
-            //   },
-            //   {
-            //     source: '/api/ping',
-            //     destination: 'http://localhost:9000/api/ping',
-            //   },
-        ];
-    },
+    // async rewrites() {
+    //     return [
+    //         {
+    //             source: '/images/:path*',
+    //             destination: 'http://localhost:9000/:path*',
+    //         },
+    //     ];
+    // },
     async headers() {
         return [
             {

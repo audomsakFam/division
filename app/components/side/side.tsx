@@ -145,7 +145,7 @@ export default function Side({ children }: SideProps) {
                         <div className="flex justify-around w-full bg-blue-900 text-slate-100" onClick={() => router.push('/pages/admin/profile')} >
                             <div className="flex w-full items-center mb-5 cursor-pointer m-5">
                                 <Avatar className="w-12 h-12 rounded-full overflow-hidden mb-2 mr-4">
-                                    <AvatarImage className="w-full h-full object-cover" src={'/images/profile/' + session.user.image} />
+                                    <AvatarImage className="w-full h-full object-cover" src={'http://192.168.138.81:9000/images' + '/profile/' + session.user.image} />
                                 </Avatar>
                                 <h1><b>{session.user.name}</b></h1>
                             </div>

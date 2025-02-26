@@ -304,8 +304,8 @@ export default function Management() {
                                 <>
                                     {item.type == 0 && (
                                         <div className="flex w-1/2 flex-col h-full mr-2">
-                                            <Label>แบนเนอร์ ซ้าย</Label>
-                                            <div className="w-full h-full relative overflow-y-auto">
+                                            <Label>แบนเนอร์ </Label>
+                                            <div className="w-full h-full relative overflow-y-auto flex flex-col items-center justify-center">
                                                 {previewUrlL ? (
                                                     <img
                                                         src={previewUrlL}
@@ -315,9 +315,41 @@ export default function Management() {
                                                 ) : (
                                                     <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-md">
                                                         <img
-                                                            src={'/images/' + item.name}
+                                                            src={'http://192.168.138.81:9000/images' + '/'+ item.name}
                                                             className="w-full h-full object-cover rounded-md"
                                                             alt="Preview"
+                                                        />
+                                                    </div>
+                                                )}
+                                                {fileL ? (
+                                                    <div className="w-1/2 flex flex-col justify-center items-center mt-4">
+                                                        <button
+                                                            onClick={handleUploadL}
+                                                            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mb-2"
+                                                        >
+                                                            อัปโหลดแบนเนอร์
+                                                        </button>
+                                                        <button
+                                                            onClick={() => { setFileL(null); setPreviewUrlL('') }}
+                                                            className="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                                                        >
+                                                            ยกเลิก
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex flex-col w-1/2 justify-center items-center mt-4">
+                                                        <label
+                                                            htmlFor="fileInputL"
+                                                            className="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded-lg text-center hover:bg-blue-600"
+                                                        >
+                                                            เปลี่ยนแบนเนอร์
+                                                        </label>
+                                                        <input
+                                                            id="fileInputL"
+                                                            type="file"
+                                                            accept="image/*"
+                                                            onChange={handleFileChangeL}
+                                                            className="hidden"
                                                         />
                                                     </div>
                                                 )}
@@ -326,8 +358,8 @@ export default function Management() {
                                     )}
                                     {item.type == 1 && (
                                         <div className="flex w-1/2 flex-col h-full mr-2">
-                                            <Label>แบนเนอร์ ขวา</Label>
-                                            <div className="w-full h-full relative overflow-y-auto"> 
+                                            <Label>แบนเนอร์ </Label>
+                                            <div className="w-full h-full relative overflow-y-auto flex flex-col items-center justify-center">
                                                 {previewUrlR ? (
                                                     <img
                                                         src={previewUrlR}
@@ -337,9 +369,41 @@ export default function Management() {
                                                 ) : (
                                                     <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-md">
                                                         <img
-                                                            src={'/images/' + item.name}
+                                                            src={'http://192.168.138.81:9000/images' + '/' + item.name}
                                                             className="w-full h-full object-cover rounded-md"
                                                             alt="Preview"
+                                                        />
+                                                    </div>
+                                                )}
+                                                {fileR ? (
+                                                    <div className="w-1/2 flex flex-col justify-center items-center mt-4">
+                                                        <button
+                                                            onClick={handleUploadR}
+                                                            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mb-2"
+                                                        >
+                                                            อัปโหลดแบนเนอร์
+                                                        </button>
+                                                        <button
+                                                            onClick={() => { setFileR(null); setPreviewUrlR("") }}
+                                                            className="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                                                        >
+                                                            ยกเลิก
+                                                        </button>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex flex-col w-1/2 justify-center items-center mt-4">
+                                                        <label
+                                                            htmlFor="fileInputR"
+                                                            className="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded-lg text-center hover:bg-blue-600"
+                                                        >
+                                                            เปลี่ยนแบนเนอร์
+                                                        </label>
+                                                        <input
+                                                            id="fileInputR"
+                                                            type="file"
+                                                            accept="image/*"
+                                                            onChange={handleFileChangeR}
+                                                            className="hidden"
                                                         />
                                                     </div>
                                                 )}
@@ -350,7 +414,7 @@ export default function Management() {
                             ))}
                         </div>
                     </CardContent>
-                    <CardFooter className="flex justify-end">
+                    {/* <CardFooter className="flex justify-end">
                         <div className="flex w-full ">
                             {fileL ? (
                                 <div className="w-1/2 flex flex-col justify-center items-center">
@@ -358,7 +422,7 @@ export default function Management() {
                                         onClick={handleUploadL}
                                         className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mb-2"
                                     >
-                                        อัปโหลดแบนเนอร์ ซ้าย
+                                        อัปโหลดแบนเนอร์
                                     </button>
                                     <button
                                         onClick={() => { setFileL(null); setPreviewUrlL('') }}
@@ -373,7 +437,7 @@ export default function Management() {
                                         htmlFor="fileInputL"
                                         className="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded-lg text-center hover:bg-blue-600"
                                     >
-                                        เปลี่ยนแบนเนอร์ ซ้าย
+                                        เปลี่ยนแบนเนอร์
                                     </label>
                                     <input
                                         id="fileInputL"
@@ -390,7 +454,7 @@ export default function Management() {
                                         onClick={handleUploadR}
                                         className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mb-2"
                                     >
-                                        อัปโหลดแบนเนอร์ ขวา
+                                        อัปโหลดแบนเนอร์
                                     </button>
                                     <button
                                         onClick={() => { setFileR(null); setPreviewUrlR("") }}
@@ -405,7 +469,7 @@ export default function Management() {
                                         htmlFor="fileInputR"
                                         className="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded-lg text-center hover:bg-blue-600"
                                     >
-                                        เปลี่ยนแบนเนอร์ ขวา
+                                        เปลี่ยนแบนเนอร์
                                     </label>
                                     <input
                                         id="fileInputR"
@@ -417,7 +481,7 @@ export default function Management() {
                                 </div>
                             )}
                         </div>
-                    </CardFooter>
+                    </CardFooter> */}
                 </Card>
                 <Card className="flex-grow m-2">
                     <CardHeader>
@@ -432,7 +496,7 @@ export default function Management() {
                                         {
                                             item.type == 2 && (
                                                 <div className="w-full mb-4 flex items-center justify-center">
-                                                    <ReactPlayer url={'/images/' + item.name} width={'100%'} controls={true} />
+                                                    <ReactPlayer url={'http://192.168.138.81:9000/images' + '/' + item.name} width={'100%'} controls={true} />
 
                                                 </div>
                                             )

@@ -481,7 +481,7 @@ export default function Items() {
                                                     {/* กล่องแสดงภาพหลัก */}
                                                     <div className="flex  justify-center items-center overflow-hidden">
                                                         <img
-                                                            src={'/images/items/' + item.img}
+                                                            src={'http://192.168.138.81:9000/images' + '/items/'+ item.img}
                                                             width={90}
                                                             height={90}
                                                             alt="item image"
@@ -495,7 +495,7 @@ export default function Items() {
                                                     `}
                                                     >
                                                         <img
-                                                            src={'/images/items/' + item.img}
+                                                            src={'http://192.168.138.81:9000/images' + '/items/' + item.img}
                                                             alt="Zoomed image"
                                                             className="transform w-full absolute"
                                                         />
