@@ -67,6 +67,7 @@ export default function HomePage() {
 
     return (
         <>
+
             {
                 previewData.map((item) => (
                     <>
@@ -74,7 +75,7 @@ export default function HomePage() {
                             (item.type == 0 && (
                                 <div id="bannerL" className="fixed flex justify-start w-1/2 left-0 top-1/4 ml-10 z-[1000]">
                                     <img
-                                        src={'http://192.168.138.81:9000/images' + '/' + item.name}
+                                        src={'http://localhost:9000/images' + '/' + item.name}
                                         className="h-[500px] object-cover"
                                         alt=""
                                     />
@@ -97,7 +98,7 @@ export default function HomePage() {
                             (item.type == 1 && (
                                 <div id="bannerR" className="fixed flex justify-end w-1/2 right-0 top-1/4 mr-10 z-[1000]">
                                     <img
-                                        src={'http://192.168.138.81:9000/images' + '/' + item.name}
+                                        src={'http://localhost:9000/images' + '/' + item.name}
                                         className="h-[500px] object-cover"
                                         alt=""
                                     />
@@ -118,22 +119,49 @@ export default function HomePage() {
                         }
                         {
                             item.type == 2 && (
-                                <div className="absolute flex justify-center items-center h-screen mt-2 ml-0 mr-2 pl-2 pr-2 flex-col top-1/3  z-[1002]">
-                                    <div className="flex flex-col items-center">
-                                        <div className="bg-blue-900 mb-5 p-4">
+                                <div className="absolute flex justify-center items-center h-screen mt-10 ml-0 mr-2 pl-2 pr-2 flex-col top-1/3  z-[1002]">
+                                    {/* <div className="flex flex-col items-center ">
+                                        <div className="bg-blue-900 mb-5 top-0 p-4 w-full fixed z-[1011]">
                                             <h1 className="text-center text-lg sm:text-3xl font-bold text-white">
                                                 ยินดีต้อนรับเข้าสู่ ระบบยืม-คืน <br /> วัสดุและครุภัณฑ์ กองพัฒนานักศึกษา
                                             </h1>
                                         </div>
                                         <div className="w-full mb-4 flex items-center justify-center">
-                                            <ReactPlayer url={'http://192.168.138.81:9000/images' + '/' + item.name} controls={true} />
+                                            <ReactPlayer url={'http://localhost:9000/images' + '/' + item.name} controls={true} />
                                         </div>
                                         <div className="mb-4 mt-10 text-center text-2xl font-bold text-gray-800 ">
                                             <h1>ปฏิทินการยืม</h1>
                                         </div>
                                         <CalendarCom />
-                                    </div>
+                                    </div> */}
+                                    <div className="flex flex-col items-center sm:pt-[100px] xl:pt-[140px] md:pt-[140px] lg:pt-[140px] pt-[0px]">
+                                        {/* Header (Fixed) */}
+                                        <div className="top-0 w-full fixed z-[1011]">
+                                            <h1 className="pt-2 pb-2 bg-blue-900 text-center  text-lg sm:text-3xl font-bold text-white">
+                                                ยินดีต้อนรับเข้าสู่ ระบบยืม-คืน <br /> วัสดุและครุภัณฑ์ กองพัฒนานักศึกษา
+                                            </h1>
+                                        </div>
 
+                                        {/* Video */}
+                                        <div className="w-full mb-4 mt-10 flex items-center justify-center relative">
+                                            <div className="w-full  mt-20  max-w-[800px] aspect-video">
+                                                <ReactPlayer
+                                                    url={'http://localhost:9000/images' + '/' + item.name}
+                                                    controls={true}
+                                                    width="100%"
+                                                    height="100%"
+                                                />
+                                            </div>
+                                        </div>
+
+
+                                        {/* Calendar Section */}
+                                        <div className="mt-6 text-center text-2xl font-bold text-gray-800">
+                                            <h1>ปฏิทินการยืม</h1>
+                                        </div>
+
+                                        <CalendarCom />
+                                    </div>
                                     <div className="flex justify-center ">
                                         <button
                                             onClick={() => route.push("/pages/user/main_flow")}
@@ -143,7 +171,7 @@ export default function HomePage() {
                                         </button>
                                     </div>
 
-                                    <div className="w-full bg-blue-900 h-20 flex justify-center items-center flex-col text-white bottom-0 fixed">
+                                    <div className="w-full bg-blue-900 h-30 lg:h-20 md:h-20 xl:h-20 flex justify-center items-center flex-col text-white bottom-0 fixed p-2">
                                         <p>พัฒนาระบบโดย: กองพัฒนานักศึกษา มหาวิทยาลัยเทคโนโลยีราชมงคลธัญบุรี</p>
                                         <p>ผู้พัฒนาระบบ: นายอุดมศักดิ์ วัชระวรากรณ์, นายเกียรติภูมิ โภคา นักศึกษาคณะวิศวกรรมศาสตร์ สาขาวิศวกรรมคอมพิวเตอร์</p>
                                     </div>

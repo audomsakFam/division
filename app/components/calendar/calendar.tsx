@@ -59,7 +59,7 @@ export default function CalendarCom() {
     }
 
     return (
-        <div className="w-full bg-white h-[auto] mb-4 rounded-md border shadow p-0">
+        <div className="w-full bg-white h-[auto] mb-2 rounded-md border shadow p-0">
             <Calendar
                 className="h-[auto] w-full flex "
                 classNames={{
