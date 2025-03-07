@@ -325,7 +325,7 @@ export default function Equipment({ onSelected }: { onSelected: (item: ReqBorrow
                                                                     <TableCell className="pt-0 pb-0 pl-0 pr-0 text-stone-950 border-r border-gray-400 text-center">
                                                                         <div className="relative flex justify-center items-center">
                                                                             <img
-                                                                                src={'http://192.168.138.81:9000/images' + '/items/' + item.img}
+                                                                                src={'http://localhost:9000/images' + '/items/' + item.img}
                                                                                 alt={item.name}
                                                                                 onClick={() =>
                                                                                     handleImageClick(

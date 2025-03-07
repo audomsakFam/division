@@ -295,16 +295,21 @@ export async function POST(req: Request) {
                 debug: true,  // เปิด debugging
             });
 
+            // new
+            const fetchMail = await prisma.mailNoti.findMany({});
+            const ccEmails = fetchMail.map(mail => mail.email);
             const info = await transporter.sendMail({
                 from: `"Division Borrow ( ยืมอุปกรณ์ )" <${user.email}>`, // Sender email
                 to: 'fam841209@gmail.com', // Receiver email guidance.rmutt@gmail.com,
-                cc: ["sdrmuttq@gmail.com", "guidance.rmutt@gmail.com", "culturermutt@gmail.com", "rmutt2563@gmail.com", "Munchart829@gmail.com"], // "sdrmuttq@gmail.com", "guidance.rmutt@gmail.com", "culturermutt@gmail.com", "rmutt2563@gmail.com", "Munchart829@gmail.com"
+                // cc: ["sdrmuttq@gmail.com", "guidance.rmutt@gmail.com", "culturermutt@gmail.com", "rmutt2563@gmail.com", "Munchart829@gmail.com"], // "sdrmuttq@gmail.com", "guidance.rmutt@gmail.com", "culturermutt@gmail.com", "rmutt2563@gmail.com", "Munchart829@gmail.com"
+                cc: ccEmails,
                 subject: `แจ้งการยืมอุปกรณ์ ${result.project}`,
                 text: `โครงการ: ${result.project} \nจำนวนผู้เข้าร่วม: ${participate} คน\nชื่อ: ${result.name + ' ' + result.lastname}\nเบอร์โทร: ${result.tel}\nจากหน่วยงาน: ${result.origanization?.name}
                 \n\t\t\tอุปกรณ์\n\n${itemSummary}
                 `,
             });
-
+            // new
+            
             console.log("Email sent: ", info.messageId);
 
             return NextResponse.json(result, {

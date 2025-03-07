@@ -183,12 +183,12 @@ export default function Summary() {
 
     const exportToPNG = async () => {
         const element = document.getElementById("export-area"); // ให้ div มี id="export-area"
-    
+
         if (!element) {
             console.error("ไม่พบองค์ประกอบที่ต้องการแปลงเป็นรูปภาพ");
             return;
         }
-    
+
         try {
             const canvas = await html2canvas(element, { scale: 2 }); // Scale 2 เพื่อความคมชัด
             const image = canvas.toDataURL("image/png"); // แปลงเป็น Base64
@@ -261,6 +261,10 @@ export default function Summary() {
                                     <CardTitle className='text-xl'>ใบสรุปรายการ {dates.project}</CardTitle>
                                     <h3 className="text-xl font-semibold">จำนวนผู้เข้าร่วมโดยประมาณ: {dates?.participate} คน</h3>
 
+                                    {/* new */}
+                                    <h3 className="text-xl font-semibold">วันส่งมอบ - วันส่งคืนอุปกรณ์: {dates.serveAt.split('T')[0] + " - " + dates.retureAt.split('T')[0]}</h3>
+                                    {/* new */}
+                                    
                                 </CardHeader>
                                 <CardContent className='pl-2 pr-2'>
                                     <div className='mb-5'>
@@ -344,13 +348,15 @@ export default function Summary() {
                                 </CardContent>
                             </span>
                             <div className="mt-6 mb-6 flex justify-center space-x-4">
-                                <button
+                                {/* new */}
+                                <Button
                                     onClick={() => setStep(step - 1)}
                                     type="button"
                                     className="w-[100px] bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 transition duration-200"
                                 >
                                     ย้อนกลับ
-                                </button>
+                                </Button>
+                                {/* new */}
                                 <Dialog>
                                     <DialogTrigger asChild>
                                         <Button className="w-[100px] bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200" onClick={(e) => e.stopPropagation()}>
