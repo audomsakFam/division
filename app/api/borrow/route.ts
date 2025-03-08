@@ -273,40 +273,44 @@ export async function POST(req: Request) {
             console.log('itemSummary to mail', itemSummary)
 
 
-            const user = await prisma.user.findUnique({
-                where: { email: process.env.SMTP_USER },
-                select: { email: true, password: true }, // ฟิลด์สำหรับเก็บ SMTP Credentials
-            });
+            // const user = await prisma.user.findUnique({
+            //     where: { email: process.env.SMTP_USER },
+            //     select: { email: true, password: true }, // ฟิลด์สำหรับเก็บ SMTP Credentials
+            // });
 
 
-            if (!user || !user.email || !user.password) {
-                throw new Error("SMTP credentials not found for this user.");
-            }
+            // if (!user || !user.email || !user.password) {
+            //     throw new Error("SMTP credentials not found for this user.");
+            // }
 
             const transporter = nodemailer.createTransport({
                 host: "smtp.gmail.com", // สามารถปรับให้รองรับ SMTP Provider อื่น
                 port: 587,
                 secure: false, // ใช้ STARTTLS
                 auth: {
-                    user: user.email,
+                    user: "your84120@gmail.com",
                     pass: 'ephwtqoczgrkooru',
                 },
                 logger: true, // เปิด logging
                 debug: true,  // เปิด debugging
             });
 
+            const fetchMail = await prisma.mailNoti.findMany({});
+            const ccEmails = fetchMail.map(mail => mail.email);
             const info = await transporter.sendMail({
-                from: `"Division Borrow ( ยืมอุปกรณ์ )" <${user.email}>`, // Sender email
+                from: `"Division Borrow ( ยืมอุปกรณ์ )" <${"your84120@gmail.com"}>`, // Sender email
                 to: 'fam841209@gmail.com', // Receiver email guidance.rmutt@gmail.com,
-                cc: ["sdrmuttq@gmail.com", "guidance.rmutt@gmail.com", "culturermutt@gmail.com", "rmutt2563@gmail.com", "Munchart829@gmail.com"], // "sdrmuttq@gmail.com", "guidance.rmutt@gmail.com", "culturermutt@gmail.com", "rmutt2563@gmail.com", "Munchart829@gmail.com"
+                // cc: ["sdrmuttq@gmail.com", "guidance.rmutt@gmail.com", "culturermutt@gmail.com", "rmutt2563@gmail.com", "Munchart829@gmail.com"], // "sdrmuttq@gmail.com", "guidance.rmutt@gmail.com", "culturermutt@gmail.com", "rmutt2563@gmail.com", "Munchart829@gmail.com"
+                cc: ccEmails,
                 subject: `แจ้งการยืมอุปกรณ์ ${result.project}`,
                 text: `โครงการ: ${result.project} \nจำนวนผู้เข้าร่วม: ${participate} คน\nชื่อ: ${result.name + ' ' + result.lastname}\nเบอร์โทร: ${result.tel}\nจากหน่วยงาน: ${result.origanization?.name}
                 \n\t\t\tอุปกรณ์\n\n${itemSummary}
                 `,
             });
+            // new
 
             console.log("Email sent: ", info.messageId);
-
+            // Sender email
             return NextResponse.json(result, {
                 status: 200,
             });

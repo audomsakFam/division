@@ -44,7 +44,7 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import ReactPlayer from "react-player";
 import { PostfixData, ResPostfix } from "@/app/interfaces/postfix";
-import { Set } from "@prisma/client";
+import { mailNoti, Set } from "@prisma/client";
 
 export default function Management() {
     const [previewData, setPerviewData] = useState<PerviewData[]>([]);
@@ -66,6 +66,52 @@ export default function Management() {
     const [setName, setSetName] = useState('');
     const [oriName, setOriName] = useState('');
     const [position, setPosition] = useState("")
+
+    // new
+    const [mailName, setMailName] = useState('');
+    const [isOpenMailCreate, setIsOpenMailCreate] = useState(false);
+    const [mail, setMail] = useState<mailNoti[]>([])
+    const [isOpenMail, setIsOpenMail] = useState(set.map(() => false));
+    const fetchMail = async () => {
+        try {
+            const res = await axios.get(`/api/mail`);
+
+            // setMail((await res).data.res);
+            setMail(res.data.res);
+        } catch (error) {
+            console.error(error)
+        }
+    }
+    const handleOpenChangeMail = (index: any, open: any) => {
+        const newIsOpenMail = [...isOpenMail];
+        newIsOpenMail[index] = open;
+        setIsOpenMail(newIsOpenMail);
+    };
+    const deleteMail = async (id: number) => {
+        try {
+            const res = await axios.delete(`/api/mail?id=${id}`);
+            if (res.status === 200) {
+                fetchMail();
+                console.log(res.data);
+            }
+        } catch (error) {
+            console.error(error)
+        }
+    }
+    const createMail = async () => {
+        try {
+            const res = await axios.post(`/api/mail`, { email: mailName });
+            if (res.status === 200) {
+                setMailName('');
+                fetchMail();
+                console.log(res.data);
+            }
+        } catch (error) {
+            console.error(error)
+        }
+    }
+    // new
+
     const handleOpenChange = (index: any, open: any) => {
         const newIsOpenOri = [...isOpenOri];
         newIsOpenOri[index] = open;
@@ -315,7 +361,7 @@ export default function Management() {
                                                 ) : (
                                                     <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-md">
                                                         <img
-                                                            src={'http://192.168.138.81:9000/images' + '/'+ item.name}
+                                                            src={'http://172.20.48.135:9000/images' + '/' + item.name}
                                                             className="w-full h-full object-cover rounded-md"
                                                             alt="Preview"
                                                         />
@@ -369,7 +415,7 @@ export default function Management() {
                                                 ) : (
                                                     <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-md">
                                                         <img
-                                                            src={'http://192.168.138.81:9000/images' + '/' + item.name}
+                                                            src={'http://172.20.48.135:9000/images' + '/' + item.name}
                                                             className="w-full h-full object-cover rounded-md"
                                                             alt="Preview"
                                                         />
@@ -414,74 +460,6 @@ export default function Management() {
                             ))}
                         </div>
                     </CardContent>
-                    {/* <CardFooter className="flex justify-end">
-                        <div className="flex w-full ">
-                            {fileL ? (
-                                <div className="w-1/2 flex flex-col justify-center items-center">
-                                    <button
-                                        onClick={handleUploadL}
-                                        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mb-2"
-                                    >
-                                        อัปโหลดแบนเนอร์
-                                    </button>
-                                    <button
-                                        onClick={() => { setFileL(null); setPreviewUrlL('') }}
-                                        className="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                                    >
-                                        ยกเลิก
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="flex flex-col w-1/2 justify-center items-center">
-                                    <label
-                                        htmlFor="fileInputL"
-                                        className="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded-lg text-center hover:bg-blue-600"
-                                    >
-                                        เปลี่ยนแบนเนอร์
-                                    </label>
-                                    <input
-                                        id="fileInputL"
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleFileChangeL}
-                                        className="hidden"
-                                    />
-                                </div>
-                            )}
-                            {fileR ? (
-                                <div className="w-1/2 flex flex-col justify-center items-center">
-                                    <button
-                                        onClick={handleUploadR}
-                                        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 mb-2"
-                                    >
-                                        อัปโหลดแบนเนอร์
-                                    </button>
-                                    <button
-                                        onClick={() => { setFileR(null); setPreviewUrlR("") }}
-                                        className="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                                    >
-                                        ยกเลิก
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="flex flex-col w-1/2 justify-center items-center">
-                                    <label
-                                        htmlFor="fileInputR"
-                                        className="cursor-pointer bg-blue-500 text-white px-4 py-2 rounded-lg text-center hover:bg-blue-600"
-                                    >
-                                        เปลี่ยนแบนเนอร์
-                                    </label>
-                                    <input
-                                        id="fileInputR"
-                                        type="file"
-                                        accept="image/*"
-                                        onChange={handleFileChangeR}
-                                        className="hidden"
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    </CardFooter> */}
                 </Card>
                 <Card className="flex-grow m-2">
                     <CardHeader>
@@ -496,7 +474,7 @@ export default function Management() {
                                         {
                                             item.type == 2 && (
                                                 <div className="w-full mb-4 flex items-center justify-center">
-                                                    <ReactPlayer url={'http://192.168.138.81:9000/images' + '/' + item.name} width={'100%'} controls={true} />
+                                                    <ReactPlayer url={'http://172.20.48.135:9000/images' + '/' + item.name} width={'100%'} controls={true} />
 
                                                 </div>
                                             )
@@ -761,106 +739,205 @@ export default function Management() {
                 </Card>
 
             </div>
-            <Card className="flex-grow m-2">
-                <CardHeader>
-                    <div className="flex justify-between items-center">
-                        <CardTitle>ชุดอุปกรณ์</CardTitle>
+            {/* new */}
+            <div className="flex justify-between flex-wrap">
+                <Card className="flex-grow m-2">
+                    <CardHeader>
+                        <div className="flex justify-between items-center">
+                            <CardTitle>ชุดอุปกรณ์</CardTitle>
 
-                        <Dialog open={isOpenSetCreate} onOpenChange={(open) => {
-                            setIsOpenSetCreate(open)
-                            setSetName("");
-                        }}>
-                            <DialogTrigger asChild>
-                                <Button className="bg-blue-500 hover:bg-blue-800" onClick={() => setSetName("")}>เพิ่มชุดอุปกรณ์ใหม่</Button>
-                            </DialogTrigger>
-                            <DialogContent className="sm:max-w-md">
-                                <DialogHeader>
-                                    <DialogTitle>เพิ่มชุดอุปกรณ์ใหม่</DialogTitle>
-                                </DialogHeader>
-                                <div className="flex items-center space-x-2">
-                                    <div className="grid flex-1 gap-2">
-                                        <Label htmlFor="namePost" className="sr-only">
-                                            ชื่อชุดอุปกรณ์
-                                        </Label>
-                                        <Input
-                                            value={setName}
-                                            onChange={(e) => setSetName(e.target.value)}
-                                            placeholder="ชื่อชุดอุปกรณ์"
-                                            id="namePost"
-                                        />
+                            <Dialog open={isOpenSetCreate} onOpenChange={(open) => {
+                                setIsOpenSetCreate(open)
+                                setSetName("");
+                            }}>
+                                <DialogTrigger asChild>
+                                    <Button className="bg-blue-500 hover:bg-blue-800" onClick={() => setSetName("")}>เพิ่มชุดอุปกรณ์ใหม่</Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-md">
+                                    <DialogHeader>
+                                        <DialogTitle>เพิ่มชุดอุปกรณ์ใหม่</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="flex items-center space-x-2">
+                                        <div className="grid flex-1 gap-2">
+                                            <Label htmlFor="namePost" className="sr-only">
+                                                ชื่อชุดอุปกรณ์
+                                            </Label>
+                                            <Input
+                                                value={setName}
+                                                onChange={(e) => setSetName(e.target.value)}
+                                                placeholder="ชื่อชุดอุปกรณ์"
+                                                id="namePost"
+                                            />
+                                        </div>
                                     </div>
-                                </div>
-                                <DialogFooter className="sm:justify-start">
-                                    <DialogClose asChild>
-                                        <Button type="button" onClick={() => createSet()}
-                                            className={`bg-blue-500 hover:bg-blue-800 ${setName == "" ? "pointer-events-none opacity-50 cursor-not-allowed" : ""}`} >
-                                            ยืนยัน
-                                        </Button>
-                                    </DialogClose>
-                                    <DialogClose asChild>
-                                        <Button type="button" variant="secondary">
-                                            ยกเลิก
-                                        </Button>
-                                    </DialogClose>
-                                </DialogFooter>
-                            </DialogContent>
-                        </Dialog>
-                    </div>
-                </CardHeader>
-                <CardContent className="overflow-y-scroll">
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="">
-                                <TableHead >#</TableHead>
-                                <TableHead>ชุดอุปกรณ์</TableHead>
-                                <TableHead>ดำเนินการ</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {
-                                set.map((v, i) => (
-                                    <TableRow key={i}>
-                                        <TableCell>{i + 1}</TableCell>
-                                        <TableCell>{v.name}</TableCell>
-                                        <TableCell>
-                                            <Dialog open={isOpenSet[i]} onOpenChange={(open) => {
-                                                handleOpenChangeSet(i, open)
-                                            }}>
-                                                <DialogTrigger asChild>
-                                                    <Button className="bg-red-500 hover:bg-red-800" >ลบ</Button>
-                                                </DialogTrigger>
-                                                <DialogContent className="sm:max-w-md">
-                                                    <DialogHeader>
-                                                        <DialogTitle>ต้องการลบชุดอุปกรณ์ {v.name} จริงหรือไม่</DialogTitle>
-                                                        <DialogDescription>
-                                                            ข้อมูลที่ถูกลบจะไม่สามารถกู้คืนได้
-                                                        </DialogDescription>
-                                                    </DialogHeader>
-                                                    <DialogFooter className="sm:justify-start">
-                                                        <DialogClose asChild>
-                                                            <div className="flex gap-2">
-                                                                <Button type="button" variant="destructive" onClick={() => deleteSet(v.id)}>
-                                                                    ยืนยัน
-                                                                </Button>
-                                                                <Button type="button" variant="secondary">
-                                                                    ยกเลิก
-                                                                </Button>
-                                                            </div>
-                                                        </DialogClose>
-                                                    </DialogFooter>
-                                                </DialogContent>
-                                            </Dialog>
-                                        </TableCell>
-                                    </TableRow>
-                                ))
-                            }
-                        </TableBody>
-                    </Table>
-                </CardContent>
-                <CardFooter className="flex justify-end">
+                                    <DialogFooter className="sm:justify-start">
+                                        <DialogClose asChild>
+                                            <Button type="button" onClick={() => createSet()}
+                                                className={`bg-blue-500 hover:bg-blue-800 ${setName == "" ? "pointer-events-none opacity-50 cursor-not-allowed" : ""}`} >
+                                                ยืนยัน
+                                            </Button>
+                                        </DialogClose>
+                                        <DialogClose asChild>
+                                            <Button type="button" variant="secondary">
+                                                ยกเลิก
+                                            </Button>
+                                        </DialogClose>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="overflow-y-scroll">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="">
+                                    <TableHead >#</TableHead>
+                                    <TableHead>ชุดอุปกรณ์</TableHead>
+                                    <TableHead>ดำเนินการ</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {
+                                    set.map((v, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell>{i + 1}</TableCell>
+                                            <TableCell>{v.name}</TableCell>
+                                            <TableCell>
+                                                <Dialog open={isOpenSet[i]} onOpenChange={(open) => {
+                                                    handleOpenChangeSet(i, open)
+                                                }}>
+                                                    <DialogTrigger asChild>
+                                                        <Button className="bg-red-500 hover:bg-red-800" >ลบ</Button>
+                                                    </DialogTrigger>
+                                                    <DialogContent className="sm:max-w-md">
+                                                        <DialogHeader>
+                                                            <DialogTitle>ต้องการลบชุดอุปกรณ์ {v.name} จริงหรือไม่</DialogTitle>
+                                                            <DialogDescription>
+                                                                ข้อมูลที่ถูกลบจะไม่สามารถกู้คืนได้
+                                                            </DialogDescription>
+                                                        </DialogHeader>
+                                                        <DialogFooter className="sm:justify-start">
+                                                            <DialogClose asChild>
+                                                                <div className="flex gap-2">
+                                                                    <Button type="button" variant="destructive" onClick={() => deleteSet(v.id)}>
+                                                                        ยืนยัน
+                                                                    </Button>
+                                                                    <Button type="button" variant="secondary">
+                                                                        ยกเลิก
+                                                                    </Button>
+                                                                </div>
+                                                            </DialogClose>
+                                                        </DialogFooter>
+                                                    </DialogContent>
+                                                </Dialog>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                }
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
 
-                </CardFooter>
-            </Card>
+                <Card className="flex-grow m-2">
+                    <CardHeader>
+                        <div className="flex justify-between items-center">
+                            <CardTitle>e-mail สำหรับสแจ้งเตือน</CardTitle>
+
+                            <Dialog open={isOpenMailCreate} onOpenChange={(open) => {
+                                setIsOpenMailCreate(open)
+                                setMailName("");
+                            }}>
+                                <DialogTrigger asChild>
+                                    <Button className="bg-blue-500 hover:bg-blue-800" onClick={() => setSetName("")}>เพิ่ม e-mail ใหม่</Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-md">
+                                    <DialogHeader>
+                                        <DialogTitle>เพิ่ม e-mail ใหม่</DialogTitle>
+                                    </DialogHeader>
+                                    <div className="flex items-center space-x-2">
+                                        <div className="grid flex-1 gap-2">
+                                            <Label htmlFor="emailPost" className="sr-only">
+                                                e-mail
+                                            </Label>
+                                            <Input
+                                                value={mailName}
+                                                onChange={(e) => setMailName(e.target.value)}
+                                                placeholder="email"
+                                                id="emailPost"
+                                            />
+                                        </div>
+                                    </div>
+                                    <DialogFooter className="sm:justify-start">
+                                        <DialogClose asChild>
+                                            <Button type="button" onClick={() => createMail()}
+                                                className={`bg-blue-500 hover:bg-blue-800 ${mailName == "" ? "pointer-events-none opacity-50 cursor-not-allowed" : ""}`} >
+                                                ยืนยัน
+                                            </Button>
+                                        </DialogClose>
+                                        <DialogClose asChild>
+                                            <Button type="button" variant="secondary">
+                                                ยกเลิก
+                                            </Button>
+                                        </DialogClose>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
+                        </div>
+                    </CardHeader>
+                    <CardContent className="overflow-y-scroll">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="">
+                                    <TableHead >#</TableHead>
+                                    <TableHead>e-mail</TableHead>
+                                    <TableHead>ดำเนินการ</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {
+                                    mail.map((v, i) => (
+                                        <TableRow key={i}>
+                                            <TableCell>{i + 1}</TableCell>
+                                            <TableCell>{v.email}</TableCell>
+                                            <TableCell>
+                                                <Dialog open={isOpenMail[i]} onOpenChange={(open) => {
+                                                    handleOpenChangeMail(i, open)
+                                                }}>
+                                                    <DialogTrigger asChild>
+                                                        <Button className="bg-red-500 hover:bg-red-800" >ลบ</Button>
+                                                    </DialogTrigger>
+                                                    <DialogContent className="sm:max-w-md">
+                                                        <DialogHeader>
+                                                            <DialogTitle>ต้องการลบ {v.email} จริงหรือไม่</DialogTitle>
+                                                            <DialogDescription>
+                                                                ข้อมูลที่ถูกลบจะไม่สามารถกู้คืนได้
+                                                            </DialogDescription>
+                                                        </DialogHeader>
+                                                        <DialogFooter className="sm:justify-start">
+                                                            <DialogClose asChild>
+                                                                <div className="flex gap-2">
+                                                                    <Button type="button" variant="destructive" onClick={() => deleteMail(v.id)}>
+                                                                        ยืนยัน
+                                                                    </Button>
+                                                                    <Button type="button" variant="secondary">
+                                                                        ยกเลิก
+                                                                    </Button>
+                                                                </div>
+                                                            </DialogClose>
+                                                        </DialogFooter>
+                                                    </DialogContent>
+                                                </Dialog>
+                                            </TableCell>
+                                        </TableRow>
+                                    ))
+                                }
+                            </TableBody>
+                        </Table>
+                    </CardContent>
+                </Card>
+            </div>
+            {/* new */}
         </Side>
     );
 }

@@ -33,9 +33,9 @@ import DateComponent from '@/app/components/date/date'
 import { ResOri, ResOriData } from '@/app/interfaces/ori'
 import axios from 'axios'
 import { useRouter } from 'next/navigation'
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
-import { thsarabun } from '@/public/fonts/thsarabun'
+// import { jsPDF } from "jspdf";
+// import autoTable from "jspdf-autotable";
+// import { thsarabun } from '@/public/fonts/thsarabun'
 import { Button } from '@/components/ui/button'
 import html2canvas from 'html2canvas'
 import { saveAs } from "file-saver";
@@ -183,12 +183,12 @@ export default function Summary() {
 
     const exportToPNG = async () => {
         const element = document.getElementById("export-area"); // ให้ div มี id="export-area"
-    
+
         if (!element) {
             console.error("ไม่พบองค์ประกอบที่ต้องการแปลงเป็นรูปภาพ");
             return;
         }
-    
+
         try {
             const canvas = await html2canvas(element, { scale: 2 }); // Scale 2 เพื่อความคมชัด
             const image = canvas.toDataURL("image/png"); // แปลงเป็น Base64
@@ -260,6 +260,9 @@ export default function Summary() {
                                 <CardHeader>
                                     <CardTitle className='text-xl'>ใบสรุปรายการ {dates.project}</CardTitle>
                                     <h3 className="text-xl font-semibold">จำนวนผู้เข้าร่วมโดยประมาณ: {dates?.participate} คน</h3>
+                                    {/* new */}
+                                    <h3 className="text-xl font-semibold">วันส่งมอบ - วันส่งคืนอุปกรณ์: {dates.serveAt.split('T')[0] + " - " + dates.retureAt.split('T')[0]}</h3>
+                                    {/* new */}
 
                                 </CardHeader>
                                 <CardContent className='pl-2 pr-2'>
