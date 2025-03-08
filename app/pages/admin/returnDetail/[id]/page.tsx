@@ -122,7 +122,7 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
                                                     {/* กล่องแสดงภาพหลัก */}
                                                     <div className="flex justify-start items-center overflow-hidden">
                                                         <img
-                                                            src={'http://192.168.138.81:9000/images' + '/sign/' + borrow.img_sign}
+                                                            src={'http://172.20.48.135:9000/images' + '/sign/' + borrow.img_sign}
                                                             crossOrigin="anonymous"
                                                             width={200}
                                                             height={200}
@@ -133,7 +133,7 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
                                                     {/* กล่องสำหรับแสดงภาพซูม */}
                                                     <div className={`absolute w-1/2 hidden group-hover:flex justify-center items-center transform z-1000`}>
                                                         <img
-                                                            src={'http://192.168.138.81:9000/images' + '/sign/' + borrow.img_sign}
+                                                            src={'http://172.20.48.135:9000/images' + '/sign/' + borrow.img_sign}
                                                             crossOrigin="anonymous"
                                                             alt="Zoomed image"
                                                             className="transform w-full absolute w-[400px] "
@@ -144,7 +144,7 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
                                                     {/* กล่องแสดงภาพหลัก */}
                                                     <div className="flex justify-start items-center overflow-hidden">
                                                         <img
-                                                            src={'http://192.168.138.81:9000/images' + '/sign/' + borrow.borrower_id}
+                                                            src={'http://172.20.48.135:9000/images' + '/sign/' + borrow.borrower_id}
                                                             crossOrigin="anonymous"
                                                             width={200}
                                                             height={200}
@@ -155,7 +155,7 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
                                                     {/* กล่องสำหรับแสดงภาพซูม */}
                                                     <div className={`absolute w-1/2  hidden group-hover:flex justify-center items-center transform z-1000`}>
                                                         <img
-                                                            src={'http://192.168.138.81:9000/images' + '/sign/' + borrow.borrower_id}
+                                                            src={'http://172.20.48.135:9000/images' + '/sign/' + borrow.borrower_id}
                                                             alt="Zoomed image"
                                                             className="transform w-full absolute w-[400px] "
                                                         />
@@ -219,7 +219,7 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
                                                             {/* กล่องแสดงภาพหลัก */}
                                                             <div className="flex justify-center items-center overflow-hidden">
                                                                 <img
-                                                                    src={'http://192.168.138.81:9000/images' + '/items/'  + item.item.img!}
+                                                                    src={'http://172.20.48.135:9000/images' + '/items/'  + item.item.img!}
                                                                     width={90}
                                                                     height={90}
                                                                     alt="item image"
@@ -230,7 +230,7 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
                                                             {/* กล่องสำหรับแสดงภาพซูม */}
                                                             <div className={`absolute w-1/5 hidden group-hover:flex justify-center items-center right-1/2 transform z-100`}>
                                                                 <img
-                                                                    src={'http://192.168.138.81:9000/images' + '/items/' + item.item.img!}
+                                                                    src={'http://172.20.48.135:9000/images' + '/items/' + item.item.img!}
                                                                     alt="Zoomed image"
                                                                     className="transform w-full absolute"
                                                                     crossOrigin="anonymous"

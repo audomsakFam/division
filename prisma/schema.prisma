@@ -121,14 +121,22 @@ model ImgAndVideoPreview {
   id       Int      @id @default(autoincrement())
   name     String   @db.VarChar(500)
   type     Int      @db.SmallInt() // 0 img L , 1 img R // 2 video
-  createAt DateTime @default(now())
+  createAt DateTime @default(now()) 
   updateAt DateTime @updatedAt
 }
 
+<<<<<<< HEAD
 // new
+=======
+
+>>>>>>> famDev
 model mailNoti {
   id       Int      @id @default(autoincrement())
   email    String   @db.VarChar(100) @unique
   createAt DateTime @default(now())
   updateAt DateTime @updatedAt
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> famDev

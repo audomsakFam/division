@@ -33,9 +33,9 @@ import DateComponent from '@/app/components/date/date'
 import { ResOri, ResOriData } from '@/app/interfaces/ori'
 import axios from 'axios'
 import { useRouter } from 'next/navigation'
-import { jsPDF } from "jspdf";
-import autoTable from "jspdf-autotable";
-import { thsarabun } from '@/public/fonts/thsarabun'
+// import { jsPDF } from "jspdf";
+// import autoTable from "jspdf-autotable";
+// import { thsarabun } from '@/public/fonts/thsarabun'
 import { Button } from '@/components/ui/button'
 import html2canvas from 'html2canvas'
 import { saveAs } from "file-saver";
@@ -260,6 +260,9 @@ export default function Summary() {
                                 <CardHeader>
                                     <CardTitle className='text-xl'>ใบสรุปรายการ {dates.project}</CardTitle>
                                     <h3 className="text-xl font-semibold">จำนวนผู้เข้าร่วมโดยประมาณ: {dates?.participate} คน</h3>
+                                    {/* new */}
+                                    <h3 className="text-xl font-semibold">วันส่งมอบ - วันส่งคืนอุปกรณ์: {dates.serveAt.split('T')[0] + " - " + dates.retureAt.split('T')[0]}</h3>
+                                    {/* new */}
 
                                     {/* new */}
                                     <h3 className="text-xl font-semibold">วันส่งมอบ - วันส่งคืนอุปกรณ์: {dates.serveAt.split('T')[0] + " - " + dates.retureAt.split('T')[0]}</h3>

@@ -4,8 +4,11 @@ import { Calendar } from "@/components/ui/calendar"
 import { useForm } from "react-hook-form";
 import { GetBorrowWithCache } from "@/lib/servers/getItemWithCache";
 import { th } from 'date-fns/locale';
+import Swal from 'sweetalert2'
+import { ResBorrowData } from "@/app/interfaces/borrow";
 export default function CalendarCom() {
     const [eventDates, setEventDates] = useState({
+        borrowDetail: [] as ResBorrowData[],
         borrowed: [] as { start: Date, end: Date }[],  // เก็บเป็นอาร์เรย์ของอ็อบเจ็กต์ที่มี start และ end เป็น Date
         returned: [] as Date[],
         eventDetail: [] as string[],
@@ -18,12 +21,14 @@ export default function CalendarCom() {
         const setData = async () => {
             await GetBorrowWithCache().then((res) => {
                 setEventDates({
+                    borrowDetail: res.filter((item) => item.status !== 4),
                     borrowed: res.filter((item) => item.status !== 4).map((item) => ({
                         start: new Date(item.createAt),  // เปลี่ยนเป็น Date
                         end: new Date(item.retureAt),    // เปลี่ยนเป็น Date
                     })),
                     returned: res.filter((item) => item.status !== 4).map((item) => new Date(item.retureAt)),
-                    eventDetail: res.filter((item) => item.status !== 4).map((item) => `โครงการ ${item.project} โดย ${item.name}`),
+                    // eventDetail: res.filter((item) => item.status !== 4).map((item) => `โครงการ ${item.project} โดย ${item.name}`),
+                    eventDetail: res.filter((item) => item.status !== 4).map((item) => `${new Date(item.createAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false })} ${item.name}`),
                 });
             });
             setLoading(false);
@@ -31,26 +36,57 @@ export default function CalendarCom() {
         setData();
     }, []);
 
-    // ฟังก์ชันกำหนดสีตามเงื่อนไข
-    const getDayColor = (date: Date) => {
-        const isBorrowed = eventDates.borrowed.some(
-            (event) => date >= event.start && date <= event.end  // เปรียบเทียบ Date โดยตรง
-        );
-        const isReturned = eventDates.returned.some(
-            (d) => date.toISOString().split("T")[0] === d.toISOString().split("T")[0]  // เปรียบเทียบ Date
-        );
-        const today = new Date();
-        const isToday = date.toISOString().split("T")[0] === today.toISOString().split("T")[0];
+    const borrowDetails = async (detail: ResBorrowData) => {
+        Swal.fire({
+            title: `โครงการ ${detail.project}`,
+            html: `
+            <table style="width:100%; border-collapse: collapse; margin: auto; text-align: center;">
+                <tr>
+                    <td style="font-weight: bold; text-align: left; padding: 5px;">โดย</td>
+                    <td style="text-align: left; padding: 5px;">${detail.name} ${detail.lastname}</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold; text-align: left; padding: 5px;">เบอร์โทรศัพท์</td>
+                    <td style="text-align: left; padding: 5px;">${detail.tel}</td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold; text-align: left; padding: 5px;">วันที่ส่งมอบ - ส่งคืน</td>
+                    <td style="text-align: left; padding: 5px;">
+                        ${detail.serveAt.split('T')[0].split("-").reverse().join("/")} - 
+                        ${detail.retureAt.split('T')[0].split("-").reverse().join("/")}
+                    </td>
+                </tr>
+                <tr>
+                    <td style="font-weight: bold; text-align: left; padding: 5px;">จำนวนผู้เข้าร่วม</td>
+                    <td style="text-align: left; padding: 5px;">${detail.participate} คน</td>
+                </tr>
+            </table>`,
+            icon: "info",
+            confirmButtonText: "ปิด",
+        });
+    }
 
-        if ((isToday && isBorrowed && isReturned) || (isToday && isBorrowed) || (isToday && isReturned)) return "bg-gradient-to-r from-red-500 via-blue-900 to-yellow-500 text-white"; // วันปัจจุบัน
-        if (isBorrowed && isReturned) {
-            return "bg-gradient-to-r from-red-500 to-yellow-500 text-white"; // สีแดงและเหลืองสำหรับยืมและคืนในวันเดียวกัน
-        }
-        if (isBorrowed) return "bg-red-500 text-white"; // วันที่ยืม
-        if (isReturned) return "bg-yellow-500 text-black"; // วันที่คืน
-        if (isToday) return "bg-blue-300 text-black"; // วันที่คืน
-        return "bg-white text-black"; // วันอื่นๆ
-    };
+    // ฟังก์ชันกำหนดสีตามเงื่อนไข
+    // const getDayColor = (date: Date) => {
+    //     const isBorrowed = eventDates.borrowed.some(
+    //         (event) => date >= event.start && date <= event.end  // เปรียบเทียบ Date โดยตรง
+    //     );
+    //     const isReturned = eventDates.returned.some(
+    //         (d) => date.toISOString().split("T")[0] === d.toISOString().split("T")[0]  // เปรียบเทียบ Date
+    //     );
+    //     const today = new Date();
+    //     const isToday = date.toISOString().split("T")[0] === today.toISOString().split("T")[0];
+
+    //     if ((isToday && isBorrowed && isReturned) || (isToday && isBorrowed) || (isToday && isReturned)) return "bg-gradient-to-r from-red-500 via-blue-900 to-yellow-500 text-white"; // วันปัจจุบัน
+    //     if (isBorrowed && isReturned) {
+    //         return "bg-gradient-to-r from-red-500 to-yellow-500 text-white"; // สีแดงและเหลืองสำหรับยืมและคืนในวันเดียวกัน
+    //     }
+    //     if (isBorrowed) return "bg-red-500 text-white"; // วันที่ยืม
+    //     if (isReturned) return "bg-yellow-500 text-black"; // วันที่คืน
+    //     if (isToday) return "bg-blue-300 text-black"; // วันที่คืน
+    //     return "bg-white text-black"; // วันอื่นๆ
+    // };
+
 
     // ฟังก์ชันแสดงรายละเอียดเหตุการณ์
 
@@ -74,7 +110,7 @@ export default function CalendarCom() {
                     Day: ({ date }) => {
                         const newDate = new Date(date);
                         newDate.setDate(date.getDate() + 1);  // เพิ่ม 1 วัน
-                        const dayClasses = getDayColor(newDate);
+                        // const dayClasses = getDayColor(newDate);
 
                         const eventDetail = eventDates.borrowed
                             .filter((event) => {
@@ -100,16 +136,49 @@ export default function CalendarCom() {
                                 console.log("date event new------->", normalizeDate(newDate).toDateString());
                                 console.log("date event isEndDate------->", isEndDate);
 
-                                const additionalDetail = isEndDate ? "คืน" : "ยืม"; // ถ้าตรงเพิ่ม "คืน" ถ้าไม่ตรงเพิ่ม "ยืม"
+                                // const additionalDetail = isEndDate ? "คืน" : "ยืม"; // ถ้าตรงเพิ่ม "คืน" ถ้าไม่ตรงเพิ่ม "ยืม"
 
-                                return `${baseDetail} (${additionalDetail})`; // เพิ่มข้อความต่อท้าย
+                                // return `${baseDetail} (${additionalDetail})`; // เพิ่มข้อความต่อท้าย
+                                return `${baseDetail} `; // เพิ่มข้อความต่อท้าย
                             });
+                        // const getDayDetail = () => {
+                        //     console.log('detail ---> ', eventDetail)
+                        //     return eventDetail.length > 0 ? eventDetail.join(", ") : '';
+                        // };
 
-                        const detailToShow = eventDetail.length > 0 ? eventDetail.join('\n') : "ไม่มีข้อมูลกิจกรรม";
+                        // const names = eventDetail.map(detail => detail.split(" ")[1]);
+                        // const eventDetailMatched = eventDates.borrowDetail.find(item => names.includes(item.name));
+                        // console.log("Matched Event:", eventDetailMatched);
+                        // const detailToShow = eventDetail.length > 0 ? eventDetail.join('\n') : "ไม่มีข้อมูpลกิจกรรม";
                         return (
-                            <div className={`w-full h-full border-y flex items-center justify-center cursor-pointer whitespace-per-line p-0`} title={detailToShow}>
-                                <div className={`${dayClasses} w-full h-[30px] sm:h-[100px] flex items-center justify-center border-r border-gray-500`}>
-                                    {date.getDate()}
+                            // <div className={`w-full h-full border-y flex items-center justify-center cursor-pointer whitespace-per-line p-0`} title={detailToShow}>
+                            //     <div className={`${dayClasses} w-full h-[30px] sm:h-[100px] flex items-center justify-center border-r border-gray-500`}>
+                            //         {date.getDate()}
+                            //     </div>
+                            // </div>
+                            <div
+                                className={`w-full h-full border-y flex items-center justify-center cursor-pointer whitespace-pre-line p-0`}
+                            // className={`w-full h-full border-y flex items-center justify-center cursor-pointer whitespace-pre-line p-0`}
+                            // title={detailToShow}
+                            >
+                                <div className="w-full h-[30px] sm:h-[100px] flex flex-col items-center justify-start border-r border-gray-500">
+                                    <span className={date.toDateString() === new Date().toDateString() ? "text-blue-500 font-bold" : ""}>
+                                        {date.getDate()}
+                                    </span>
+                                    {/* <span>{date.getDate()}</span>  */}
+                                    {eventDetail.length > 0 &&
+                                        eventDetail.map((detail, i) => {
+                                            const matchedItem = eventDates.borrowDetail.find(item => item.name === detail.split(" ")[1]); // ใช้ detail ตรงๆ
+                                            return (
+                                                <span
+                                                    key={i}
+                                                    className="text-xs hover:text-blue-500"
+                                                    onClick={() => matchedItem && borrowDetails(matchedItem)} // เช็คก่อนว่า matchedItem มีค่า
+                                                >
+                                                    {detail}
+                                                </span>
+                                            );
+                                        })}
                                 </div>
                             </div>
                         );
@@ -123,7 +192,7 @@ export default function CalendarCom() {
                 defaultMonth={fieldValue?.from}
                 locale={th}
             />
-            <div className="flex flex-col gap-2 ml-12 mt-2 mb-2">
+            {/* <div className="flex flex-col gap-2 ml-12 mt-2 mb-2">
                 <p className="flex items-center">
                     <div className="bg-blue-300 rounded-full w-4 h-4 mr-2"></div>
                     วันนี้
@@ -140,7 +209,7 @@ export default function CalendarCom() {
                     <div className="bg-gradient-to-r from-red-500 via-blue-900 to-yellow-500 rounded-full w-4 h-4 mr-2"></div>
                     วันนี้และมีหลายเหตุการณ์
                 </p>
-            </div>
+            </div> */}
 
         </div>
     );

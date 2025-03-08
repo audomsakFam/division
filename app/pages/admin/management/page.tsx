@@ -69,6 +69,10 @@ export default function Management() {
     const [position, setPosition] = useState("")
 
     // new
+<<<<<<< HEAD
+=======
+    const [mailName, setMailName] = useState('');
+>>>>>>> famDev
     const [isOpenMailCreate, setIsOpenMailCreate] = useState(false);
     const [mail, setMail] = useState<mailNoti[]>([])
     const [isOpenMail, setIsOpenMail] = useState(set.map(() => false));
@@ -365,7 +369,7 @@ export default function Management() {
                                                 ) : (
                                                     <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-md">
                                                         <img
-                                                            src={'http://192.168.138.81:9000/images' + '/' + item.name}
+                                                            src={'http://172.20.48.135:9000/images' + '/' + item.name}
                                                             className="w-full h-full object-cover rounded-md"
                                                             alt="Preview"
                                                         />
@@ -419,7 +423,7 @@ export default function Management() {
                                                 ) : (
                                                     <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-md">
                                                         <img
-                                                            src={'http://192.168.138.81:9000/images' + '/' + item.name}
+                                                            src={'http://172.20.48.135:9000/images' + '/' + item.name}
                                                             className="w-full h-full object-cover rounded-md"
                                                             alt="Preview"
                                                         />
@@ -478,7 +482,7 @@ export default function Management() {
                                         {
                                             item.type == 2 && (
                                                 <div className="w-full mb-4 flex items-center justify-center">
-                                                    <ReactPlayer url={'http://192.168.138.81:9000/images' + '/' + item.name} width={'100%'} controls={true} />
+                                                    <ReactPlayer url={'http://172.20.48.135:9000/images' + '/' + item.name} width={'100%'} controls={true} />
 
                                                 </div>
                                             )
@@ -743,7 +747,6 @@ export default function Management() {
                 </Card>
 
             </div>
-
             {/* new */}
             <div className="flex justify-between flex-wrap">
                 <Card className="flex-grow m-2">

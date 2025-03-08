@@ -329,11 +329,11 @@ export default function Equipment({ onSelected }: { onSelected: (item: ReqBorrow
                                                                                 alt={item.name}
                                                                                 onClick={() =>
                                                                                     handleImageClick(
-                                                                                        'http://192.168.138.81:9000/images' + '/items/' + item.img
+                                                                                        'http://172.20.48.135:9000/images' + '/items/' + item.img
                                                                                     )
                                                                                 }
                                                                                 className={`h-12 w-auto object-cover transition-transform duration-300 ease-in-out cursor-pointer ${expandedImage ===
-                                                                                    'http://192.168.138.81:9000/images' + '/items/' + item.img
+                                                                                    'http://172.20.48.135:9000/images' + '/items/' + item.img
                                                                                     ? 'scale-[3] z-50 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2'
                                                                                     : ''
                                                                                     }`}
