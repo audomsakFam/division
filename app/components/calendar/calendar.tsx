@@ -124,7 +124,7 @@ export default function CalendarCom() {
                                 // className={`w-full h-full border-y flex items-center justify-center cursor-pointer whitespace-pre-line p-0`}
                                 // title={detailToShow}
                             >
-                                <div className="w-full h-[30px] sm:h-[100px] flex flex-col items-center justify-center border-r border-gray-500">
+                                <div className="w-full h-[30px] sm:h-[100px] flex flex-col items-center justify-start border-r border-gray-500">
                                     <span className={date.toDateString() === new Date().toDateString() ? "text-blue-500 font-bold" : ""}>
                                         {date.getDate()}
                                     </span>
