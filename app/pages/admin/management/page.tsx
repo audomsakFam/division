@@ -330,6 +330,7 @@ export default function Management() {
     };
 
     useEffect(() => {
+        fetchMail();
         fetchOri();
         fetchPerview();
         getSet();
