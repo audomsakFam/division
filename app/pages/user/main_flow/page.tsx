@@ -347,13 +347,13 @@ export default function Summary() {
                                 </CardContent>
                             </span>
                             <div className="mt-6 mb-6 flex justify-center space-x-4">
-                                <button
+                                <Button
                                     onClick={() => setStep(step - 1)}
                                     type="button"
                                     className="w-[100px] bg-gray-500 text-white py-2 px-4 rounded-md hover:bg-gray-600 transition duration-200"
                                 >
                                     ย้อนกลับ
-                                </button>
+                                </Button>
                                 <Dialog>
                                     <DialogTrigger asChild>
                                         <Button className="w-[100px] bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition duration-200" onClick={(e) => e.stopPropagation()}>

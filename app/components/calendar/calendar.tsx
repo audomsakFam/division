@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { GetBorrowWithCache } from "@/lib/servers/getItemWithCache";
 import { th } from 'date-fns/locale';
 import Swal from 'sweetalert2'
-import { ResBorrowData } from "@/app/interfaces/borrow";
+import { BorrowDetail, ResBorrowData } from "@/app/interfaces/borrow";
 export default function CalendarCom() {
     const [eventDates, setEventDates] = useState({
         borrowDetail: [] as ResBorrowData[],
@@ -20,15 +20,16 @@ export default function CalendarCom() {
     useEffect(() => {
         const setData = async () => {
             await GetBorrowWithCache().then((res) => {
+                console.log('res.filter((item) => item.status !== 4) --------------------->', res.filter((item) => item.status !== 4));
                 setEventDates({
                     borrowDetail: res.filter((item) => item.status !== 4),
                     borrowed: res.filter((item) => item.status !== 4).map((item) => ({
-                        start: new Date(item.createAt),  // เปลี่ยนเป็น Date
+                        start: new Date(item.serveAt),  // เปลี่ยนเป็น Date
                         end: new Date(item.retureAt),    // เปลี่ยนเป็น Date
                     })),
                     returned: res.filter((item) => item.status !== 4).map((item) => new Date(item.retureAt)),
                     // eventDetail: res.filter((item) => item.status !== 4).map((item) => `โครงการ ${item.project} โดย ${item.name}`),
-                    eventDetail: res.filter((item) => item.status !== 4).map((item) => `${new Date(item.createAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false })} ${item.name}`),
+                    eventDetail: res.filter((item) => item.status !== 4).map((item) => `${item.id} ${new Date(item.serveAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false })} ${item.name}`),
                 });
             });
             setLoading(false);
@@ -36,9 +37,35 @@ export default function CalendarCom() {
         setData();
     }, []);
 
-    const borrowDetails = async (detail: ResBorrowData) => {
+    const borrowDetails = async (detail: ResBorrowData, detail2: BorrowDetail[]) => {
+        console.log('test -------------------------> ', detail);
+
+        // **จัดกลุ่มอุปกรณ์ตามฝ่าย**
+        const divisionMap = new Map<string, string[]>();
+
+        detail2.forEach(d => {
+            const divisionName = d.item.division.name;
+            const itemName = d.item.name;
+
+            if (!divisionMap.has(divisionName)) {
+                divisionMap.set(divisionName, []);
+            }
+            divisionMap.get(divisionName)?.push(itemName);
+        });
+
+        // **สร้าง HTML ของตาราง**
+        const divisionTableRows = Array.from(divisionMap.entries())
+            .map(([division, items]) => `
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 5px; font-weight: bold;">${division}</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">${items.join(", ")}</td>
+                </tr>
+            `)
+            .join("");
+
         Swal.fire({
             title: `โครงการ ${detail.project}`,
+            width: "44%",
             html: `
             <table style="width:100%; border-collapse: collapse; margin: auto; text-align: center;">
                 <tr>
@@ -60,11 +87,31 @@ export default function CalendarCom() {
                     <td style="font-weight: bold; text-align: left; padding: 5px;">จำนวนผู้เข้าร่วม</td>
                     <td style="text-align: left; padding: 5px;">${detail.participate} คน</td>
                 </tr>
-            </table>`,
-            icon: "info",
+              
+            </table>
+            <br>
+            <h2>ฝ่ายและอุปกรณ์</h2>
+           <div style="display: flex; justify-content: center; align-items: center; width: 100%;">
+            <table style="border-collapse: collapse; text-align: left; margin: auto;">
+                <tr>
+                    <td style="text-align: left; padding: 5px;">
+                        <table style="width: 100%; border-collapse: collapse; text-align: left; margin: auto;">
+                            <tr>
+                                <th style="border: 1px solid #ddd; padding: 5px; text-align: center;">ฝ่าย</th>
+                                <th style="border: 1px solid #ddd; padding: 5px; text-align: center;">อุปกรณ์</th>
+                            </tr>
+                            ${divisionTableRows}
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </div>
+            `,
             confirmButtonText: "ปิด",
         });
-    }
+    };
+
+
 
     // ฟังก์ชันกำหนดสีตามเงื่อนไข
     // const getDayColor = (date: Date) => {
@@ -117,24 +164,25 @@ export default function CalendarCom() {
                                 const eventEndDate = new Date(event.end);
                                 eventEndDate.setDate(eventEndDate.getDate() + 1); // เพิ่ม 1 วันเพื่อรวมวันที่สุดท้าย
 
-                                return newDate >= event.start && newDate <= eventEndDate;
+                                // return newDate >= event.start && newDate <= eventEndDate;
+                                return newDate.getTime() >= event.start.getTime() && newDate.getTime() <= eventEndDate.getTime();
                             })
                             .map((event) => {
                                 const index = eventDates.borrowed.indexOf(event);
                                 const baseDetail = eventDates.eventDetail[index]; // ข้อความเดิม
 
                                 // ปรับ newDate และ event.end ให้เป็นเวลา 00:00:00 ก่อนเปรียบเทียบ
-                                const normalizeDate = (date: Date) => {
-                                    const normalized = new Date(date);
-                                    normalized.setHours(0, 0, 0, 0); // รีเซ็ตเวลาเป็น 00:00:00
-                                    return normalized;
-                                };
-                                const normalizedEndDate = new Date(event.end);
-                                normalizedEndDate.setDate(normalizedEndDate.getDate() + 1);
-                                const isEndDate = normalizeDate(newDate).getTime() === normalizeDate(normalizedEndDate).getTime(); // เปรียบเทียบวันที่หลัง normalize
-                                console.log("date event------->", normalizeDate(normalizedEndDate).toDateString());
-                                console.log("date event new------->", normalizeDate(newDate).toDateString());
-                                console.log("date event isEndDate------->", isEndDate);
+                                // const normalizeDate = (date: Date) => {
+                                //     const normalized = new Date(date);
+                                //     normalized.setHours(0, 0, 0, 0); // รีเซ็ตเวลาเป็น 00:00:00
+                                //     return normalized;
+                                // };
+                                // const normalizedEndDate = new Date(event.end);
+                                // normalizedEndDate.setDate(normalizedEndDate.getDate() + 1);
+                                // const isEndDate = normalizeDate(newDate).getTime() === normalizeDate(normalizedEndDate).getTime(); // เปรียบเทียบวันที่หลัง normalize
+                                // // console.log("date event------->", normalizeDate(normalizedEndDate).toDateString());
+                                // // console.log("date event new------->", normalizeDate(newDate).toDateString());
+                                // console.log("date event isEndDate------->", isEndDate);
 
                                 // const additionalDetail = isEndDate ? "คืน" : "ยืม"; // ถ้าตรงเพิ่ม "คืน" ถ้าไม่ตรงเพิ่ม "ยืม"
 
@@ -168,15 +216,67 @@ export default function CalendarCom() {
                                     {/* <span>{date.getDate()}</span>  */}
                                     {eventDetail.length > 0 &&
                                         eventDetail.map((detail, i) => {
-                                            const matchedItem = eventDates.borrowDetail.find(item => item.name === detail.split(" ")[1]); // ใช้ detail ตรงๆ
+                                            const matchedItems = eventDates.borrowDetail
+                                                .filter(item =>
+                                                    item.id.toString() === detail.split(" ")[0].trim()
+                                                )
+                                                .sort((a, b) => {
+                                                    const serveAtA = new Date(a.serveAt).getTime();
+                                                    const serveAtB = new Date(b.serveAt).getTime();
+                                                    return serveAtA - serveAtB; // เรียงจากน้อยไปมากตาม serveAt
+                                                })
+
+                                            const uniqueMatchedItems = matchedItems.reduce((acc: Array<Array<typeof matchedItems[0]>>, item) => {
+                                                const existingGroup = acc.find(group =>
+                                                    group.some((groupItem) => {
+                                                        const groupItemServeAt = groupItem.serveAt;
+                                                        const itemServeAt = item.serveAt;
+                                                        // เช็คทั้ง itemId และ serveAt
+                                                        return groupItem.Borrow_detail.some(borrowDetail => borrowDetail.itemId === item.Borrow_detail[0]?.itemId) && groupItemServeAt === itemServeAt;
+                                                    })
+                                                );
+
+                                                if (existingGroup) {
+                                                    existingGroup.push(item); // ถ้ามีกลุ่มที่มี itemId และ serveAt เดียวกันแล้ว ให้เพิ่ม item นี้ไป
+                                                } else {
+                                                    acc.push([item]); // ถ้ายังไม่มีกลุ่มนั้น ให้สร้างกลุ่มใหม่
+                                                }
+
+                                                return acc;
+                                            }, []);
+                                            console.log('matchedItems --------------------------->', matchedItems);
                                             return (
-                                                <span
-                                                    key={i}
-                                                    className="text-xs hover:text-blue-500"
-                                                    onClick={() => matchedItem && borrowDetails(matchedItem)} // เช็คก่อนว่า matchedItem มีค่า
-                                                >
-                                                    {detail}
-                                                </span>
+
+                                                <div key={i}>
+                                                    {/* {detail} */}
+
+                                                    {uniqueMatchedItems.map((group, groupIndex) => {
+                                                        const seenDetails = new Set(); // สร้าง Set สำหรับเก็บชื่อและเวลา
+                                                        return group.map((item, index) => {
+                                                            const itemKey = `${item.name.trim()}-${item.serveAt}`; // สร้าง key ที่ประกอบด้วยชื่อและเวลา
+
+                                                            if (seenDetails.has(itemKey)) {
+                                                                return null; // ถ้าค่าซ้ำ ให้ไม่แสดง
+                                                            }
+
+                                                            seenDetails.add(itemKey); // เพิ่ม key นี้เข้าไปใน Set
+
+                                                            return (
+                                                                <span
+                                                                    key={index}
+                                                                    className="block text-xs hover:text-blue-500"
+                                                                    onClick={() => {
+                                                                        const borrowDetailsList = group.map(item => item.Borrow_detail).flat();
+                                                                        borrowDetails(group[0], borrowDetailsList);
+                                                                    }}
+                                                                >
+                                                                    {/* {groupIndex == 0 && detail} */}
+                                                                    {new Date(group[0].serveAt).toLocaleTimeString('th-TH', { hour: '2-digit', minute: '2-digit', hour12: false }) + " " + group[0].name}
+                                                                </span>
+                                                            );
+                                                        });
+                                                    })}
+                                                </div>
                                             );
                                         })}
                                 </div>

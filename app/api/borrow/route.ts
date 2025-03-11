@@ -303,7 +303,7 @@ export async function POST(req: Request) {
                 // cc: ["sdrmuttq@gmail.com", "guidance.rmutt@gmail.com", "culturermutt@gmail.com", "rmutt2563@gmail.com", "Munchart829@gmail.com"], // "sdrmuttq@gmail.com", "guidance.rmutt@gmail.com", "culturermutt@gmail.com", "rmutt2563@gmail.com", "Munchart829@gmail.com"
                 cc: ccEmails,
                 subject: `แจ้งการยืมอุปกรณ์ ${result.project}`,
-                text: `โครงการ: ${result.project} \nจำนวนผู้เข้าร่วม: ${participate} คน\nชื่อ: ${result.name + ' ' + result.lastname}\nเบอร์โทร: ${result.tel}\nจากหน่วยงาน: ${result.origanization?.name}
+                text: `โครงการ: ${result.project} \nวันส่งมอบ - วันส่งคืน: ${serveAt.split('T')[0]} ถึง ${retureAt.split('T')[0]} \nจำนวนผู้เข้าร่วม: ${participate} คน\nชื่อ: ${result.name + ' ' + result.lastname}\nเบอร์โทร: ${result.tel}\nจากหน่วยงาน: ${result.origanization?.name}
                 \n\t\t\tอุปกรณ์\n\n${itemSummary}
                 `,
             });

@@ -17,6 +17,8 @@ export default function HomePage() {
             );
         }
     }, []);
+
+
     useEffect(() => {
 
         const fetchPerview = async () => {
@@ -77,10 +79,12 @@ export default function HomePage() {
                     <>
                         {
                             (item.type == 0 && (
-                                <div id="bannerL" className="fixed flex justify-start w-1/2 left-0 top-1/4 ml-10 z-[1000]">
+                                <div id="bannerL" 
+                                  className="fixed flex justify-end left-0 top-1/4 z-[1100] w-auto ml-10"
+                                >
                                     <img
                                         src={'http://172.20.48.135:9000/images' + '/' + item.name}
-                                        className="h-[500px] object-cover"
+                                        className="h-[540px] max-w-[100%] object-cover"
                                         alt=""
                                     />
                                     <button
@@ -90,7 +94,7 @@ export default function HomePage() {
                                                 leftBanner.remove();
                                             }
                                         }}
-                                        className="absolute left-2 bg-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center"
+                                         className="absolute -top-3 -left-3 bg-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center"
                                     >
                                         &times;
                                     </button>
@@ -100,29 +104,29 @@ export default function HomePage() {
                         }
                         {
                             (item.type == 1 && (
-                                <div id="bannerR" className="fixed flex justify-end w-1/2 right-0 top-1/4 mr-10 z-[1000]">
-                                    <img
-                                        src={'http://172.20.48.135:9000/images' + '/' + item.name}
-                                        className="h-[500px] object-cover"
-                                        alt=""
-                                    />
-                                    <button
-                                        onClick={() => {
-                                            const rightBanner = document.querySelector("#bannerR");
-                                            if (rightBanner instanceof HTMLElement) {
-                                                rightBanner.remove();
-                                            }
-                                        }}
-                                        className="absolute right-2 bg-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center"
-                                    >
-                                        &times;
-                                    </button>
+                                <div
+                                    id="bannerR"
+                                    className="fixed flex justify-end right-0 top-1/4 z-[1100] w-auto mr-10"
+                                >
+                                    <div className="relative">
+                                        <img
+                                            src={`http://172.20.48.135:9000/images/${item.name}`}
+                                            className="h-[540px] max-w-[100%] object-cover"
+                                            alt=""
+                                        />
+                                        <button
+                                            onClick={() => document.querySelector("#bannerR")?.remove()}
+                                            className="absolute -top-3 -right-3 bg-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center"
+                                        >
+                                            &times;
+                                        </button>
+                                    </div>
                                 </div>
 
                             ))
                         }
-                         {/* new */}
-                         {
+                        {/* new */}
+                        {
                             item.type == 2 && (
                                 <div className="absolute flex justify-center items-center h-screen mt-10 ml-0 mr-2 pl-2 pr-2 flex-col top-1/3  z-[1002]">
                                     <div className="flex flex-col items-center sm:pt-[100px] xl:pt-[140px] md:pt-[140px] lg:pt-[140px] pt-[0px]">
