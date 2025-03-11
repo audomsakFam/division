@@ -137,7 +137,7 @@ export default function HomePage() {
                                         <div className="w-full mb-4 mt-10 flex items-center justify-center relative">
                                             <div className="w-full  mt-20  max-w-[800px] aspect-video">
                                                 <ReactPlayer
-                                                    url={'http://localhost:9000/images' + '/' + item.name}
+                                                    url={'http://172.20.48.135:9000/images' + '/' + item.name} // <----------------------------------------------------
                                                     controls={true}
                                                     width="100%"
                                                     height="100%"
