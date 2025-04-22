@@ -27,7 +27,7 @@ export async function POST(req: Request) {
     try {
         const { newName, name, division, status, postfix } = await req.json();
 
-        console.log('req======>', newName, name, division, status)
+        console.log('req======>', newName, name, division, status, postfix)
 
         const totalItems = await prisma.items.count({
             where: { name: name },
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
 
         const divisionId = await prisma.division.findFirst({ where: { name: division } }) // .then((res) => res?.id)
         const postfixId = await prisma.postfix.findFirst({ where: { name: postfix } }) // .then((res) => res?.id)
-
+        console.log('postfixId======>', postfixId)
         const totalNewStatus =
             status.normal + status.borrowed + status.damaged + status.lost;
 
@@ -76,7 +76,7 @@ export async function POST(req: Request) {
         const transaction = updatedItems.map((item) =>
             prisma.items.update({
                 where: { id: item.id },
-                data: { status: item.status?.toString(), name: newName, divisionId: divisionId?.id },
+                data: { status: item.status?.toString(), name: newName, divisionId: divisionId?.id, postfixId: postfixId?.id },
             })
         );
 

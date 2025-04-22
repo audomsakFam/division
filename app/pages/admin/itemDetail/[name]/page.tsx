@@ -219,6 +219,16 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
                                             className="text-stone-950 pointer-events-none border-0 bg-transparent w-full"
                                         />
                                     </div>
+                                    <div className=" items-center gap-2 mb-2 w-full">
+                                        <Label htmlFor="postfix" className="text-left font-black">
+                                            หน่วย
+                                        </Label>
+                                        <Input
+                                            id="postfix"
+                                            defaultValue={itemDetail?.postfix.name}
+                                            className="text-stone-950 pointer-events-none border-0 bg-transparent w-full"
+                                        />
+                                    </div>
                                     <div className="items-center gap-2 mb-2 w-full">
                                         <Label htmlFor="division" className="text-left font-black">
                                             ฝ่ายที่รับผิดชอบ

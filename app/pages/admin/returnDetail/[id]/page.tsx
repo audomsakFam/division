@@ -113,6 +113,7 @@ export default function ReturnDetail({ params }: { params: { id: string } }) {
                                     <div className="flex flex-col">
                                         <h3 className="text-xl font-semibold mr-2">ผู้ยืม: {borrow?.name + ' ' + borrow?.lastname}</h3>
                                         <h3 className="text-xl font-semibold">องค์กร: {borrow?.origanization.name}</h3>
+                                        <h3 className="text-xl font-semibold"> เบอร์โทร: {borrow?.tel}</h3>
                                     </div>
                                     {borrow.mentor_name != '-' && (
                                         <div>
