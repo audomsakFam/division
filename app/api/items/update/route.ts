@@ -25,7 +25,7 @@ export async function PUT(req: Request) {
 export async function POST(req: Request) {
     const url = new URL(req.url);
     try {
-        const { newName, name, division, status } = await req.json();
+        const { newName, name, division, status, postfix } = await req.json();
 
         console.log('req======>', newName, name, division, status)
 
@@ -34,6 +34,7 @@ export async function POST(req: Request) {
         });
 
         const divisionId = await prisma.division.findFirst({ where: { name: division } }) // .then((res) => res?.id)
+        const postfixId = await prisma.postfix.findFirst({ where: { name: postfix } }) // .then((res) => res?.id)
 
         const totalNewStatus =
             status.normal + status.borrowed + status.damaged + status.lost;
@@ -62,7 +63,8 @@ export async function POST(req: Request) {
                     updates[key] -= 1;
                     return {
                         ...item, name: newName,
-                        divisionId: divisionId?.id
+                        divisionId: divisionId?.id,
+                        postfixId: postfixId?.id
                         , status: key == 'normal' ? 'ปกติ' : key == 'borrowed' ? 'ถูกยืม' : key == 'damaged' ? 'ชำรุด' : 'หาย'
                     };
                 }

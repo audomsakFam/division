@@ -39,6 +39,7 @@ import { Button } from "@/components/ui/button";
 import { ResDivision, ResDivisionData } from "@/app/interfaces/division";
 import { ClearItemCache } from "@/lib/servers/getItemWithCache";
 import { FaCircleMinus, FaCirclePlus, FaPen } from "react-icons/fa6";
+import { PostfixData, ResPostfix } from "@/app/interfaces/postfix";
 
 // const itemsPerPage = 10;
 export default function ItemDetail({ params }: { params: { name: string } }) {
@@ -55,6 +56,8 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
     // const [statusFilter, setStatusFilter] = useState('');
     const name = decodeURIComponent(params.name)
     const [newName, setNewName] = useState(name)
+    const [postfix, setPostfix] = useState<PostfixData[]>([]);
+    const [postfixSelect, setPostfixSelect] = useState('')
     const [clone, setClone] = useState(0)
     const [position, setPosition] = React.useState('')
     const [division, setDivision] = useState<ResDivisionData[]>([]);
@@ -72,6 +75,13 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
         }
     }
 
+    const getPostfix = async () => {
+        await axios.get<ResPostfix>('/api/postfix')
+            .then((res) => {
+                setPostfix(res.data.data);
+            }).catch((err) => console.error(err))
+    }
+
     const deleteItem = async (name: string, deleteCount: number) => {
         try {
             const res = await axios.delete(`/api/items?name=${name}&count=${deleteCount}`);
@@ -85,7 +95,7 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
 
     const updateAll = async () => {
         try {
-            const res = await axios.post('/api/items/update', { name: name, newName: newName, division: position, status: itemsNum });
+            const res = await axios.post('/api/items/update', { name: name, newName: newName, division: position, status: itemsNum, postfix: postfixSelect });
             if (res.status === 200) {
                 const currentUrl = new URL(window.location.href);
                 currentUrl.pathname = `${currentUrl.pathname.replace(params.name, '')}/${newName}`;
@@ -144,7 +154,7 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
 
             setItems(itemsData); // ตั้งค่า items ทั้งหมด
             setItemDetail(itemsData[0]); // ตั้งค่า item แรก (หากจำเป็น)
-
+            setPostfixSelect(itemsData[0].postfix.name)
             // คำนวณจำนวนของแต่ละสถานะ
             const normal = itemsData.filter((v) => v.status === 'ปกติ').length;
             const borrowed = itemsData.filter((v) => v.status === 'ถูกยืม').length;
@@ -172,6 +182,7 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
 
     useEffect(() => {
         findItems();
+        getPostfix();
         getDivision();
     }, [])
 
@@ -283,6 +294,27 @@ export default function ItemDetail({ params }: { params: { name: string } }) {
                                             onChange={(e) => setNewName(e.target.value)}
                                             className="text-stone-950 bg-transparent w-full"
                                         />
+                                    </div>
+                                    <div className="items-start justify-start flex flex-col gap-2 mb-2 w-full">
+                                        <Label htmlFor="division" className="text-left font-black">
+                                            เลือกหน่วย
+                                        </Label>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="outline">{postfixSelect}</Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent className="w-56 h-96 overflow-y-scroll">
+                                                <DropdownMenuLabel>หน่วย</DropdownMenuLabel>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuRadioGroup value={postfixSelect} onValueChange={setPostfixSelect}>
+                                                    {
+                                                        postfix.map((v, i) => (
+                                                            <DropdownMenuRadioItem key={i} value={v.name}>{v.name}</DropdownMenuRadioItem>
+                                                        ))
+                                                    }
+                                                </DropdownMenuRadioGroup>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </div>
                                     <div className="items-start justify-start flex flex-col gap-2 mb-2 w-full">
                                         <Label htmlFor="division" className="text-left font-black">

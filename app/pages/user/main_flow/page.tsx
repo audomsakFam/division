@@ -1,5 +1,5 @@
 'use client'
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useState } from 'react'
 import {
     Card,
     CardContent,
@@ -63,8 +63,43 @@ export default function Summary() {
     const [dates, setDates] = useState<any>({});
     const [ori, setOri] = useState<ResOriData[]>([]);
     const [set, setSet] = useState<any[]>([]);
+    const [sseConnection, setSSEConnection] = useState<EventSource | null>(null);
     const router = useRouter();
 
+    const startSSEConnection = useCallback(() => {
+        console.log('Initializing SSE connection...');
+        const eventSource = new EventSource('http://172.20.48.135:9000/api/noti');
+        eventSource.onopen = () => {
+            console.log('SSE connection opened.');
+        };
+        eventSource.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type && data.type === 'ping') {
+                console.log('Received ping from server. Sending pong...');
+                fetch('http://172.20.48.135:9000/api/ping', { method: 'POST', body: 'pong' });
+            }
+        };
+        eventSource.onerror = (event) => {
+            console.error('SSE Error:', event);
+            eventSource.close();
+            // Attempt to reconnect after a delay
+            setTimeout(() => {
+                console.log('Reconnecting SSE...');
+                startSSEConnection(); // Restart the connection
+            }, 3000); // Reconnect after 3 seconds
+        };
+        setSSEConnection(eventSource);
+    }, []);
+
+    useEffect(() => {
+        startSSEConnection();
+        return () => {
+            console.log('Cleaning up SSE connection...');
+            if (sseConnection) {
+                sseConnection.close();
+            }
+        };
+    }, [startSSEConnection]);
 
     const getSet = async () => {
         try {

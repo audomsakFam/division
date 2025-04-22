@@ -4,10 +4,11 @@ import CalendarCom from "@/app/components/calendar/calendar";
 import { PerviewData, ResPerview } from "@/app/interfaces/preview";
 import axios from "axios";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import ReactPlayer from 'react-player'
 export default function HomePage() {
     const route = useRouter()
+    const [sseConnection, setSSEConnection] = useState<EventSource | null>(null);
     const [previewData, setPerviewData] = useState<PerviewData[]>([]);
     useEffect(() => {
         if (navigator.userAgent.includes("Mobile")) {
@@ -18,6 +19,40 @@ export default function HomePage() {
         }
     }, []);
 
+    const startSSEConnection = useCallback(() => {
+        console.log('Initializing SSE connection...');
+        const eventSource = new EventSource('http://172.20.48.135:9000/api/noti');
+        eventSource.onopen = () => {
+            console.log('SSE connection opened.');
+        };
+        eventSource.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            if (data.type && data.type === 'ping') {
+                console.log('Received ping from server. Sending pong...');
+                fetch('http://172.20.48.135:9000/api/ping', { method: 'POST', body: 'pong' });
+            } 
+        };
+        eventSource.onerror = (event) => {
+            console.error('SSE Error:', event);
+            eventSource.close();
+            // Attempt to reconnect after a delay
+            setTimeout(() => {
+                console.log('Reconnecting SSE...');
+                startSSEConnection(); // Restart the connection
+            }, 3000); // Reconnect after 3 seconds
+        };
+        setSSEConnection(eventSource);
+    }, []);
+
+    useEffect(() => {
+        startSSEConnection();
+        return () => {
+            console.log('Cleaning up SSE connection...');
+            if (sseConnection) {
+                sseConnection.close();
+            }
+        };
+    }, [startSSEConnection]);
 
     useEffect(() => {
 
@@ -79,8 +114,8 @@ export default function HomePage() {
                     <>
                         {
                             (item.type == 0 && (
-                                <div id="bannerL" 
-                                  className="fixed flex justify-end left-0 top-1/4 z-[1100] w-auto ml-10"
+                                <div id="bannerL"
+                                    className="fixed flex justify-end left-0 top-1/4 z-[1100] w-auto ml-10"
                                 >
                                     <img
                                         src={'http://172.20.48.135:9000/images' + '/' + item.name}
@@ -94,7 +129,7 @@ export default function HomePage() {
                                                 leftBanner.remove();
                                             }
                                         }}
-                                         className="absolute -top-3 -left-3 bg-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center"
+                                        className="absolute -top-3 -left-3 bg-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center"
                                     >
                                         &times;
                                     </button>
