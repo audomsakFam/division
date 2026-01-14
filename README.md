@@ -4,7 +4,7 @@
 2. Run the following command at the project root:
 
 ```bash
-docker compose up --build
+docker compose up --build -d
 ```
 
 4. Run the following command at the project root:
