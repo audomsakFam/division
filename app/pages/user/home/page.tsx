@@ -62,52 +62,7 @@ export default function HomePage() {
             {
                 previewData.map((item) => (
                     <>
-                        {
-                            (item.type == 0 && (
-                                <div id="bannerL" className="fixed flex justify-start w-1/2 left-0 top-1/4 ml-10 z-[1000]">
-                                    <img
-                                        src={'http://localhost:9000/images/' + item.name}
-                                        className="h-[500px] object-cover"
-                                        alt=""
-                                    />
-                                    <button
-                                        onClick={() => {
-                                            const leftBanner = document.querySelector("#bannerL");
-                                            if (leftBanner instanceof HTMLElement) {
-                                                leftBanner.remove();
-                                            }
-                                        }}
-                                        className="absolute left-2 bg-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center"
-                                    >
-                                        &times;
-                                    </button>
-                                </div>
-
-                            ))
-                        }
-                        {
-                            (item.type == 1 && (
-                                <div id="bannerR" className="fixed flex justify-end w-1/2 right-0 top-1/4 mr-10 z-[1000]">
-                                    <img
-                                        src={'http://localhost:9000/images/' + item.name}
-                                        className="h-[500px] object-cover"
-                                        alt=""
-                                    />
-                                    <button
-                                        onClick={() => {
-                                            const rightBanner = document.querySelector("#bannerR");
-                                            if (rightBanner instanceof HTMLElement) {
-                                                rightBanner.remove();
-                                            }
-                                        }}
-                                        className="absolute right-2 bg-red-500 text-white rounded-full w-10 h-10 flex items-center justify-center"
-                                    >
-                                        &times;
-                                    </button>
-                                </div>
-
-                            ))
-                        }
+                        
                         {
                             item.type == 2 && (
 
