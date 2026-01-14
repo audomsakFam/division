@@ -12,17 +12,28 @@ docker compose up --build
    ```bash
     npm i
    ```
+   
 5. Prisma
 
     ```bash
    npx prisma migrate dev --name init
+      ```
+    ```bash
+   npx prisma generate
+    ```
+    ```bash
    npx prisma db seed
-   ```
+    ```
  
-6. 
+6. Local Run
    ```bash
     npm run dev
    ```
    
-7. You can now visit http://localhost:3000/division-borrow to check the result.
+7. Run express SSE
+   ```bash
+    node server.mjs
+   ```
+   
+8. You can now visit http://localhost:3000/division-borrow to check the result and http://localhost:3000/division-borrow/pages/admin/login to check dashboard
 
