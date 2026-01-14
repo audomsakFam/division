@@ -176,7 +176,7 @@ export default function HomePage() {
             ),
             labels: {
                 formatter: function (value: number) {
-                    return `${Math.round(value)} ครั้ง`; // เพิ่มหน่วย "ครั้ง" ที่ท้ายค่า Y
+                    return `${Math.round(value)} ครั้ง`; 
                 },
             }
         },

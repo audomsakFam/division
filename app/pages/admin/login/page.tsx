@@ -17,7 +17,7 @@ export default function Login() {
       {status == 'unauthenticated' && <div className="h-screen w-screen flex justify-center items-center bg-blue-900">
         <div className="sm:shadow-xl px-8 pb-8 pt-12 sm:bg-white rounded-xl space-y-12 text-blue-950">
           <div className='flex justify-start items-center'>
-            <Image width={50} height={50} src="/images/logoRMUTT.png" alt="Image" className="rounded-md object-cover mb-3" />
+            <Image width={50} height={50} src={`${process.env.NEXT_PUBLIC_BASE_PATH}/images/logoRMUTT.png`} alt="Image" className="rounded-md object-cover mb-3" />
             <div className='flex flex-col ml-2'>
               <h1 className="font-semibold text-2xl">Login</h1>
               <p className='text-stone-400'>for admin only.</p>

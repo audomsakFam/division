@@ -136,7 +136,7 @@ export default function Side({ children }: SideProps) {
                                 <h1><b>{session.user.name}</b></h1>
                             </div>
                             <div className="m-5">
-                                <Image width={60} height={60} src="/images/logoRMUTT.png" alt="Image" className="rounded-md object-cover mb-3" />
+                                <Image width={60} height={60} src={process.env.NEXT_PUBLIC_BASE_PATH + '/images/logoRMUTT.png'} alt="Image" className="rounded-md object-cover mb-3" />
                             </div>
                         </div>
                         <div className="h-full px-3 py-4 overflow-y-auto bg-blue-950 text-slate-100 flex flex-col justify-between">

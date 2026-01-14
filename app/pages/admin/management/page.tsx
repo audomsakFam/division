@@ -315,7 +315,7 @@ export default function Management() {
                                                 ) : (
                                                     <div className="w-full h-full bg-gray-200 flex items-center justify-center rounded-md">
                                                         <img
-                                                            src={'http://localhost:9000/images/' + item.name}
+                                                            src={'http://localhost:9000/${process.env.NEXT_PUBLIC_BASE_PATH}/images/' + item.name}
                                                             className="w-full h-full object-cover rounded-md"
                                                             alt="Preview"
                                                         />

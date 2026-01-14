@@ -17,4 +17,3 @@ export const RefreshProvider = ({ children }: { children: React.ReactNode }) => 
         </RefreshContext.Provider>
     );
 };
-/* eslint-disable*/

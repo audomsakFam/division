@@ -43,20 +43,6 @@ export async function GET(req: Request) {
             }
         });
 
-        // const groupData = data.reduce((acc: Record<string, number[]>, curr) => {
-        //     const divisionName = curr.item?.division.name
-        //     const mountIndex = new Date(curr.borrow.createAt).getMonth()
-        //     if(!divisionName){
-        //         return acc
-        //     }
-        //     if (!acc[divisionName]) {
-        //         acc[divisionName] = Array(12).fill(0)
-        //     }
-        //     acc[divisionName][mountIndex] += 1 // key, value
-
-        //     return acc;
-        // }, {})
-
         const series = Object.keys(groupData).map((divisionName) => ({
             name: divisionName,
             data: groupData[divisionName]

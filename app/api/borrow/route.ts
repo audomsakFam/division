@@ -54,7 +54,7 @@ export async function POST(req: Request) {
             filePath2 = `images/sign/${fileName}`;
             await writeImageToPublic(fileName, buffer);
         }
-       
+
         if (!borrowDetails || borrowDetails.length === 0) {
             return NextResponse.json({ error: 'No borrow details provided' }, { status: 400 });
         }
@@ -244,17 +244,14 @@ export async function POST(req: Request) {
             }, {});
 
             console.log('groupedItems to mail', groupedItems)
-            // delete groupedItems['Unknown'];
 
             const itemSummary = Object.entries(groupedItems)
                 .map(([divisionName, { items, sets }]) => {
-                    // กรองอุปกรณ์ที่มีชื่อเป็น 'Unknown'
                     const itemDetails = Object.entries(items)
                         .filter(([itemName, count]) => itemName !== 'Unknown' && itemName !== 'Unknown:') // กรอง 'Unknown' ออก
                         .map(([itemName, count]) => `  - ${itemName}: ${count} ชิ้น`)
                         .join('\n');
 
-                    // กรอง Set ที่มีชื่อเป็น 'Unknown'
                     const setDetails = Object.entries(sets)
                         .filter(([setName, setItems]) => setName !== 'Unknown') // กรอง 'Unknown' ออก
                         .map(([setName, setItems]) => {
@@ -272,41 +269,28 @@ export async function POST(req: Request) {
 
             console.log('itemSummary to mail', itemSummary)
 
-
-            const user = await prisma.user.findUnique({
-                where: { email: process.env.SMTP_USER },
-                select: { email: true, password: true }, // ฟิลด์สำหรับเก็บ SMTP Credentials
-            });
-
-
-            if (!user || !user.email || !user.password) {
-                throw new Error("SMTP credentials not found for this user.");
-            }
-
             const transporter = nodemailer.createTransport({
-                host: "smtp.gmail.com", // สามารถปรับให้รองรับ SMTP Provider อื่น
+                host: "smtp.gmail.com", 
                 port: 587,
                 secure: false, // ใช้ STARTTLS
                 auth: {
-                    user: user.email,
+                    user: "your84120@gmail.com",
                     pass: 'ephwtqoczgrkooru',
                 },
-                logger: true, // เปิด logging
-                debug: true,  // เปิด debugging
+                logger: true, 
+                debug: true, 
             });
 
             const info = await transporter.sendMail({
-                from: `"Division Borrow" <${user.email}>`, // Sender email
-                to: 'fam841209@gmail.com', // Receiver email
-                cc: ["famqqblood@gmail.com"],
+                from: `"Division Borrow ( ยืมอุปกรณ์ )" <${"your84120@gmail.com"}>`, 
+                to: 'fam841209@gmail.com', 
                 subject: `แจ้งการยืมอุปกรณ์ ${result.project}`,
-                text: `โครงการ: ${result.project} \nจำนวนผู้เข้าร่วม: ${participate} คน\nชื่อ: ${result.name + ' ' + result.lastname}\nเบอร์โทร: ${result.tel}\nจากหน่วยงาน: ${result.origanization?.name}
+                text: `โครงการ: ${result.project} \nวันส่งมอบ - วันส่งคืน: ${serveAt.split('T')[0]} ถึง ${retureAt.split('T')[0]} \nจำนวนผู้เข้าร่วม: ${participate} คน\nชื่อ: ${result.name + ' ' + result.lastname}\nเบอร์โทร: ${result.tel}\nจากหน่วยงาน: ${result.origanization?.name}
                 \n\t\t\tอุปกรณ์\n\n${itemSummary}
                 `,
             });
 
             console.log("Email sent: ", info.messageId);
-
             return NextResponse.json(result, {
                 status: 200,
             });
@@ -326,13 +310,13 @@ export async function GET(req: Request) {
                 origanization: true,
                 Borrow_detail: {
                     include: {
-                        item: { include: { division: true, postfix: true, qr: true } },
+                        item: { include: { division: true, postfix: true } },
                         set: {
                             include: {
                                 Item_set: {
                                     include: {
                                         item: {
-                                            include: { division: true, postfix: true, qr: true }
+                                            include: { division: true, postfix: true }
                                         }
                                     }
                                 }

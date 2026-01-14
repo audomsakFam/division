@@ -10,7 +10,7 @@ generator client {
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
+  // url      = env("DATABASE_URL")
 }
 
 model User {
@@ -67,7 +67,7 @@ model Qr_detail {
 model Division {
   id       Int      @id @default(autoincrement())
   name     String   @db.VarChar(100)
-  email    String   @db.VarChar(100)
+  // email    String   @db.VarChar(100)
   createAt DateTime @default(now())
   updateAt DateTime @updatedAt
   Items    Items[]
