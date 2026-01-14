@@ -32,7 +32,7 @@ docker compose up --build -d
    
 7. Run express SSE
    ```bash
-    node server.mjs
+    npm run serve
    ```
    
 8. You can now visit http://localhost:3000/division-borrow to check the result and http://localhost:3000/division-borrow/pages/admin/login to check dashboard
