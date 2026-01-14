@@ -24,7 +24,6 @@ const authOption: AuthOptions = {
                     if (!user) {
                         throw new Error('Invalid username or password');
                     }
-
                     const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
 
                     if (isPasswordValid) {

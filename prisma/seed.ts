@@ -1,6 +1,8 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+import bcrypt from 'bcrypt';
+
 
 const items = [
   {
@@ -878,6 +880,7 @@ const items = [
 ];
 
 const main = async () => {
+  const hashedPassword = await bcrypt.hash('1234', 9);
   await prisma.user.create({
     data: {
       name: "SuperAd",
@@ -886,8 +889,7 @@ const main = async () => {
       tel: "0653675098",
       email: "your841209@gmail.com",
       username: "admin67891",
-      password: "1234",
-      image: "1,739,947,314,949-rb_63457.png",
+      password: hashedPassword,
       role: "admin",
     },
   });
@@ -905,7 +907,7 @@ const main = async () => {
       { name: "ฝ่ายบริหารงานทั่วไป" },
       { name: "ฝ่ายพัฒนาศักยภาพนักศึกษา" },
       { name: "ฝ่ายสุขภาพและอนามัย" },
-      { name: "ฝ่ายแนะแนวการศึกษาอาชีพและศิษย์เก่า"},
+      { name: "ฝ่ายแนะแนวการศึกษาอาชีพและศิษย์เก่า" },
       { name: "ฝ่ายทำนุบำรุงศิลปวัฒนธรรม" },
     ],
   });
