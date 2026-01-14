@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-require-imports */
-const { PrismaClient } = require("@prisma/client");
+import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient();
 import bcrypt from 'bcrypt';
 
@@ -891,6 +891,7 @@ const main = async () => {
       username: "admin67891",
       password: hashedPassword,
       role: "admin",
+      image: ''
     },
   });
 
