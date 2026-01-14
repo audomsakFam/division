@@ -35,5 +35,5 @@ docker compose up --build -d
     npm run serve
    ```
    
-8. You can now visit http://localhost:3000/division-borrow to check the result and http://localhost:3000/division-borrow/pages/admin/login to check dashboard
+8. You can now visit http://localhost:3000/division-borrow to check the result and http://localhost:3000/division-borrow/pages/admin/login to check dashboard (user: admin67891, password: 1234)
 
