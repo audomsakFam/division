@@ -878,19 +878,19 @@ const items = [
 ];
 
 const main = async () => {
-  // await prisma.user.create({
-  //   data: {
-  //     name: "SuperAd",
-  //     lastname: "Admin",
-  //     gender: "ชาย",
-  //     tel: "0653675098",
-  //     email: "your841209@gmail.com",
-  //     username: "admin67891",
-  //     password: "$2b$09$VEppOzl0N9oNA6zED6SJbuYIs.fqWG37e7KVIg/MkRxZteQnOaehi",
-  //     image: "1,739,947,314,949-rb_63457.png",
-  //     role: "admin",
-  //   },
-  // });
+  await prisma.user.create({
+    data: {
+      name: "SuperAd",
+      lastname: "Admin",
+      gender: "ชาย",
+      tel: "0653675098",
+      email: "your841209@gmail.com",
+      username: "admin67891",
+      password: "1234",
+      image: "1,739,947,314,949-rb_63457.png",
+      role: "admin",
+    },
+  });
 
   await prisma.imgAndVideoPreview.createMany({
     data: [
