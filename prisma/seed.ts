@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-require-imports */
 import { PrismaClient } from '@prisma/client'
 const prisma = new PrismaClient();
 import bcrypt from 'bcrypt';
