@@ -24,5 +24,5 @@ docker compose up --build
     npm run dev
    ```
    
-7. You can now visit http://localhost:3000 to check the result.
+7. You can now visit http://localhost:3000/division-borrow to check the result.
 
